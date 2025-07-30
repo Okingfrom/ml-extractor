@@ -1,0 +1,6 @@
+columns:
+  SKU: SKU
+  Name: Product Name
+  Price: Price
+  Description: Description
+  # Add more mappings as needed

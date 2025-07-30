@@ -1,0 +1,8 @@
+pandas
+openpyxl
+xlrd
+python-docx
+PyPDF2
+spacy
+yaml
+pytest
