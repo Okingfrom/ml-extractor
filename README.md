@@ -24,6 +24,13 @@ A modular Python tool for extracting product data from various file formats (Exc
    ```bash
    python main.py --help
    ```
+      git remote remove origin  # Only if you already have an 'origin' set
+   git remote add origin https://github.com/Okingfrom/ml-extrator.git
+   git branch -M main
+   git push -u origin main   git remote remove origin  # Only if you already have an 'origin' set
+   git remote add origin https://github.com/Okingfrom/ml-extrator.git
+   git branch -M main
+   git push -u origin main   sudo apt install python3-venv python3-pip
 
 ## Project Structure
 - `src/` - Source code modules

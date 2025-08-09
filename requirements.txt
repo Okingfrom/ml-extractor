@@ -1,8 +1,12 @@
-pandas
-openpyxl
-xlrd
-python-docx
-PyPDF2
-spacy
-yaml
-pytest
+# Working requirements without NumPy/Pandas for older CPUs
+flask>=2.0.0
+openpyxl>=3.1.0
+xlrd>=2.0.0
+python-docx>=1.0.0
+PyPDF2>=3.0.0
+PyYAML>=6.0.0
+pytest>=7.0.0
+
+# Note: Streamlit and pandas require NumPy which doesn't work on older AMD A6 processors
+# due to instruction set incompatibility (illegal instruction error)
+# Use app_flask.py or main_simple.py instead
