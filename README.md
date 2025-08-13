@@ -1,8 +1,25 @@
-# ML Extrator
+# ML Extractor - AI-Powered Mercado Libre Bulk Mapper 🚀
 
-A modular Python tool for extracting product data from various file formats (Excel, TXT, DOCX, PDF), mapping it to Mercado Libre's bulk upload template, and exporting the result.
+A sophisticated Python application that intelligently maps product data from various file formats to Mercado Libre's bulk upload template, enhanced with AI capabilities for automatic data completion.
 
-## Features
+## ✨ Features
+
+### 🧠 AI-Powered Enhancement
+- **Smart brand detection** from product names and descriptions
+- **Automatic model/SKU generation** based on product information  
+- **Realistic weight estimation** by product category
+- **Color inference** from product descriptions
+- **Standard warranty assignment** by product type
+- **Valid EAN-13 code generation**
+
+### 🌐 Professional Web Interface
+- Modern Flask-based web application
+- Professional Mercado Libre themed design
+- Real-time processing feedback
+- Comprehensive debug logging
+- Intuitive file upload and field mapping
+
+### 📁 Multi-Format Support
 - Modular file readers for Excel, TXT, DOCX, and PDF
 - Configuration-driven data mapping
 - CLI entry point for automation and scripting

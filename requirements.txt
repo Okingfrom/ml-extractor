@@ -1,12 +1,15 @@
-# Working requirements without NumPy/Pandas for older CPUs
-flask>=2.0.0
+# ML Extractor with AI Requirements
+flask>=3.0.0
 openpyxl>=3.1.0
 xlrd>=2.0.0
-python-docx>=1.0.0
+python-docx>=1.1.0
 PyPDF2>=3.0.0
 PyYAML>=6.0.0
+requests>=2.32.0
+python-dotenv>=1.1.0
 pytest>=7.0.0
 
 # Note: Streamlit and pandas require NumPy which doesn't work on older AMD A6 processors
+# All AI functionality works without NumPy/Pandas dependencies
 # due to instruction set incompatibility (illegal instruction error)
 # Use app_flask.py or main_simple.py instead

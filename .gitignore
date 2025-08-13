@@ -62,3 +62,4 @@ uploads/
 # Temporary files
 *.tmp
 *.temp
+.env
