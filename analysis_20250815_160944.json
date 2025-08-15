@@ -1,0 +1,273 @@
+{
+  "timestamp": "2025-08-15T16:09:41.598790",
+  "formula_fix_test": {
+    "formulas_detected": 9,
+    "formulas_list": [
+      {
+        "row": 2,
+        "col": 5,
+        "formula": "=IF(C2=0,D2*1.22*0.792*1.5,C2*1.22*1.5)",
+        "calculated_value": 40.58208
+      },
+      {
+        "row": 3,
+        "col": 5,
+        "formula": "=IF(C3=0,D3*1.22*0.792*1.5,C3*1.22*1.5)",
+        "calculated_value": 14.4936
+      },
+      {
+        "row": 4,
+        "col": 5,
+        "formula": "=IF(C4=0,D4*1.22*0.792*1.5,C4*1.22*1.5)",
+        "calculated_value": 14.4936
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "formula": "=IF(C5=0,D5*1.22*0.792*1.5,C5*1.22*1.5)",
+        "calculated_value": 18.84168
+      },
+      {
+        "row": 6,
+        "col": 5,
+        "formula": "=IF(C6=0,D6*1.22*0.792*1.5,C6*1.22*1.5)",
+        "calculated_value": 24.63912
+      },
+      {
+        "row": 7,
+        "col": 5,
+        "formula": "=IF(C7=0,D7*1.22*0.792*1.5,C7*1.22*1.5)",
+        "calculated_value": 30.43656
+      },
+      {
+        "row": 8,
+        "col": 5,
+        "formula": "=IF(C8=0,D8*1.22*0.792*1.5,C8*1.22*1.5)",
+        "calculated_value": 34.78464
+      },
+      {
+        "row": 9,
+        "col": 5,
+        "formula": "=IF(C9=0,D9*1.22*0.792*1.5,C9*1.22*1.5)",
+        "calculated_value": 34.78464
+      },
+      {
+        "row": 10,
+        "col": 5,
+        "formula": "=IF(C10=0,D10*1.22*0.792*1.5,C10*1.22*1.5)",
+        "calculated_value": 36.234
+      }
+    ],
+    "fix_working": true
+  },
+  "mapping_quality": {
+    "total_products": 998,
+    "price_values_detected": 10,
+    "price_range": {
+      "min": 0.0,
+      "max": 0.0,
+      "avg": 0.0
+    }
+  },
+  "field_completeness": {
+    "Código de catálogo ML": {
+      "filled": 2,
+      "empty": 996,
+      "percentage": 0.2
+    },
+    "Título: incluye producto, marca, modelo y destaca sus características principales": {
+      "filled": 13,
+      "empty": 985,
+      "percentage": 1.3
+    },
+    "Cantidad de caracteres": {
+      "filled": 0,
+      "empty": 998,
+      "percentage": 0.0
+    },
+    "Condición": {
+      "filled": 997,
+      "empty": 1,
+      "percentage": 99.9
+    },
+    "Código universal de producto": {
+      "filled": 2,
+      "empty": 996,
+      "percentage": 0.2
+    },
+    "Varía por: Color": {
+      "filled": 996,
+      "empty": 2,
+      "percentage": 99.8
+    },
+    "Varía por: Nombre comercial del color": {
+      "filled": 994,
+      "empty": 4,
+      "percentage": 99.6
+    },
+    "Fotos": {
+      "filled": 3,
+      "empty": 995,
+      "percentage": 0.3
+    },
+    "SKU": {
+      "filled": 10,
+      "empty": 988,
+      "percentage": 1.0
+    },
+    "Stock": {
+      "filled": 995,
+      "empty": 3,
+      "percentage": 99.7
+    },
+    "Precio": {
+      "filled": 13,
+      "empty": 985,
+      "percentage": 1.3
+    },
+    "Moneda": {
+      "filled": 995,
+      "empty": 3,
+      "percentage": 99.7
+    },
+    "Descripción": {
+      "filled": 11,
+      "empty": 987,
+      "percentage": 1.1
+    },
+    "Cargo por venta": {
+      "filled": 1,
+      "empty": 997,
+      "percentage": 0.1
+    },
+    "Forma de envío": {
+      "filled": 995,
+      "empty": 3,
+      "percentage": 99.7
+    },
+    "Costo de envío": {
+      "filled": 997,
+      "empty": 1,
+      "percentage": 99.9
+    },
+    "Retiro en persona": {
+      "filled": 995,
+      "empty": 3,
+      "percentage": 99.7
+    },
+    "Tipo de garantía": {
+      "filled": 994,
+      "empty": 4,
+      "percentage": 99.6
+    },
+    "Tiempo de garantía": {
+      "filled": 1,
+      "empty": 997,
+      "percentage": 0.1
+    },
+    "Unidad de Tiempo de garantía": {
+      "filled": 995,
+      "empty": 3,
+      "percentage": 99.7
+    },
+    "Tienda Oficial": {
+      "filled": 995,
+      "empty": 3,
+      "percentage": 99.7
+    },
+    "Marca": {
+      "filled": 996,
+      "empty": 2,
+      "percentage": 99.8
+    },
+    "Modelo": {
+      "filled": 11,
+      "empty": 987,
+      "percentage": 1.1
+    },
+    "Formato de venta": {
+      "filled": 994,
+      "empty": 4,
+      "percentage": 99.6
+    },
+    "Unidades por pack": {
+      "filled": 1,
+      "empty": 997,
+      "percentage": 0.1
+    },
+    "Diámetro": {
+      "filled": 1,
+      "empty": 997,
+      "percentage": 0.1
+    },
+    "Unidad de Diámetro": {
+      "filled": 995,
+      "empty": 3,
+      "percentage": 99.7
+    },
+    "Largo": {
+      "filled": 1,
+      "empty": 997,
+      "percentage": 0.1
+    },
+    "Unidad de Largo": {
+      "filled": 995,
+      "empty": 3,
+      "percentage": 99.7
+    },
+    "Material": {
+      "filled": 994,
+      "empty": 4,
+      "percentage": 99.6
+    },
+    "Resistencia": {
+      "filled": 1,
+      "empty": 997,
+      "percentage": 0.1
+    },
+    "Unidad de Resistencia": {
+      "filled": 995,
+      "empty": 3,
+      "percentage": 99.7
+    },
+    "Peso": {
+      "filled": 1,
+      "empty": 997,
+      "percentage": 0.1
+    },
+    "Unidad de Peso": {
+      "filled": 995,
+      "empty": 3,
+      "percentage": 99.7
+    },
+    "Resumen de errores": {
+      "filled": 2,
+      "empty": 996,
+      "percentage": 0.2
+    },
+    "BUYBOX_FORMULA": {
+      "filled": 0,
+      "empty": 998,
+      "percentage": 0.0
+    },
+    "HIDDEN_PICTURES": {
+      "filled": 0,
+      "empty": 998,
+      "percentage": 0.0
+    }
+  },
+  "ai_enhancement": {},
+  "errors": [],
+  "recommendations": [
+    "❗ Título: incluye producto, marca, modelo y destaca sus características principales: Only 1.3% complete - Review mapping",
+    "❗ Precio: Only 1.3% complete - Review mapping",
+    "❗ Título: incluye producto, marca, modelo y destaca sus características principales: Only 1.3% complete - Review mapping",
+    "❗ Precio: Only 1.3% complete - Review mapping",
+    "❗ Título: incluye producto, marca, modelo y destaca sus características principales: Only 1.3% complete - Review mapping",
+    "❗ Precio: Only 1.3% complete - Review mapping",
+    "🤖 Marca: AI working well (99.8%)",
+    "🤖 Marca: AI working well (99.8%)",
+    "🤖 Marca: AI working well (99.8%)",
+    "💰 Price mapping: SUCCESS! 13 products with prices"
+  ]
+}
