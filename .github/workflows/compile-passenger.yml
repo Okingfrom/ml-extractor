@@ -78,3 +78,49 @@ jobs:
               traceback.print_exc()
               raise
           PY
+
+    - name: Test passenger_wsgi WSGI app with Werkzeug (default)
+    run: |
+      python - <<'PY'
+      import importlib, traceback
+      try:
+        m = importlib.import_module('passenger_wsgi')
+        app = getattr(m, 'application')
+        from werkzeug.test import Client
+        from werkzeug.wrappers import Response
+        client = Client(app, Response)
+        resp = client.get('/')
+        print('werkzeug status:', resp.status_code)
+        if resp.status_code not in (200,302):
+          raise SystemExit('werkzeug smoke failed: ' + str(resp.status_code))
+        print('werkzeug smoke passed')
+      except Exception:
+        print('werkzeug test failed:')
+        traceback.print_exc()
+        raise
+      PY
+
+    - name: Test passenger_wsgi WSGI app with Werkzeug (USE_FALLBACK=1)
+    env:
+      USE_FALLBACK: '1'
+    run: |
+      python - <<'PY'
+      import importlib, os, traceback
+      try:
+        os.environ['USE_FALLBACK'] = '1'
+        importlib.reload(importlib.import_module('passenger_wsgi'))
+        m = importlib.import_module('passenger_wsgi')
+        app = getattr(m, 'application')
+        from werkzeug.test import Client
+        from werkzeug.wrappers import Response
+        client = Client(app, Response)
+        resp = client.get('/')
+        print('werkzeug status (fallback):', resp.status_code)
+        if resp.status_code not in (200,302):
+          raise SystemExit('werkzeug fallback smoke failed: ' + str(resp.status_code))
+        print('werkzeug fallback smoke passed')
+      except Exception:
+        print('werkzeug fallback test failed:')
+        traceback.print_exc()
+        raise
+      PY
