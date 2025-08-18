@@ -23,8 +23,8 @@ from auth_system import user_manager, login_required, premium_required
 load_dotenv()
 
 # 🚧 DEVELOPER MODE - Set to True for easy testing, False for production
-DEVELOPER_MODE = True
-DISABLE_AUTH = True  # 🚧 NEW: Completely disable authentication for testing
+DEVELOPER_MODE = False
+DISABLE_AUTH = False  # Disable developer bypass for safe merge; enable real auth
 DEVELOPER_USER = {
     'user_id': 999,
     'username': 'developer',
