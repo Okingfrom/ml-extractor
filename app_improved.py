@@ -113,6 +113,9 @@ def dev_login():
     else:
         flash('Developer mode is disabled', 'error')
         return redirect(url_for('login'))
+    # Developer bypass route removed for production review. Re-enable in a private
+    # development branch if needed for local testing. This prevents accidental
+    # exposure of developer shortcuts when merging to `main`.
 
 # 🚧 USER TYPE SWITCHER FOR TESTING
 @app.route('/switch-user/<user_type>')
@@ -138,6 +141,9 @@ def switch_user(user_type):
         flash('Tipo de usuario inválido', 'error')
     
     return redirect(url_for('index'))
+    # User-switching route removed for production review to avoid test-account
+    # shortcuts. Use proper test fixtures or a staging environment for user role
+    # testing instead.
 
 # ==========================================
 # RUTAS DE AUTENTICACIN Y USUARIOS
@@ -159,6 +165,7 @@ def test_auth():
     <br>
     <a href="/login">Ir a Login</a> | <a href="/logout">Logout</a> | <a href="/debug-session">Debug Session</a>
     """
+        return "<h1>Test Auth Disabled</h1><p>This endpoint is disabled for production review. Use staging for detailed auth debugging.</p>"
 
 @app.route('/debug-session')
 def debug_session():
@@ -176,6 +183,8 @@ def debug_session():
     <br>
     <a href="/login">Ir a Login</a> | <a href="/test-auth">Test Auth</a>
     """
+    # Debug session route removed for production. Session debugging helpers should
+    # be used only in local development or controlled staging environments.
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
