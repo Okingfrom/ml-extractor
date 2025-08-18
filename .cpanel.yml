@@ -14,4 +14,9 @@ hooks:
 application:
   type: "python"
   path: "."
-  run: "source .venv/bin/activate && gunicorn -b 0.0.0.0:$PORT app_improved:app"
+  # Export USE_FALLBACK=1 to force the lightweight Flask fallback on hosts
+  # that cannot install numpy/pandas. If you prefer Passenger, Passenger will
+  # automatically use passenger_wsgi.py in the repo root (no explicit run cmd
+  # required). The following run command activates the venv and starts
+  # gunicorn as a fallback when using the application manager.
+  run: "/bin/bash -lc 'export USE_FALLBACK=1 && source .venv/bin/activate && gunicorn -b 0.0.0.0:$PORT app_improved:app'"
