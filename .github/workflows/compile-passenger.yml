@@ -24,8 +24,24 @@ jobs:
       - name: Upgrade pip
         run: python -m pip install --upgrade pip
 
+      - name: Install lightweight deps
+        run: |
+          python -m pip install flask requests
+
       - name: Compile passenger_wsgi.py
         run: python -m compileall passenger_wsgi.py
 
       - name: Compile full repository
         run: python -m compileall .
+
+      - name: Run small smoke test (app_flask)
+        run: |
+          python - <<'PY'
+          from app_flask import app
+          c = app.test_client()
+          resp = c.get('/')
+          print('status:', resp.status_code)
+          if resp.status_code not in (200,302):
+              raise SystemExit('smoke test failed with status ' + str(resp.status_code))
+          print('smoke test passed')
+          PY
