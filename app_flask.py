@@ -4,11 +4,7 @@ Simple Flask-based alternative to Streamlit that doesn't require NumPy/Pandas
 """
 
 from flask import Flask, request, render_template_string, send_file, redirect, url_for
-import openpyxl
 import csv
-import docx
-import PyPDF2
-import yaml
 import os
 import tempfile
 from werkzeug.utils import secure_filename
@@ -71,6 +67,11 @@ HTML_TEMPLATE = '''
 
 def read_excel_simple(file_path):
     """Read Excel file without pandas"""
+    try:
+        import openpyxl
+    except Exception as e:
+        raise RuntimeError("openpyxl is required to read Excel files. Install it or run using the fallback environment.") from e
+
     workbook = openpyxl.load_workbook(file_path)
     sheet = workbook.active
     data = {}
@@ -102,11 +103,21 @@ def read_csv_simple(file_path):
 
 def read_docx_simple(file_path):
     """Read DOCX file"""
+    try:
+        import docx
+    except Exception as e:
+        raise RuntimeError("python-docx is required to read .docx files. Install it or use a different input format.") from e
+
     doc = docx.Document(file_path)
     return "\n".join([para.text for para in doc.paragraphs])
 
 def read_pdf_simple(file_path):
     """Read PDF file"""
+    try:
+        import PyPDF2
+    except Exception as e:
+        raise RuntimeError("PyPDF2 is required to read PDF files. Install it or use a different input format.") from e
+
     with open(file_path, "rb") as f:
         reader = PyPDF2.PdfReader(f)
         text = ""
@@ -122,10 +133,16 @@ def read_txt_simple(file_path):
 def load_mapping_simple(config_path):
     """Load mapping configuration"""
     try:
+        try:
+            import yaml
+        except Exception:
+            # If yaml is not available, return empty mapping to avoid import-time failures
+            return [], {}
+
         with open(config_path, 'r') as f:
             config = yaml.safe_load(f)
             return config.get('template_columns', []), config.get('mapping', {})
-    except Exception as e:
+    except Exception:
         return [], {}
 
 def apply_mapping_simple(data, mapping, template_columns):
@@ -144,6 +161,11 @@ def apply_mapping_simple(data, mapping, template_columns):
 
 def write_excel_simple(data, template_columns, output_path):
     """Write Excel file without pandas"""
+    try:
+        import openpyxl
+    except Exception as e:
+        raise RuntimeError("openpyxl is required to write Excel files. Install it or run using the fallback environment.") from e
+
     workbook = openpyxl.Workbook()
     sheet = workbook.active
     
