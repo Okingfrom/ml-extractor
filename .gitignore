@@ -55,6 +55,7 @@ uploads/
 !README.md
 !SOLUTION_README.md
 !requirements.txt
+users.db
 
 # Logs
 *.log

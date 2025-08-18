@@ -1,0 +1,17 @@
+---
+deployment:
+  tasks:
+    - /bin/bash -lc "python3 -m venv .venv || true"
+    - /bin/bash -lc "source .venv/bin/activate && pip install --upgrade pip setuptools wheel"
+    - /bin/bash -lc "source .venv/bin/activate && pip install -r requirements.txt || true"
+    - /bin/bash -lc "# Ensure uploads and backups dirs exist"
+    - /bin/bash -lc "mkdir -p uploads backups"
+
+hooks:
+  build: |
+    echo "Build completed"
+
+application:
+  type: "python"
+  path: "."
+  run: "source .venv/bin/activate && gunicorn -b 0.0.0.0:$PORT app_improved:app"
