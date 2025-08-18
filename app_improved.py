@@ -151,40 +151,13 @@ def switch_user(user_type):
 
 @app.route('/test-auth')
 def test_auth():
-    """Pgina de prueba para verificar autenticacin"""
-    return f"""
-    <h1> Test de Autenticacin</h1>
-    <p>Ruta actual: {request.path}</p>
-    <p>User ID: {session.get('user_id', 'No definido')}</p>
-    <p>Username: {session.get('username', 'No definido')}</p>
-    <p>Email: {session.get('email', 'No definido')}</p>
-    <p>Account Type: {session.get('account_type', 'No definido')}</p>
-    <p>Sesin completa: {dict(session)}</p>
-    <p>Session ID en cookies: {request.cookies.get('session', 'No definido')}</p>
-    <p>Todas las cookies: {dict(request.cookies)}</p>
-    <br>
-    <a href="/login">Ir a Login</a> | <a href="/logout">Logout</a> | <a href="/debug-session">Debug Session</a>
-    """
-        return "<h1>Test Auth Disabled</h1><p>This endpoint is disabled for production review. Use staging for detailed auth debugging.</p>"
+    """Página de prueba para verificar autenticación (deshabilitada en esta rama)."""
+    return "<h1>Test Auth Disabled</h1><p>This endpoint is disabled for production review. Use staging for detailed auth debugging.</p>"
 
 @app.route('/debug-session')
 def debug_session():
-    """Ruta especial para debug de sesin - sin proteccin"""
-    print(f" DEBUG SESSION: Session keys: {list(session.keys())}")
-    print(f" DEBUG SESSION: Session dict: {dict(session)}")
-    print(f" DEBUG SESSION: Cookies: {dict(request.cookies)}")
-    
-    return f"""
-    <h1> Debug de Sesin</h1>
-    <p><strong>Session Keys:</strong> {list(session.keys())}</p>
-    <p><strong>Session Dict:</strong> {dict(session)}</p>
-    <p><strong>Cookies:</strong> {dict(request.cookies)}</p>
-    <p><strong>Request Headers:</strong> {dict(request.headers)}</p>
-    <br>
-    <a href="/login">Ir a Login</a> | <a href="/test-auth">Test Auth</a>
-    """
-    # Debug session route removed for production. Session debugging helpers should
-    # be used only in local development or controlled staging environments.
+    """Debug session endpoint disabled in this branch for safety."""
+    return "<h1>Debug Session Disabled</h1><p>Session debugging is disabled in this branch. Use staging for debugging.</p>"
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
