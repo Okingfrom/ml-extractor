@@ -23,8 +23,8 @@ from auth_system import user_manager, login_required, premium_required
 load_dotenv()
 
 # 🚧 DEVELOPER MODE - Set to True for easy testing, False for production
-DEVELOPER_MODE = False
-DISABLE_AUTH = False  # Disable developer bypass for safe merge; enable real auth
+DEVELOPER_MODE = True
+DISABLE_AUTH = True  # 🚧 NEW: Completely disable authentication for testing
 DEVELOPER_USER = {
     'user_id': 999,
     'username': 'developer',
@@ -113,9 +113,6 @@ def dev_login():
     else:
         flash('Developer mode is disabled', 'error')
         return redirect(url_for('login'))
-    # Developer bypass route removed for production review. Re-enable in a private
-    # development branch if needed for local testing. This prevents accidental
-    # exposure of developer shortcuts when merging to `main`.
 
 # 🚧 USER TYPE SWITCHER FOR TESTING
 @app.route('/switch-user/<user_type>')
@@ -141,9 +138,6 @@ def switch_user(user_type):
         flash('Tipo de usuario inválido', 'error')
     
     return redirect(url_for('index'))
-    # User-switching route removed for production review to avoid test-account
-    # shortcuts. Use proper test fixtures or a staging environment for user role
-    # testing instead.
 
 # ==========================================
 # RUTAS DE AUTENTICACIN Y USUARIOS
@@ -151,13 +145,37 @@ def switch_user(user_type):
 
 @app.route('/test-auth')
 def test_auth():
-    """Página de prueba para verificar autenticación (deshabilitada en esta rama)."""
-    return "<h1>Test Auth Disabled</h1><p>This endpoint is disabled for production review. Use staging for detailed auth debugging.</p>"
+    """Pgina de prueba para verificar autenticacin"""
+    return f"""
+    <h1> Test de Autenticacin</h1>
+    <p>Ruta actual: {request.path}</p>
+    <p>User ID: {session.get('user_id', 'No definido')}</p>
+    <p>Username: {session.get('username', 'No definido')}</p>
+    <p>Email: {session.get('email', 'No definido')}</p>
+    <p>Account Type: {session.get('account_type', 'No definido')}</p>
+    <p>Sesin completa: {dict(session)}</p>
+    <p>Session ID en cookies: {request.cookies.get('session', 'No definido')}</p>
+    <p>Todas las cookies: {dict(request.cookies)}</p>
+    <br>
+    <a href="/login">Ir a Login</a> | <a href="/logout">Logout</a> | <a href="/debug-session">Debug Session</a>
+    """
 
 @app.route('/debug-session')
 def debug_session():
-    """Debug session endpoint disabled in this branch for safety."""
-    return "<h1>Debug Session Disabled</h1><p>Session debugging is disabled in this branch. Use staging for debugging.</p>"
+    """Ruta especial para debug de sesin - sin proteccin"""
+    print(f" DEBUG SESSION: Session keys: {list(session.keys())}")
+    print(f" DEBUG SESSION: Session dict: {dict(session)}")
+    print(f" DEBUG SESSION: Cookies: {dict(request.cookies)}")
+    
+    return f"""
+    <h1> Debug de Sesin</h1>
+    <p><strong>Session Keys:</strong> {list(session.keys())}</p>
+    <p><strong>Session Dict:</strong> {dict(session)}</p>
+    <p><strong>Cookies:</strong> {dict(request.cookies)}</p>
+    <p><strong>Request Headers:</strong> {dict(request.headers)}</p>
+    <br>
+    <a href="/login">Ir a Login</a> | <a href="/test-auth">Test Auth</a>
+    """
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -2078,7 +2096,7 @@ HTML_TEMPLATE = '''
                             </div>
                         </div>
                         
-                        <!-- Configuración de IA - Solo Premium -->
+                        <!-- Configuracin de IA - Solo Premium -->
                         {% if not user_info or user_info.account_type == 'premium' %}
                         <div style="
                             background: #f8f9fa;
@@ -2087,7 +2105,7 @@ HTML_TEMPLATE = '''
                             margin: 20px 0;
                             border: 1px solid #e9ecef;
                         ">
-                            <h4 style="color: #333; margin: 0 0 16px 0; font-size: 16px; font-weight: 600;">Configuración de IA</h4>
+                            <h4 style="color: #333; margin: 0 0 16px 0; font-size: 16px; font-weight: 600;">Configuracin de IA</h4>
                             
                             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
                                 <div class="form-group">
@@ -2141,7 +2159,7 @@ HTML_TEMPLATE = '''
                             text-align: center;
                         ">
                             <h4 style="color: #856404; margin: 0 0 10px 0;"> Funcionalidad Premium</h4>
-                            <p style="margin: 0;">La configuración de IA requiere cuenta Premium. Actualiza tu cuenta para acceder a esta funcionalidad.</p>
+                            <p style="margin: 0;">La configuracin de IA requiere cuenta Premium. Actualiza tu cuenta para acceder a esta funcionalidad.</p>
                         </div>
                         {% endif %}
                         
@@ -2241,7 +2259,7 @@ HTML_TEMPLATE = '''
                     <div style="display: flex; align-items: center; gap: 12px;">
                         <span style="font-size: 24px;"></span>
                         <div>
-                            <h3 style="margin: 0; font-size: 18px; font-weight: 600;">Configuración de Inteligencia Artificial</h3>
+                            <h3 style="margin: 0; font-size: 18px; font-weight: 600;">Configuracin de Inteligencia Artificial</h3>
                             <small class="small-pill">Haz clic para configurar la IA (Opcional)</small>
                         </div>
                     </div>
@@ -2368,7 +2386,7 @@ HTML_TEMPLATE = '''
                                 box-shadow: 0 3px 10px rgba(102, 179, 255, 0.3);
                             " onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 5px 15px rgba(102, 179, 255, 0.4)'" 
                                onmouseout="this.style.transform='translateY(0px)'; this.style.boxShadow='0 3px 10px rgba(102, 179, 255, 0.3)'">
-                                 Cerrar Configuración IA
+                                 Cerrar Configuracin IA
                             </button>
                         </div>
                     </div>
@@ -2389,7 +2407,7 @@ HTML_TEMPLATE = '''
                 <small>Recomendado: Excel o CSV para mejor mapeo</small>
             </div>
             
-            <h3>Configuración de Mapeo</h3>
+            <h3>Configuracin de Mapeo</h3>
             
             <div class="mapping-section">
                 <label>Selecciona los campos que quieres mapear desde tus datos:</label>
@@ -2482,7 +2500,7 @@ HTML_TEMPLATE = '''
             </div>
             {% endif %}
             
-            <!-- NUEVA SECCIN: CONFIGURACIÓN MANUAL MASIVA -->
+            <!-- NUEVA SECCIN: CONFIGURACIN MANUAL MASIVA -->
             {% if user_info and user_info.account_type == 'premium' %}
             <div class="manual-config-collapsible">
                 <div class="manual-config-header" onclick="toggleManualSection()" style="
@@ -2502,7 +2520,7 @@ HTML_TEMPLATE = '''
                     <div style="display: flex; align-items: center; gap: 12px;">
                         <span style="font-size: 24px;"></span>
                         <div>
-                            <h3 style="margin: 0; font-size: 18px; font-weight: 600;">Configuración Manual Masiva</h3>
+                            <h3 style="margin: 0; font-size: 18px; font-weight: 600;">Configuracin Manual Masiva</h3>
                             <small style="opacity: 0.9; font-size: 14px;">Haz clic para configurar valores masivos (Opcional)</small>
                         </div>
                     </div>
@@ -2771,7 +2789,7 @@ HTML_TEMPLATE = '''
                                 box-shadow: 0 3px 10px rgba(40, 167, 69, 0.3);
                             " onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 5px 15px rgba(40, 167, 69, 0.4)'" 
                                onmouseout="this.style.transform='translateY(0px)'; this.style.boxShadow='0 3px 10px rgba(40, 167, 69, 0.3)'">
-                                 Cerrar Configuración Manual
+                                 Cerrar Configuracin Manual
                             </button>
                         </div>
                     </div>
@@ -2779,7 +2797,7 @@ HTML_TEMPLATE = '''
             </div>
             
             {% else %}
-            <!-- Mensaje para usuarios gratuitos sobre configuración manual -->
+            <!-- Mensaje para usuarios gratuitos sobre configuracin manual -->
             <div style="
                 background: linear-gradient(135deg, #f8f9fa, #e9ecef);
                 border: 1px solid #dee2e6;
@@ -2789,9 +2807,9 @@ HTML_TEMPLATE = '''
                 margin: 24px 0;
                 text-align: center;
             ">
-                <h3 style="color: #6c757d; margin: 0 0 15px 0;"> Configuración Manual Masiva - Premium</h3>
+                <h3 style="color: #6c757d; margin: 0 0 15px 0;"> Configuracin Manual Masiva - Premium</h3>
                 <p style="margin: 0 0 15px 0; font-size: 16px;">
-                    Las opciones de configuración masiva estn disponibles solo para cuentas Premium.
+                    Las opciones de configuracin masiva estn disponibles solo para cuentas Premium.
                 </p>
                 <div style="
                     background: rgba(255,255,255,0.8);
@@ -2809,7 +2827,7 @@ HTML_TEMPLATE = '''
             </div>
             {% endif %}
             
-            <!-- NUEVA SECCIN: CONFIGURACIÓN AVANZADA DE IA -->
+            <!-- NUEVA SECCIN: CONFIGURACIN AVANZADA DE IA -->
             {% if user_info and user_info.account_type == 'premium' %}
             <div class="advanced-ai-collapsible">
                 <div class="advanced-ai-header" onclick="toggleAdvancedAISection()" style="
@@ -2829,7 +2847,7 @@ HTML_TEMPLATE = '''
                     <div style="display: flex; align-items: center; gap: 12px;">
                         <span style="font-size: 24px;"></span>
                         <div>
-                            <h3 style="margin: 0; font-size: 18px; font-weight: 600;">Configuración Avanzada de IA</h3>
+                            <h3 style="margin: 0; font-size: 18px; font-weight: 600;">Configuracin Avanzada de IA</h3>
                             <small class="small-pill">Haz clic para personalizar prompts de IA (Opcional)</small>
                         </div>
                     </div>
@@ -2985,7 +3003,7 @@ HTML_TEMPLATE = '''
                                 box-shadow: 0 3px 10px rgba(111, 66, 193, 0.3);
                             " onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 5px 15px rgba(111, 66, 193, 0.4)'" 
                                onmouseout="this.style.transform='translateY(0px)'; this.style.boxShadow='0 3px 10px rgba(111, 66, 193, 0.3)'">
-                                 Cerrar Configuración Avanzada
+                                 Cerrar Configuracin Avanzada
                             </button>
                         </div>
                     </div>
@@ -2993,7 +3011,7 @@ HTML_TEMPLATE = '''
             </div>
             
             {% else %}
-            <!-- Mensaje para usuarios gratuitos sobre configuración avanzada de IA -->
+            <!-- Mensaje para usuarios gratuitos sobre configuracin avanzada de IA -->
             <div style="
                 background: linear-gradient(135deg, #f3e7ff, #e8d5ff);
                 border: 1px solid #d4b3ff;
@@ -3003,7 +3021,7 @@ HTML_TEMPLATE = '''
                 margin: 24px 0;
                 text-align: center;
             ">
-                <h3 style="color: #6b21a8; margin: 0 0 15px 0;"> Configuración Avanzada de IA - Premium</h3>
+                <h3 style="color: #6b21a8; margin: 0 0 15px 0;"> Configuracin Avanzada de IA - Premium</h3>
                 <p style="margin: 0 0 15px 0; font-size: 16px;">
                     La personalizacin avanzada de prompts de IA est disponible solo para cuentas Premium.
                 </p>
@@ -3125,7 +3143,7 @@ HTML_TEMPLATE = '''
                     </div>
                     <div class="loading-step" id="step4">
                         <span class="loading-step-icon"></span>
-                        <span>Aplicando configuración manual...</span>
+                        <span>Aplicando configuracin manual...</span>
                     </div>
                     <div class="loading-step" id="step5">
                         <span class="loading-step-icon"></span>
@@ -3672,7 +3690,7 @@ def index():
                                            message_type="error",
                                            user_info=session)
             
-            # Obtener configuración IA
+            # Obtener configuracin IA
             ai_provider = request.form.get('ai_provider', 'manual')
             
             # Validar funcionalidades premium
@@ -3709,12 +3727,12 @@ def index():
             content_ext = content_filename.split('.')[-1].lower()
             products = read_product_data(content_path, content_ext)
             
-            # Obtener configuración de mapeo
+            # Obtener configuracin de mapeo
             selected_fields = request.form.getlist('map_fields')
             condicion = request.form.get('condicion', 'Nuevo')
             moneda = request.form.get('moneda', '$')
             
-            #  NUEVA CONFIGURACIÓN MANUAL MASIVA
+            #  NUEVA CONFIGURACIN MANUAL MASIVA
             manual_config = {
                 'stock_global': request.form.get('stock_global'),
                 'stock_selective': request.form.get('stock_selective'),
@@ -3743,7 +3761,7 @@ def index():
                 'codigo_universal_selective': request.form.get('codigo_universal_selective')
             }
             
-            #  NUEVA CONFIGURACIÓN AVANZADA DE IA
+            #  NUEVA CONFIGURACIN AVANZADA DE IA
             ai_config = {
                 'titulo_prompt': request.form.get('ai_titulo_prompt', ''),
                 'descripcion_prompt': request.form.get('ai_descripcion_prompt', ''),
@@ -3773,7 +3791,7 @@ def index():
             debug_info.append(f" Total productos detectados: {len(products)}")
             debug_info.append(f" Campos a mapear: {selected_fields}")
             debug_info.append(f" IA habilitada: {'S' if ai_provider != 'manual' else 'No'}")
-            debug_info.append(f" Configuración manual: {'Activa' if any(manual_config.values()) else 'No configurada'}")
+            debug_info.append(f" Configuracin manual: {'Activa' if any(manual_config.values()) else 'No configurada'}")
             
             #  Debug precios ANTES del procesamiento IA
             precios_detectados_input = 0
@@ -3911,7 +3929,7 @@ def index():
             if ai_provider != 'manual':
                 success_message += f" Con IA {ai_provider.upper()}."
             
-            # Agregar informacin sobre configuración manual aplicada
+            # Agregar informacin sobre configuracin manual aplicada
             manual_summary = ""
             if manual_config:
                 applied_configs = []
@@ -3938,7 +3956,7 @@ def index():
                     applied_configs.append(f"Color: {manual_config['color_global']}")
                 
                 if applied_configs:
-                    manual_summary = f" Configuración manual aplicada: {', '.join(applied_configs)}"
+                    manual_summary = f" Configuracin manual aplicada: {', '.join(applied_configs)}"
             
             # Convertir debug_info a string para mostrar
             debug_info_str = '\n'.join(debug_info) if debug_info else None
@@ -3959,7 +3977,7 @@ def index():
     return render_template_string(HTML_TEMPLATE, user_info=session)
 
 def fill_ml_template(sheet, headers, products, selected_fields, condicion, moneda, manual_config=None, obligatory_fields=None, debug_info=None):
-    """Llena la plantilla ML con datos de productos y configuración manual masiva con mapeo inteligente"""
+    """Llena la plantilla ML con datos de productos y configuracin manual masiva con mapeo inteligente"""
     
     if debug_info is None:
         debug_info = []
@@ -4327,7 +4345,7 @@ def fill_ml_template(sheet, headers, products, selected_fields, condicion, moned
                 column_map[field] = col_num
                 break
     
-    # Procesar configuración selectiva de la configuración manual
+    # Procesar configuracin selectiva de la configuracin manual
     stock_selective_dict = {}
     marca_modelo_selective_dict = {}
     catalogo_selective_dict = {}
@@ -4381,7 +4399,7 @@ def fill_ml_template(sheet, headers, products, selected_fields, condicion, moned
     
     for i, product in enumerate(products):
         row_num = start_row + i
-        excel_row = row_num  # Fila real en Excel para configuración selectiva
+        excel_row = row_num  # Fila real en Excel para configuracin selectiva
         
         # Llenar campos seleccionados del archivo de datos
         for field in selected_fields:
@@ -4393,7 +4411,7 @@ def fill_ml_template(sheet, headers, products, selected_fields, condicion, moned
                 if value:
                     safe_set_cell_value(sheet, row_num, col_num, value)
         
-        #  APLICAR CONFIGURACIÓN MANUAL MASIVA
+        #  APLICAR CONFIGURACIN MANUAL MASIVA
         if manual_config:
             
             # Stock: selectivo tiene prioridad sobre global
