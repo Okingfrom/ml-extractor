@@ -45,3 +45,36 @@ jobs:
               raise SystemExit('smoke test failed with status ' + str(resp.status_code))
           print('smoke test passed')
           PY
+
+      - name: Test passenger_wsgi import (default)
+        run: |
+          python - <<'PY'
+          import importlib, traceback
+          try:
+              m = importlib.import_module('passenger_wsgi')
+              app = getattr(m, 'application', None)
+              print('passenger_wsgi loaded, application:', type(app))
+          except Exception:
+              print('passenger_wsgi import failed:')
+              traceback.print_exc()
+              raise
+          PY
+
+      - name: Test passenger_wsgi import (with USE_FALLBACK=1)
+        env:
+          USE_FALLBACK: '1'
+        run: |
+          python - <<'PY'
+          import importlib, os, traceback
+          try:
+              # ensure env var seen by module-level code
+              os.environ['USE_FALLBACK'] = '1'
+              importlib.reload(importlib.import_module('passenger_wsgi'))
+              m = importlib.import_module('passenger_wsgi')
+              app = getattr(m, 'application', None)
+              print('passenger_wsgi loaded with USE_FALLBACK=1, application:', type(app))
+          except Exception:
+              print('passenger_wsgi import with USE_FALLBACK=1 failed:')
+              traceback.print_exc()
+              raise
+          PY
