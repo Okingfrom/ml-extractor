@@ -22,19 +22,6 @@ from auth_system import user_manager, login_required, premium_required
 # Cargar variables de entorno
 load_dotenv()
 
-# 🚧 DEVELOPER MODE - Set to True for easy testing, False for production
-DEVELOPER_MODE = True
-DISABLE_AUTH = True  # 🚧 NEW: Completely disable authentication for testing
-DEVELOPER_USER = {
-    'user_id': 999,
-    'username': 'developer',
-    'email': 'dev@test.com',
-    'first_name': 'Developer',
-    'last_name': 'Mode',
-    'account_type': 'premium',
-    'user_type': 'premium'
-}
-
 #  FUNCIN HELPER PARA MANEJO SEGURO DE CELDAS
 def safe_get_cell_value(sheet, row, col):
     """Obtiene el valor de una celda manejando MergedCell de forma segura"""
@@ -78,66 +65,18 @@ import shutil
 from ai_enhancer import AIProductEnhancer, AI_CONFIG
 
 app = Flask(__name__)
-app.secret_key = os.getenv('SECRET_KEY', 'dev_secret_key_ml_extractor_2025_very_secure')
+app.secret_key = os.getenv('SECRET_KEY', 'tu_clave_secreta_muy_segura_para_produccion')
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=24)  # Sesión válida por 24 horas
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=24)  # Sesin vlida por 24 horas
 
-# Configuración robusta de sesiones
+# Configuracin adicional de sesiones
 app.config['SESSION_COOKIE_SECURE'] = False  # Para desarrollo (HTTP)
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-app.config['SESSION_COOKIE_NAME'] = 'ml_extractor_session'
-app.config['APPLICATION_ROOT'] = '/'
 
 # Create uploads directory if it doesn't exist
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-
-# 🚧 DEVELOPER BYPASS ROUTE - For easy testing (REMOVE IN PRODUCTION)
-@app.route('/dev-login')
-def dev_login():
-    """Developer bypass route - automatically logs in as premium user"""
-    if DEVELOPER_MODE:
-        # Create session for developer user
-        session.permanent = True
-        session['user_id'] = DEVELOPER_USER['user_id']
-        session['username'] = DEVELOPER_USER['username']
-        session['email'] = DEVELOPER_USER['email']
-        session['first_name'] = DEVELOPER_USER['first_name']
-        session['last_name'] = DEVELOPER_USER['last_name']
-        session['account_type'] = DEVELOPER_USER['account_type']
-        session['user_type'] = DEVELOPER_USER['user_type']
-        
-        flash('🚧 Developer mode: Auto-logged in as premium user', 'success')
-        return redirect(url_for('index'))
-    else:
-        flash('Developer mode is disabled', 'error')
-        return redirect(url_for('login'))
-
-# 🚧 USER TYPE SWITCHER FOR TESTING
-@app.route('/switch-user/<user_type>')
-def switch_user(user_type):
-    """Switch between Premium and Regular user for testing"""
-    if not DISABLE_AUTH:
-        flash('User switching is only available when authentication is disabled', 'error')
-        return redirect(url_for('index'))
-    
-    if user_type.lower() == 'premium':
-        session['account_type'] = 'premium'
-        session['user_type'] = 'premium'
-        session['first_name'] = 'Usuario'
-        session['last_name'] = 'Premium'
-        flash('🌟 Cambiado a Usuario PREMIUM - Todas las funciones disponibles', 'success')
-    elif user_type.lower() == 'regular':
-        session['account_type'] = 'free'
-        session['user_type'] = 'free'
-        session['first_name'] = 'Usuario'
-        session['last_name'] = 'Gratuito'
-        flash('👤 Cambiado a Usuario GRATUITO - Funciones limitadas', 'warning')
-    else:
-        flash('Tipo de usuario inválido', 'error')
-    
-    return redirect(url_for('index'))
 
 # ==========================================
 # RUTAS DE AUTENTICACIN Y USUARIOS
@@ -175,6 +114,8 @@ def debug_session():
     <p><strong>Request Headers:</strong> {dict(request.headers)}</p>
     <br>
     <a href="/login">Ir a Login</a> | <a href="/test-auth">Test Auth</a>
+    """
+    <a href="/login">Ir a Login</a> | <a href="/logout">Logout</a>
     """
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -270,7 +211,7 @@ def logout():
     
     session.clear()
     return redirect('/login?message=' + 
-                   'Sesión cerrada exitosamente&type=success')
+                   'Sesin cerrada exitosamente&type=success')
 
 # ==========================================
 # API ENDPOINTS DE AUTENTICACIN
@@ -363,7 +304,7 @@ def api_verify():
 
 @app.route('/api/resend-verification', methods=['POST'])
 def api_resend_verification():
-    """API endpoint para reenviar código de verificación"""
+    """API endpoint para reenviar cdigo de verificacin"""
     try:
         data = request.get_json()
         email = data.get('email')
@@ -376,7 +317,7 @@ def api_resend_verification():
                 'error': 'Usuario no encontrado'
             }), 404
         
-    # Generar nuevo código
+        # Generar nuevo cdigo
         new_code = user_manager.generate_verification_code()
         
         # Actualizar en base de datos
@@ -395,7 +336,7 @@ def api_resend_verification():
         
         return jsonify({
             'success': True,
-            'message': 'Nuevo código enviado'
+            'message': 'Nuevo cdigo enviado'
         })
     except Exception as e:
         return jsonify({
@@ -496,28 +437,11 @@ def google_callback():
 @app.before_request
 def require_auth():
     """Middleware que requiere autenticacin para ciertas rutas"""
-    
-    # 🚧 TESTING MODE: Disable authentication completely
-    if DISABLE_AUTH:
-        # Auto-setup session if not exists
-        if 'user_id' not in session:
-            # Default to premium user for testing
-            session.permanent = True
-            session['user_id'] = DEVELOPER_USER['user_id']
-            session['username'] = DEVELOPER_USER['username']
-            session['email'] = DEVELOPER_USER['email']
-            session['first_name'] = DEVELOPER_USER['first_name']
-            session['last_name'] = DEVELOPER_USER['last_name']
-            session['account_type'] = DEVELOPER_USER['account_type']
-            session['user_type'] = DEVELOPER_USER['user_type']
-        return  # Skip all authentication checks
-    
     # Rutas pblicas que no requieren autenticacin
     public_routes = [
         '/login', '/register', '/verify', '/logout', '/test-auth', '/debug-session',
         '/api/login', '/api/register', '/api/verify', '/api/resend-verification',
         '/auth/google', '/auth/google/callback',
-        '/dev-login',  # 🚧 Developer bypass route
         '/static'
     ]
     
@@ -540,7 +464,7 @@ def require_auth():
             }), 401
         else:
             return redirect('/login?message=' + 
-                          'Debes iniciar sesión para acceder&type=warning')
+                          'Debes iniciar sesin para acceder&type=warning')
     else:
         print(f" DEBUG: Acceso permitido a {request.path} - user_id: {session.get('user_id')}")
 
@@ -577,7 +501,7 @@ HTML_TEMPLATE = '''
         
         /* Header de usuario */
         .user-header {
-            background: linear-gradient(135deg, #3483fa, #2968c8);
+            background: linear-gradient(135deg, #3483fa, #1e88e5);
             color: white;
             padding: 15px 20px;
             border-radius: 12px;
@@ -587,7 +511,6 @@ HTML_TEMPLATE = '''
             align-items: center;
             flex-wrap: wrap;
             gap: 10px;
-            box-shadow: 0 4px 20px rgba(52, 131, 250, 0.25);
         }
         
         .user-info {
@@ -618,47 +541,6 @@ HTML_TEMPLATE = '''
             margin: 0;
             font-size: 14px;
             opacity: 0.9;
-        }
-
-        /* Small text utility for high contrast on gradients */
-        .small-contrast {
-            color: rgba(0,0,0,0.85) !important; /* dark text for legibility */
-            text-shadow: 0 1px 0 rgba(255,255,255,0.6); /* subtle light lift */
-            font-size: 14px;
-            opacity: 0.95;
-        }
-
-        /* White-on-dark pill for small text over colorful gradients */
-        .small-pill {
-            display: inline-block;
-            background: rgba(0,0,0,0.65); /* slightly darker for contrast */
-            color: #ffffff !important;
-            padding: 8px 12px; /* increased padding */
-            border-radius: 999px;
-            font-size: 13px;
-            line-height: 1;
-            box-shadow: 0 6px 18px rgba(0,0,0,0.28);
-            backdrop-filter: blur(6px);
-            -webkit-backdrop-filter: blur(6px);
-            border: 1px solid rgba(255,255,255,0.06);
-            opacity: 0.98;
-        }
-
-        /* Apply pill styling to all <small> by default, opt-out with .no-pill */
-        small:not(.no-pill) {
-            display: inline-block;
-            background: rgba(0,0,0,0.55);
-            color: #ffffff !important;
-            padding: 6px 10px;
-            border-radius: 999px;
-            font-size: 12px;
-            line-height: 1;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.22);
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
-            border: 1px solid rgba(255,255,255,0.05);
-            opacity: 0.95;
-            margin-left: 4px;
         }
         
         .account-badge {
@@ -709,9 +591,8 @@ HTML_TEMPLATE = '''
         
         /* Alert para usuarios gratuitos */
         .premium-alert {
-            background: linear-gradient(135deg, rgba(255, 241, 118, 0.3), rgba(255, 234, 167, 0.5));
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 234, 167, 0.7);
+            background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+            border: 1px solid #ffeaa7;
             color: #856404;
             padding: 15px;
             border-radius: 10px;
@@ -719,7 +600,6 @@ HTML_TEMPLATE = '''
             display: flex;
             align-items: center;
             gap: 12px;
-            box-shadow: 0 4px 16px rgba(255, 193, 7, 0.15);
         }
         
         .premium-alert i {
@@ -729,19 +609,18 @@ HTML_TEMPLATE = '''
         
         body {
             font-family: 'Proxima Nova', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #fff159 0%, #ffed69 50%, #3483fa 100%);
+            background: #ffffff;
             min-height: 100vh;
             padding: 20px;
             line-height: 1.6;
             color: #333;
         }        /*  MOBILE FIRST - BASE STYLES */
         .container {
-            background: rgba(255, 255, 255, 1);
-            backdrop-filter: blur(15px);
+            background: white;
             padding: 30px;
             border-radius: 16px;
-            box-shadow: 0 8px 32px rgba(52, 131, 250, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+            border: 1px solid #e8eaed;
             max-width: 1200px;
             width: 100%;
             margin: 0 auto;
@@ -798,7 +677,7 @@ HTML_TEMPLATE = '''
             border-radius: 8px;
             font-size: 16px; /* Evita zoom en iOS */
             transition: all 0.3s ease;
-            background: rgba(255, 255, 255, 0.9);
+            background: #fafafa;
             -webkit-appearance: none;
             appearance: none;
             min-height: 44px; /* Toque mnimo recomendado */
@@ -806,18 +685,17 @@ HTML_TEMPLATE = '''
         
         input:focus, select:focus, textarea:focus {
             border-color: #3483fa;
-            background: rgba(255, 255, 255, 1);
-            box-shadow: 0 0 0 3px rgba(52, 131, 250, 0.15);
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(52, 131, 250, 0.1);
             outline: none;
         }
         
         /*  CHECKBOXES MVIL-FRIENDLY */
         .checkbox-grid {
-            background: rgba(248, 249, 250, 0.9);
-            backdrop-filter: blur(5px);
+            background: #f8f9fa;
             padding: 12px;
             border-radius: 8px;
-            border: 1px solid rgba(233, 236, 239, 0.8);
+            border: 1px solid #e9ecef;
         }
         
         .checkbox-grid label {
@@ -893,32 +771,27 @@ HTML_TEMPLATE = '''
         
         /*  SECCIONES COLAPSABLES MVIL */
         .ai-section {
-            background: linear-gradient(135deg, rgba(52, 131, 250, 0.08), rgba(52, 131, 250, 0.12));
-            backdrop-filter: blur(5px);
+            background: linear-gradient(135deg, #f8fffe, #f0f9ff);
             padding: 16px;
             border-radius: 8px;
             margin: 20px 0;
-            border: 2px solid rgba(52, 131, 250, 0.3);
-            box-shadow: 0 4px 16px rgba(52, 131, 250, 0.1);
+            border: 2px solid #3483fa;
         }
         
         .mapping-section {
-            background: rgba(250, 250, 250, 0.8);
-            backdrop-filter: blur(5px);
+            background: #fafafa;
             padding: 16px;
             border-radius: 8px;
             margin: 16px 0;
-            border: 1px solid rgba(230, 230, 230, 0.8);
+            border: 1px solid #e6e6e6;
         }
         
         .manual-config-section {
-            background: linear-gradient(135deg, rgba(255, 248, 225, 0.9), rgba(255, 243, 196, 0.9));
-            backdrop-filter: blur(5px);
+            background: linear-gradient(135deg, #fff8e1, #fff3c4);
             padding: 16px;
             border-radius: 8px;
             margin: 20px 0;
-            border: 2px solid rgba(255, 152, 0, 0.4);
-            box-shadow: 0 4px 16px rgba(255, 152, 0, 0.1);
+            border: 2px solid #ff9800;
         }
         
         .manual-config-section h3 {
@@ -972,7 +845,7 @@ HTML_TEMPLATE = '''
             accent-color: #3483fa;
         }
         
-    /*  TEXTO Y TÍTULOS RESPONSIVE */
+        /*  TEXTO Y TTULOS RESPONSIVE */
         h1 { 
             color: #3483fa; 
             font-weight: 700; 
@@ -1102,25 +975,21 @@ HTML_TEMPLATE = '''
         
         /*  MODO OSCURO (si el dispositivo lo prefiere) */
         @media (prefers-color-scheme: dark) {
-            /* Keep main container light to preserve Mercado Libre branding in testing
-               Use a subtle translucent white so elements remain readable */
             .container {
-                background: rgba(255, 255, 255, 0.95);
-                color: #222;
-                border-color: rgba(255,255,255,0.12);
-                box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+                background: #1a1a1a;
+                color: #ffffff;
+                border-color: #333;
             }
-
-            /* Inputs should remain light for clarity during testing */
+            
             input, select, textarea {
-                background: rgba(255,255,255,0.9);
-                color: #111;
-                border-color: rgba(0,0,0,0.08);
+                background: #2a2a2a;
+                color: #ffffff;
+                border-color: #444;
             }
-
+            
             .checkbox-item {
-                background: rgba(255,255,255,0.92);
-                border-color: rgba(0,0,0,0.06);
+                background: #2a2a2a;
+                border-color: #444;
             }
         }
         
@@ -1602,27 +1471,9 @@ HTML_TEMPLATE = '''
                 {{ ' Premium' if user_info.account_type == 'premium' else ' Gratuito' }}
             </span>
             <a href="/logout" class="btn-logout">
-                <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+                <i class="fas fa-sign-out-alt"></i> Cerrar Sesin
             </a>
         </div>
-    </div>
-    {% endif %}
-    
-    <!-- 🚧 TESTING CONTROLS - Only shown when auth is disabled -->
-    {% if user_info %}
-    <div class="testing-controls" style="background: rgba(255, 165, 0, 0.1); border: 2px dashed #ffa500; padding: 15px; margin: 20px auto; max-width: 1200px; border-radius: 10px; text-align: center;">
-    <h4 style="color: #ff8c00; margin-bottom: 10px;">🚧 MODO TESTING - Cambiar tipo de usuario</h4>
-        <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
-            <a href="/switch-user/premium" class="btn" style="background: linear-gradient(135deg, #3483fa, #2968c8); color: white; text-decoration: none; padding: 10px 20px; border-radius: 8px; font-weight: bold;">
-                🌟 Modo PREMIUM
-            </a>
-            <a href="/switch-user/regular" class="btn" style="background: linear-gradient(135deg, #6c757d, #495057); color: white; text-decoration: none; padding: 10px 20px; border-radius: 8px; font-weight: bold;">
-                👤 Modo GRATUITO
-            </a>
-        </div>
-                <p style="color: #666; font-size: 0.9rem; margin-top: 10px; font-style: italic;">
-            Estos controles solo están disponibles durante las pruebas (DISABLE_AUTH = True)
-        </p>
     </div>
     {% endif %}
     
@@ -1631,8 +1482,8 @@ HTML_TEMPLATE = '''
     <div class="premium-alert">
         <i class="fas fa-info-circle"></i>
         <div>
-            <strong>Cuenta gratuita:</strong> Tienes acceso al modo manual. 
-            <strong>Actualiza a Premium</strong> para usar IA automática y generación desde prompt.
+            <strong>Cuenta Gratuita:</strong> Tienes acceso al modo manual. 
+            <strong>Actualiza a Premium</strong> para usar IA automtica y generacin desde prompt.
         </div>
     </div>
     {% endif %}
@@ -1657,7 +1508,7 @@ HTML_TEMPLATE = '''
                     box-shadow: 0 3px 10px rgba(23, 162, 184, 0.3);
                 " onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 5px 15px rgba(23, 162, 184, 0.4)'" 
                    onmouseout="this.style.transform='translateY(0px)'; this.style.boxShadow='0 3px 10px rgba(23, 162, 184, 0.3)'">
-                     Guía de Uso
+                     Gua de Uso
                 </button>
                 
                 <button type="button" onclick="toggleDonationSection()" style="
@@ -1691,7 +1542,7 @@ HTML_TEMPLATE = '''
             ">
                 <div style="padding: 24px;">
                     <div style="text-align: center; margin-bottom: 20px;">
-                        <h3 style="color: #17a2b8; margin: 0; font-size: 20px;"> Guía completa de uso</h3>
+                        <h3 style="color: #17a2b8; margin: 0; font-size: 20px;"> Gua Completa de Uso</h3>
                         <small style="color: #666;">Todo lo que necesitas saber para usar ML Bulk Mapper Pro</small>
                     </div>
                     
@@ -1700,63 +1551,63 @@ HTML_TEMPLATE = '''
                         <div style="background: rgba(23, 162, 184, 0.1); padding: 16px; border-radius: 8px; border-left: 4px solid #17a2b8;">
                             <h4 style="color: #17a2b8; margin-top: 0;"> Funcionalidades Principales</h4>
                             <ul style="margin: 0; padding-left: 20px; color: #333;">
-                                <li><strong>Detección inteligente:</strong> Lee automáticamente plantillas ML</li>
+                                <li><strong>Deteccin Inteligente:</strong> Lee automticamente plantillas ML</li>
                                 <li><strong>Mapeo Anti-Errores:</strong> Cada campo va exactamente donde debe</li>
-                                <li><strong>IA avanzada:</strong> Completa datos faltantes automáticamente</li>
-                                <li><strong>Configuración manual:</strong> Valores masivos para toda la tienda</li>
-                                <li><strong>Códigos EAN-13:</strong> Generación automática de códigos</li>
+                                <li><strong>IA Avanzada:</strong> Completa datos faltantes automticamente</li>
+                                <li><strong>Configuracin Manual:</strong> Valores masivos para toda la tienda</li>
+                                <li><strong>Cdigos EAN-13:</strong> Generacin automtica de cdigos</li>
                             </ul>
                         </div>
                         
                         <!-- Cmo Evitar Errores -->
                         <div style="background: rgba(220, 53, 69, 0.1); padding: 16px; border-radius: 8px; border-left: 4px solid #dc3545;">
-                            <h4 style="color: #dc3545; margin-top: 0;"> Cómo evitar errores</h4>
+                            <h4 style="color: #dc3545; margin-top: 0;"> Cmo Evitar Errores</h4>
                             <ul style="margin: 0; padding-left: 20px; color: #333;">
-                                <li><strong>Plantilla ML:</strong> Descarga la plantilla oficial de tu categoría</li>
-                                <li><strong>Datos limpios:</strong> Asegúrate de que los precios sean solo números</li>
-                                <li><strong>SKU únicos:</strong> Cada producto debe tener SKU diferente</li>
-                                <li><strong>Campos obligatorios:</strong> Título, Precio, Stock son requeridos</li>
+                                <li><strong>Plantilla ML:</strong> Descarga la plantilla oficial de tu categora</li>
+                                <li><strong>Datos Limpios:</strong> Asegrate que precios sean solo nmeros</li>
+                                <li><strong>SKU nicos:</strong> Cada producto debe tener SKU diferente</li>
+                                <li><strong>Campos Obligatorios:</strong> Ttulo, Precio, Stock son requeridos</li>
                                 <li><strong>Formato Excel:</strong> Usa .xlsx para mejores resultados</li>
                             </ul>
                         </div>
                     </div>
                     
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 20px;">
-                        <!-- Garantía -->
-                        <div class="form-group">
-                            <label> Garantía:</label>
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 12px;">
-                                <div>
-                                    <label for="tipo_garantia">Tipo de garantía:</label>
-                                    <select name="tipo_garantia" id="tipo_garantia" style="width: 100%; max-width: 100%;">
-                                        <option value="">Sin configurar</option>
-                                        <option value="Garanta del vendedor">Garantía del vendedor</option>
-                                        <option value="Garanta de fbrica">Garantía de fábrica</option>
-                                        <option value="Sin garanta">Sin garantía</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label for="tiempo_garantia">Tiempo garantía:</label>
-                                    <input type="number" name="tiempo_garantia" id="tiempo_garantia" placeholder="ej: 12" min="0">
-                                    <label for="unidad_garantia">Unidad de tiempo:</label>
-                                    <select name="unidad_garantia" id="unidad_garantia">
-                                        <option value="dias">Días</option>
-                                        <option value="meses">Meses</option>
-                                        <option value="anios">Años</option>
-                                    </select>
-                                </div>
-                            </div>
+                        <!-- Paso a Paso -->
+                        <div style="background: rgba(40, 167, 69, 0.1); padding: 16px; border-radius: 8px; border-left: 4px solid #28a745;">
+                            <h4 style="color: #28a745; margin-top: 0;"> Proceso Paso a Paso</h4>
+                            <ol style="margin: 0; padding-left: 20px; color: #333;">
+                                <li><strong>Configura IA:</strong> Elige tu proveedor y API key</li>
+                                <li><strong>Sube Plantilla:</strong> Archivo oficial de ML (.xlsx)</li>
+                                <li><strong>Sube Datos:</strong> Tu archivo con productos</li>
+                                <li><strong>Selecciona Campos:</strong> Marca qu quieres mapear</li>
+                                <li><strong>Configura Valores:</strong> Masivos o selectivos</li>
+                                <li><strong>Procesa:</strong> Deja que la IA haga la magia </li>
+                            </ol>
                         </div>
+                        
+                        <!-- Tips Avanzados -->
+                        <div style="background: rgba(111, 66, 193, 0.1); padding: 16px; border-radius: 8px; border-left: 4px solid #6f42c1;">
+                            <h4 style="color: #6f42c1; margin-top: 0;"> Tips Avanzados</h4>
+                            <ul style="margin: 0; padding-left: 20px; color: #333;">
+                                <li><strong>IA Research:</strong> Activa investigacin para datos tcnicos</li>
+                                <li><strong>Prompts Custom:</strong> Personaliza cmo la IA mejora ttulos</li>
+                                <li><strong>Stock Selectivo:</strong> Formato "Fila:Cantidad" (ej: 8:50)</li>
+                                <li><strong>Descripcin Global:</strong> Agrega info de tu tienda a todo</li>
+                                <li><strong>Moneda:</strong> Cambia a USD si vendes internacionalmente</li>
+                            </ul>
+                        </div>
+                    </div>
                     
                     <div style="background: rgba(255, 193, 7, 0.1); padding: 16px; border-radius: 8px; border-left: 4px solid #ffc107; margin-bottom: 20px;">
-                            <h4 style="color: #e67e22; margin-top: 0;"> Campos obligatorios de ML</h4>
+                        <h4 style="color: #e67e22; margin-top: 0;"> Campos Obligatorios de ML</h4>
                         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; color: #333;">
-                            <div><strong> Título:</strong> Nombre del producto</div>
-                            <div><strong> Precio:</strong> Solo números (sin $ ni símbolos)</div>
+                            <div><strong> Ttulo:</strong> Nombre del producto</div>
+                            <div><strong> Precio:</strong> Solo nmeros (sin $ ni smbolos)</div>
                             <div><strong> Stock:</strong> Cantidad disponible</div>
                             <div><strong> Marca:</strong> Fabricante del producto</div>
-                            <div><strong> Modelo:</strong> Versión específica</div>
-                            <div><strong> Envío:</strong> Configuración automática</div>
+                            <div><strong> Modelo:</strong> Versin especfica</div>
+                            <div><strong> Envo:</strong> Configuracin automtica</div>
                         </div>
                     </div>
                     
@@ -1775,7 +1626,7 @@ HTML_TEMPLATE = '''
                             box-shadow: 0 3px 10px rgba(23, 162, 184, 0.3);
                         " onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 5px 15px rgba(23, 162, 184, 0.4)'" 
                            onmouseout="this.style.transform='translateY(0px)'; this.style.boxShadow='0 3px 10px rgba(23, 162, 184, 0.3)'">
-                             Cerrar Guía de Uso
+                             Cerrar Gua de Uso
                         </button>
                     </div>
                 </div>
@@ -1942,8 +1793,8 @@ HTML_TEMPLATE = '''
                 <div style="display: flex; align-items: center; gap: 12px;">
                     <span style="font-size: 24px;"></span>
                     <div>
-                        <h3 style="margin: 0; font-size: 18px; font-weight: 600;">Generación por prompt (IA)</h3>
-                        <small style="opacity: 0.9; font-size: 14px;">Crear plantillas desde descripción de texto</small>
+                        <h3 style="margin: 0; font-size: 18px; font-weight: 600;">Generacin por Prompt IA</h3>
+                        <small style="opacity: 0.9; font-size: 14px;">Crear plantillas desde descripcin de texto</small>
                     </div>
                 </div>
                 <div style="display: flex; align-items: center; gap: 8px;">
@@ -1972,7 +1823,7 @@ HTML_TEMPLATE = '''
                 margin-bottom: 24px;
             ">
                 <div style="padding: 24px;">
-                        <div style="
+                    <div style="
                         background: linear-gradient(135deg, #e3f2fd, #e1f5fe);
                         padding: 16px;
                         border-radius: 8px;
@@ -1980,13 +1831,13 @@ HTML_TEMPLATE = '''
                         border-left: 4px solid #3483fa;
                         color: #1565c0;
                     ">
-                        <strong>Generación inteligente:</strong> Describe tus productos y la IA creará una plantilla ML completa con datos realistas y precios competitivos.
+                        <strong>Generacin Inteligente:</strong> Describe tus productos y la IA crear una plantilla ML completa con datos realistas y precios competitivos.
                     </div>
                     
                     <form method="post" action="/generate-from-prompt" enctype="multipart/form-data">
                         <div class="form-group">
                             <label for="product_prompt" style="font-weight: 600; color: #333; margin-bottom: 8px; display: block;">
-                                Descripción de productos:
+                                Descripcin de productos:
                             </label>
                             <textarea 
                                 name="product_prompt" 
@@ -2210,7 +2061,7 @@ HTML_TEMPLATE = '''
                             box-shadow: 0 3px 10px rgba(52, 131, 250, 0.3);
                         " onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 5px 15px rgba(52, 131, 250, 0.4)'" 
                            onmouseout="this.style.transform='translateY(0px)'; this.style.boxShadow='0 3px 10px rgba(52, 131, 250, 0.3)'">
-                            Cerrar generación por prompt
+                            Cerrar Generacin por Prompt
                         </button>
                     </div>
                 </div>
@@ -2260,7 +2111,7 @@ HTML_TEMPLATE = '''
                         <span style="font-size: 24px;"></span>
                         <div>
                             <h3 style="margin: 0; font-size: 18px; font-weight: 600;">Configuracin de Inteligencia Artificial</h3>
-                            <small class="small-pill">Haz clic para configurar la IA (Opcional)</small>
+                            <small style="opacity: 0.9; font-size: 14px;">Haz clic para configurar la IA (Opcional)</small>
                         </div>
                     </div>
                     <div style="display: flex; align-items: center; gap: 8px;">
@@ -2296,7 +2147,7 @@ HTML_TEMPLATE = '''
                             margin-bottom: 20px;
                             border-left: 4px solid #66b3ff;
                         ">
-                            <strong> La IA ayuda a completar automáticamente:</strong> códigos universales, marcas, modelos, descripciones y características técnicas que falten en tus datos.
+                            <strong> La IA ayuda a completar automticamente:</strong> cdigos universales, marcas, modelos, descripciones y caractersticas tcnicas que falten en tus datos.
                         </div>
                         
                         <div class="form-group">
@@ -2307,7 +2158,7 @@ HTML_TEMPLATE = '''
                                     <label for="groq">
                                         <strong>Groq</strong> <span class="cost-badge">GRATIS</span>
                                         <span class="quality-stars"></span><br>
-                                        <small>Rápido y gratuito. Recomendado para empezar.</small>
+                                        <small>Rpido y gratuito. Recomendado para empezar.</small>
                                     </label>
                                 </div>
                                 
@@ -2337,11 +2188,11 @@ HTML_TEMPLATE = '''
                         </div>
                         
                         <div class="form-group">
-                            <label>Campos que la IA debe completar automáticamente:</label>
+                            <label>Campos que la IA debe completar automticamente:</label>
                             <div class="checkbox-group">
                                 <div class="checkbox-item">
                                     <input type="checkbox" name="ai_fields" value="codigo_universal" id="ai_codigo" checked>
-                                    <label for="ai_codigo"><span class="ai-enhanced">Código Universal EAN-13</span></label>
+                                    <label for="ai_codigo"><span class="ai-enhanced">Cdigo Universal EAN-13</span></label>
                                 </div>
                                 <div class="checkbox-item">
                                     <input type="checkbox" name="ai_fields" value="marca" id="ai_marca" checked>
@@ -2353,7 +2204,7 @@ HTML_TEMPLATE = '''
                                 </div>
                                 <div class="checkbox-item">
                                     <input type="checkbox" name="ai_fields" value="descripcion" id="ai_desc">
-                                    <label for="ai_desc"><span class="ai-enhanced">Descripción atractiva</span></label>
+                                    <label for="ai_desc"><span class="ai-enhanced">Descripcin atractiva</span></label>
                                 </div>
                                 <div class="checkbox-item">
                                     <input type="checkbox" name="ai_fields" value="peso" id="ai_peso">
@@ -2415,7 +2266,7 @@ HTML_TEMPLATE = '''
                 <div class="checkbox-group">
                     <div class="checkbox-item">
                         <input type="checkbox" name="map_fields" value="titulo" id="titulo" checked>
-                        <label for="titulo"><span class="required">Título</span> (Nombre del producto)</label>
+                        <label for="titulo"><span class="required">Ttulo</span> (Nombre del producto)</label>
                     </div>
                     
                     <div class="checkbox-item">
@@ -2435,7 +2286,7 @@ HTML_TEMPLATE = '''
                     
                     <div class="checkbox-item">
                         <input type="checkbox" name="map_fields" value="descripcion" id="descripcion">
-                        <label for="descripcion"><span class="optional">Descripción</span> (existente en datos)</label>
+                        <label for="descripcion"><span class="optional">Descripcin</span> (existente en datos)</label>
                     </div>
                     
                     <div class="checkbox-item">
@@ -2491,11 +2342,11 @@ HTML_TEMPLATE = '''
                     margin-top: 15px;
                 ">
                     <strong>Con Premium obtienes:</strong><br>
-                     Autocompletado inteligente de títulos<br>
-                     Detección automática de marcas y modelos<br>
-                     Optimización de precios con IA<br>
-                     Generación de descripciones atractivas<br>
-                     Códigos EAN-13 automáticos
+                     Autocompletado inteligente de ttulos<br>
+                     Deteccin automtica de marcas y modelos<br>
+                     Optimizacin de precios con IA<br>
+                     Generacin de descripciones atractivas<br>
+                     Cdigos EAN-13 automticos
                 </div>
             </div>
             {% endif %}
@@ -2610,44 +2461,44 @@ HTML_TEMPLATE = '''
                     </div>
                 </div>
                 
-                <!-- NUEVA SECCIÓN: FORMAS DE ENVÍO -->
+                <!-- NUEVA SECCIN: FORMAS DE ENVO -->
                 <div class="form-group">
-                    <label> Formas de envío:</label>
+                    <label> Formas de Envo:</label>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 12px;">
                         <div>
-                            <label for="forma_envio_global">Forma de envío para todos:</label>
+                            <label for="forma_envio_global">Forma de envo para todos:</label>
                             <select name="forma_envio_global" id="forma_envio_global" style="width: 100%; max-width: 100%;">
                                 <option value="">Sin configurar</option>
-                                <option value="Mercado Envos"> Mercado Envíos</option>
-                                <option value="Mercado Envos + Mercado Envos Flex"> Mercado Envíos + Mercado Envíos Flex</option>
+                                <option value="Mercado Envos"> Mercado Envos</option>
+                                <option value="Mercado Envos + Mercado Envos Flex"> Mercado Envos + Mercado Envos Flex</option>
                                 <option value="Acordar con el vendedor"> Acordar con el vendedor</option>
                             </select>
                             <small>Aplica a todos los productos</small>
                         </div>
                         <div>
                             <label for="forma_envio_selective">Excepciones selectivas:</label>
-                            <textarea name="forma_envio_selective" id="forma_envio_selective" rows="2" placeholder="ej: 8:Mercado Envíos, 10:Mercado Envíos + Mercado Envíos Flex" style="width: 100%; max-width: 100%;"></textarea>
-                            <small>Formato: Fila_Excel:Forma_Envío</small>
+                            <textarea name="forma_envio_selective" id="forma_envio_selective" rows="2" placeholder="ej: 8:Mercado Envos, 10:Mercado Envos + Mercado Envos Flex" style="width: 100%; max-width: 100%;"></textarea>
+                            <small>Formato: Fila_Excel:Forma_Envo</small>
                         </div>
                     </div>
                 </div>
                 
-                <!-- NUEVA SECCIÓN: COSTO DE ENVÍO -->
+                <!-- NUEVA SECCIN: COSTO DE ENVO -->
                 <div class="form-group">
-                    <label> Costo de envío:</label>
+                    <label> Costo de Envo:</label>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 12px;">
                         <div>
                             <label for="costo_envio_global">Costo para todos los productos:</label>
                             <select name="costo_envio_global" id="costo_envio_global" style="width: 100%; max-width: 100%;">
                                 <option value="">Sin configurar</option>
                                 <option value="A cargo del comprador"> A cargo del comprador</option>
-                                <option value="Envo gratis"> Envío gratis</option>
+                                <option value="Envo gratis"> Envo gratis</option>
                             </select>
-                            <small>Política de costo de envío general</small>
+                            <small>Poltica de costo de envo general</small>
                         </div>
                         <div>
                             <label for="costo_envio_selective">Excepciones por fila:</label>
-                            <textarea name="costo_envio_selective" id="costo_envio_selective" rows="2" placeholder="ej: 8:Envío gratis, 10:A cargo del comprador" style="width: 100%; max-width: 100%;"></textarea>
+                            <textarea name="costo_envio_selective" id="costo_envio_selective" rows="2" placeholder="ej: 8:Envo gratis, 10:A cargo del comprador" style="width: 100%; max-width: 100%;"></textarea>
                             <small>Formato: Fila_Excel:Tipo_Costo</small>
                         </div>
                     </div>
@@ -2762,11 +2613,11 @@ HTML_TEMPLATE = '''
                     </div>
                 </div>
                 
-                <!-- Descripción global -->
+                <!-- Descripcin Global -->
                 <div class="form-group">
-                    <label> Descripción global de la tienda:</label>
-                    <textarea name="descripcion_global" id="descripcion_global" rows="4" placeholder="ej: Horario: Lunes a Viernes 9-18h | Ubicación: Centro de Montevideo | WhatsApp: 099123456 | Envíos a todo el país"></textarea>
-                    <small>Esta información se agregará al final de cada descripción de producto. Usa emojis para mejor visualización.</small>
+                    <label> Descripcin Global de la Tienda:</label>
+                    <textarea name="descripcion_global" id="descripcion_global" rows="4" placeholder="ej:  Horario: Lunes a Viernes 9-18h |  Ubicacin: Centro de Montevideo |  WhatsApp: 099123456 |  Envos a todo el pas"></textarea>
+                    <small>Esta informacin se agregar al final de cada descripcin de producto. Usa emojis para mejor visualizacin.</small>
                 </div>
                 
                         <!-- Botn de cierre en la parte inferior -->
@@ -2848,7 +2699,7 @@ HTML_TEMPLATE = '''
                         <span style="font-size: 24px;"></span>
                         <div>
                             <h3 style="margin: 0; font-size: 18px; font-weight: 600;">Configuracin Avanzada de IA</h3>
-                            <small class="small-pill">Haz clic para personalizar prompts de IA (Opcional)</small>
+                            <small style="opacity: 0.9; font-size: 14px;">Haz clic para personalizar prompts de IA (Opcional)</small>
                         </div>
                     </div>
                     <div style="display: flex; align-items: center; gap: 8px;">
@@ -2884,21 +2735,21 @@ HTML_TEMPLATE = '''
                             margin-bottom: 20px;
                             border-left: 4px solid #6f42c1;
                         ">
-                            <strong> Personaliza cómo la IA procesará y mejorará tus productos automáticamente.</strong><br>
-                             <em>La IA se enfocará primero en campos OBLIGATORIOS y luego en mejoras adicionales.</em>
+                            <strong> Personaliza cmo la IA procesar y mejorar tus productos automticamente.</strong><br>
+                             <em>La IA se enfocar primero en campos OBLIGATORIOS y luego en mejoras adicionales.</em>
                         </div>
                 
                 <!-- Prompts Personalizados -->
                 <div class="form-group">
-                    <label> Mejora de Títulos (SEO):</label>
-                    <textarea name="ai_titulo_prompt" id="ai_titulo_prompt" rows="3" placeholder="ej: Mejora este título para que sea más atractivo y tenga mejor SEO. Incluye palabras clave relevantes sin hacer spam. Mantén el estilo profesional y claro."></textarea>
-                    <small>Instrucciones para que la IA mejore los títulos con SEO optimizado</small>
+                    <label> Mejora de Ttulos (SEO):</label>
+                    <textarea name="ai_titulo_prompt" id="ai_titulo_prompt" rows="3" placeholder="ej: Mejora este ttulo para que sea ms atractivo y tenga mejor SEO. Incluye palabras clave relevantes sin hacer spam. Mantn el estilo profesional y claro."></textarea>
+                    <small>Instrucciones para que la IA mejore los ttulos con SEO optimizado</small>
                 </div>
                 
                 <div class="form-group">
                     <label> Mejora de Descripciones:</label>
-                    <textarea name="ai_descripcion_prompt" id="ai_descripcion_prompt" rows="4" placeholder="ej: Crea una descripción detallada y persuasiva. Incluye beneficios del producto, características técnicas importantes y llamadas a la acción. Usa un tono profesional pero cercano."></textarea>
-                    <small>Instrucciones para generar descripciones más completas y atractivas</small>
+                    <textarea name="ai_descripcion_prompt" id="ai_descripcion_prompt" rows="4" placeholder="ej: Crea una descripcin detallada y persuasiva. Incluye beneficios del producto, caractersticas tcnicas importantes y llamadas a la accin. Usa un tono profesional pero cercano."></textarea>
+                    <small>Instrucciones para generar descripciones ms completas y atractivas</small>
                 </div>
                 
                 <div class="form-group">
@@ -2907,9 +2758,9 @@ HTML_TEMPLATE = '''
                         <div>
                             <label>
                                 <input type="checkbox" name="ai_auto_research" id="ai_auto_research">
-                                Activar investigación automática
+                                Activar investigacin automtica
                             </label>
-                            <small>La IA investigará automáticamente especificaciones técnicas</small>
+                            <small>La IA investigar automticamente especificaciones tcnicas</small>
                         </div>
                         <div>
                             <label for="ai_research_prompt">Instrucciones de investigacin:</label>
@@ -2922,14 +2773,14 @@ HTML_TEMPLATE = '''
                 <div class="form-group">
                     <label> Enfoque en Campos Obligatorios:</label>
                     <div class="checkbox-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
-                        <label><input type="checkbox" name="ai_enforce_titulo" checked> Título optimizado</label>
+                        <label><input type="checkbox" name="ai_enforce_titulo" checked> Ttulo optimizado</label>
                         <label><input type="checkbox" name="ai_enforce_precio" checked> Validacin de precios</label>
                         <label><input type="checkbox" name="ai_enforce_stock" checked> Stock realista</label>
                         <label><input type="checkbox" name="ai_enforce_marca" checked> Marca detectada</label>
                         <label><input type="checkbox" name="ai_enforce_modelo" checked> Modelo identificado</label>
-                        <label><input type="checkbox" name="ai_enforce_envio" checked> Opciones de envío</label>
+                        <label><input type="checkbox" name="ai_enforce_envio" checked> Opciones de envo</label>
                     </div>
-                    <small>La IA se asegurará de que estos campos obligatorios estén correctamente completados</small>
+                    <small>La IA se asegurar de que estos campos obligatorios estn correctamente completados</small>
                 </div>
                 
                 <!-- Mejoras Opcionales -->
@@ -2940,7 +2791,7 @@ HTML_TEMPLATE = '''
                         <label><input type="checkbox" name="ai_add_dimensiones"> Dimensiones</label>
                         <label><input type="checkbox" name="ai_add_material"> Material</label>
                         <label><input type="checkbox" name="ai_add_compatibilidad"> Compatibilidad</label>
-                        <label><input type="checkbox" name="ai_add_garantia"> Información de garantía</label>
+                        <label><input type="checkbox" name="ai_add_garantia"> Informacin de garanta</label>
                         <label><input type="checkbox" name="ai_add_usos"> Usos recomendados</label>
                     </div>
                     <small>Campos adicionales que la IA puede completar si encuentra informacin relevante</small>
@@ -2948,7 +2799,7 @@ HTML_TEMPLATE = '''
                 
                 <!-- Estilo de Comunicacin -->
                 <div class="form-group">
-                    <label> Estilo de Comunicación:</label>
+                    <label> Estilo de Comunicacin:</label>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 12px;">
                         <div>
                             <label for="ai_tone">Tono de voz:</label>
@@ -4571,9 +4422,9 @@ def generate_from_prompt():
         
         #  PROMPT MEJORADO PARA GENERACIN COMPLETA
         generation_prompt = f"""
-    MISIÓN: Genera exactamente {total_products} productos reales para vender en Mercado Libre Uruguay.
+        MISIN: Genera exactamente {total_products} productos reales para vender en Mercado Libre Uruguay.
         
-    DESCRIPCIÓN DEL USUARIO: {product_prompt}
+        DESCRIPCIN DEL USUARIO: {product_prompt}
         
         CATEGORA: {main_category}
         ESTILO: {generation_style}
@@ -4592,7 +4443,7 @@ def generate_from_prompt():
             "moneda": "$",
             "marca": "Samsung",
             "modelo": "Galaxy S24",
-            "descripcion": "Descripción detallada del producto",
+            "descripcion": "Descripcin detallada del producto",
             "condicion": "Nuevo",
             "categoria": "Electrnicos > Celulares",
             "codigo_universal": "1234567890123",
@@ -4606,7 +4457,7 @@ def generate_from_prompt():
         - Responde SOLO con el JSON vlido
         - NO agregues texto adicional 
         - Genera exactamente {total_products} productos
-    - Los códigos EAN-13 deben tener 13 dígitos
+        - Los cdigos EAN-13 deben tener 13 dgitos
         """
         
         # Generar productos con IA
@@ -4640,17 +4491,17 @@ def generate_from_prompt():
             
             #  ESTRUCTURA COMPLETA DE MERCADO LIBRE
             headers = [
-                "Título: incluye producto, marca, modelo y destaca sus características principales",
+                "Ttulo: incluye producto, marca, modelo y destaca sus caractersticas principales",
                 "Precio",
                 "Moneda",
-                "Código universal de producto",
+                "Cdigo universal de producto",
                 "Marca",
                 "Modelo",
-                "Condición",
-                "Descripción",
+                "Condicin",
+                "Descripcin",
                 "Fotos",
                 "Video",
-                "Garantía",
+                "Garanta",
                 "Peso",
                 "Color",
                 "Material principal",
@@ -4658,10 +4509,10 @@ def generate_from_prompt():
                 "Ancho de la unidad", 
                 "Profundidad de la unidad",
                 "Peso de la unidad",
-                "Código de color",
+                "Cdigo de color",
                 "Edad mnima recomendada",
                 "Edad mxima recomendada",
-                "Características del producto",
+                "Caractersticas del producto",
                 "Kit",
                 "Formato",
                 "Unidades por pack",

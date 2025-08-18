@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Aplicacin Flask mejorada para mapeo de productos a Mercado Libre
+Aplicación Flask mejorada para mapeo de productos a Mercado Libre
 Mantiene la estructura exacta de ML y permite mapeo selectivo
 CON INTELIGENCIA ARTIFICIAL para autocompletar datos faltantes
-SISTEMA DE AUTENTICACIN Y USUARIOS PREMIUM/GRATUITOS
+SISTEMA DE AUTENTICACIÓN Y USUARIOS PREMIUM/GRATUITOS
 """
 
 from flask import Flask, request, render_template_string, send_file, redirect, url_for, jsonify, session, render_template, flash
@@ -22,20 +22,7 @@ from auth_system import user_manager, login_required, premium_required
 # Cargar variables de entorno
 load_dotenv()
 
-# 🚧 DEVELOPER MODE - Set to True for easy testing, False for production
-DEVELOPER_MODE = True
-DISABLE_AUTH = True  # 🚧 NEW: Completely disable authentication for testing
-DEVELOPER_USER = {
-    'user_id': 999,
-    'username': 'developer',
-    'email': 'dev@test.com',
-    'first_name': 'Developer',
-    'last_name': 'Mode',
-    'account_type': 'premium',
-    'user_type': 'premium'
-}
-
-#  FUNCIN HELPER PARA MANEJO SEGURO DE CELDAS
+# 🔧 FUNCIÓN HELPER PARA MANEJO SEGURO DE CELDAS
 def safe_get_cell_value(sheet, row, col):
     """Obtiene el valor de una celda manejando MergedCell de forma segura"""
     try:
@@ -50,7 +37,7 @@ def safe_get_cell_value(sheet, row, col):
         else:
             return cell.value
     except Exception as e:
-        print(f" Error accediendo celda ({row},{col}): {e}")
+        print(f"⚠️ Error accediendo celda ({row},{col}): {e}")
         return None
 
 def safe_set_cell_value(sheet, row, col, value):
@@ -71,89 +58,41 @@ def safe_set_cell_value(sheet, row, col, value):
             cell.value = value
             return True
     except Exception as e:
-        print(f" Error escribiendo celda ({row},{col}): {e}")
+        print(f"⚠️ Error escribiendo celda ({row},{col}): {e}")
         return False
 from werkzeug.utils import secure_filename
 import shutil
 from ai_enhancer import AIProductEnhancer, AI_CONFIG
 
 app = Flask(__name__)
-app.secret_key = os.getenv('SECRET_KEY', 'dev_secret_key_ml_extractor_2025_very_secure')
+app.secret_key = os.getenv('SECRET_KEY', 'tu_clave_secreta_muy_segura_para_produccion')
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=24)  # Sesión válida por 24 horas
 
-# Configuración robusta de sesiones
+# Configuración adicional de sesiones
 app.config['SESSION_COOKIE_SECURE'] = False  # Para desarrollo (HTTP)
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-app.config['SESSION_COOKIE_NAME'] = 'ml_extractor_session'
-app.config['APPLICATION_ROOT'] = '/'
 
 # Create uploads directory if it doesn't exist
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
-# 🚧 DEVELOPER BYPASS ROUTE - For easy testing (REMOVE IN PRODUCTION)
-@app.route('/dev-login')
-def dev_login():
-    """Developer bypass route - automatically logs in as premium user"""
-    if DEVELOPER_MODE:
-        # Create session for developer user
-        session.permanent = True
-        session['user_id'] = DEVELOPER_USER['user_id']
-        session['username'] = DEVELOPER_USER['username']
-        session['email'] = DEVELOPER_USER['email']
-        session['first_name'] = DEVELOPER_USER['first_name']
-        session['last_name'] = DEVELOPER_USER['last_name']
-        session['account_type'] = DEVELOPER_USER['account_type']
-        session['user_type'] = DEVELOPER_USER['user_type']
-        
-        flash('🚧 Developer mode: Auto-logged in as premium user', 'success')
-        return redirect(url_for('index'))
-    else:
-        flash('Developer mode is disabled', 'error')
-        return redirect(url_for('login'))
-
-# 🚧 USER TYPE SWITCHER FOR TESTING
-@app.route('/switch-user/<user_type>')
-def switch_user(user_type):
-    """Switch between Premium and Regular user for testing"""
-    if not DISABLE_AUTH:
-        flash('User switching is only available when authentication is disabled', 'error')
-        return redirect(url_for('index'))
-    
-    if user_type.lower() == 'premium':
-        session['account_type'] = 'premium'
-        session['user_type'] = 'premium'
-        session['first_name'] = 'Usuario'
-        session['last_name'] = 'Premium'
-        flash('🌟 Cambiado a Usuario PREMIUM - Todas las funciones disponibles', 'success')
-    elif user_type.lower() == 'regular':
-        session['account_type'] = 'free'
-        session['user_type'] = 'free'
-        session['first_name'] = 'Usuario'
-        session['last_name'] = 'Gratuito'
-        flash('👤 Cambiado a Usuario GRATUITO - Funciones limitadas', 'warning')
-    else:
-        flash('Tipo de usuario inválido', 'error')
-    
-    return redirect(url_for('index'))
-
 # ==========================================
-# RUTAS DE AUTENTICACIN Y USUARIOS
+# RUTAS DE AUTENTICACIÓN Y USUARIOS
 # ==========================================
 
 @app.route('/test-auth')
 def test_auth():
-    """Pgina de prueba para verificar autenticacin"""
+    """Página de prueba para verificar autenticación"""
     return f"""
-    <h1> Test de Autenticacin</h1>
+    <h1>🧪 Test de Autenticación</h1>
     <p>Ruta actual: {request.path}</p>
     <p>User ID: {session.get('user_id', 'No definido')}</p>
     <p>Username: {session.get('username', 'No definido')}</p>
     <p>Email: {session.get('email', 'No definido')}</p>
     <p>Account Type: {session.get('account_type', 'No definido')}</p>
-    <p>Sesin completa: {dict(session)}</p>
+    <p>Sesión completa: {dict(session)}</p>
     <p>Session ID en cookies: {request.cookies.get('session', 'No definido')}</p>
     <p>Todas las cookies: {dict(request.cookies)}</p>
     <br>
@@ -162,13 +101,13 @@ def test_auth():
 
 @app.route('/debug-session')
 def debug_session():
-    """Ruta especial para debug de sesin - sin proteccin"""
-    print(f" DEBUG SESSION: Session keys: {list(session.keys())}")
-    print(f" DEBUG SESSION: Session dict: {dict(session)}")
-    print(f" DEBUG SESSION: Cookies: {dict(request.cookies)}")
+    """Ruta especial para debug de sesión - sin protección"""
+    print(f"🔍 DEBUG SESSION: Session keys: {list(session.keys())}")
+    print(f"🔍 DEBUG SESSION: Session dict: {dict(session)}")
+    print(f"🔍 DEBUG SESSION: Cookies: {dict(request.cookies)}")
     
     return f"""
-    <h1> Debug de Sesin</h1>
+    <h1>🔍 Debug de Sesión</h1>
     <p><strong>Session Keys:</strong> {list(session.keys())}</p>
     <p><strong>Session Dict:</strong> {dict(session)}</p>
     <p><strong>Cookies:</strong> {dict(request.cookies)}</p>
@@ -176,14 +115,16 @@ def debug_session():
     <br>
     <a href="/login">Ir a Login</a> | <a href="/test-auth">Test Auth</a>
     """
+    <a href="/login">Ir a Login</a> | <a href="/logout">Logout</a>
+    """
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    """Pgina de login"""
+    """Página de login"""
     if request.method == 'GET':
         return render_template('login.html')
     
-    # POST - manejar login directamente aqu
+    # POST - manejar login directamente aquí
     try:
         if request.content_type == 'application/json':
             data = request.get_json()
@@ -196,9 +137,9 @@ def login():
         success, result = user_manager.login_user(email, password, request.remote_addr)
         
         if success:
-            # Crear sesin
+            # Crear sesión
             user = result
-            session.permanent = True  # Hacer la sesin permanente
+            session.permanent = True  # Hacer la sesión permanente
             session['user_id'] = user['id']
             session['username'] = user['username']
             session['email'] = user['email']
@@ -207,11 +148,11 @@ def login():
             session['account_type'] = user['account_type']
             session['user_type'] = user['user_type']
             
-            # Debug: verificar que la sesin se guard
-            print(f" DEBUG: Sesin creada para user_id: {session.get('user_id')}")
-            print(f" DEBUG: Session keys despus de login: {list(session.keys())}")
-            print(f" DEBUG: Session ID: {request.cookies.get('session')}")
-            print(f" DEBUG: Todas las cookies: {dict(request.cookies)}")
+            # Debug: verificar que la sesión se guardó
+            print(f"🔍 DEBUG: Sesión creada para user_id: {session.get('user_id')}")
+            print(f"🔍 DEBUG: Session keys después de login: {list(session.keys())}")
+            print(f"🔍 DEBUG: Session ID: {request.cookies.get('session')}")
+            print(f"🔍 DEBUG: Todas las cookies: {dict(request.cookies)}")
             
             # Si es request JSON (AJAX), devolver JSON
             if request.content_type == 'application/json':
@@ -241,7 +182,7 @@ def login():
                 return redirect('/login')
                 
     except Exception as e:
-        print(f" Error en login: {e}")
+        print(f"❌ Error en login: {e}")
         if request.content_type == 'application/json':
             return jsonify({
                 'success': False,
@@ -253,17 +194,17 @@ def login():
 
 @app.route('/register')
 def register():
-    """Pgina de registro"""
+    """Página de registro"""
     return render_template('register.html')
 
 @app.route('/verify')
 def verify():
-    """Pgina de verificacin"""
+    """Página de verificación"""
     return render_template('verify.html')
 
 @app.route('/logout')
 def logout():
-    """Cerrar sesin"""
+    """Cerrar sesión"""
     user_id = session.get('user_id')
     if user_id:
         user_manager.db.log_activity(user_id, 'user_logout', None, request.remote_addr)
@@ -273,7 +214,7 @@ def logout():
                    'Sesión cerrada exitosamente&type=success')
 
 # ==========================================
-# API ENDPOINTS DE AUTENTICACIN
+# API ENDPOINTS DE AUTENTICACIÓN
 # ==========================================
 
 @app.route('/api/register', methods=['POST'])
@@ -305,9 +246,9 @@ def api_login():
         success, result = user_manager.login_user(email, password, request.remote_addr)
         
         if success:
-            # Crear sesin
+            # Crear sesión
             user = result
-            session.permanent = True  # Hacer la sesin permanente
+            session.permanent = True  # Hacer la sesión permanente
             session['user_id'] = user['id']
             session['username'] = user['username']
             session['email'] = user['email']
@@ -316,8 +257,8 @@ def api_login():
             session['account_type'] = user['account_type']
             session['user_type'] = user['user_type']
             
-            # Debug: verificar que la sesin se guard
-            print(f" DEBUG: Sesin creada para user_id: {session.get('user_id')}")
+            # Debug: verificar que la sesión se guardó
+            print(f"🔍 DEBUG: Sesión creada para user_id: {session.get('user_id')}")
             
             return jsonify({
                 'success': True,
@@ -343,7 +284,7 @@ def api_login():
 
 @app.route('/api/verify', methods=['POST'])
 def api_verify():
-    """API endpoint para verificacin de cuenta"""
+    """API endpoint para verificación de cuenta"""
     try:
         data = request.get_json()
         email = data.get('email')
@@ -376,7 +317,7 @@ def api_resend_verification():
                 'error': 'Usuario no encontrado'
             }), 404
         
-    # Generar nuevo código
+        # Generar nuevo código
         new_code = user_manager.generate_verification_code()
         
         # Actualizar en base de datos
@@ -409,7 +350,7 @@ def api_resend_verification():
 
 @app.route('/auth/google')
 def google_auth():
-    """Iniciar autenticacin con Google OAuth"""
+    """Iniciar autenticación con Google OAuth"""
     try:
         from google_oauth_config import google_oauth
         
@@ -433,7 +374,7 @@ def google_callback():
     try:
         from google_oauth_config import google_oauth
         
-        # Obtener parmetros
+        # Obtener parámetros
         code = request.args.get('code')
         state = request.args.get('state')
         error = request.args.get('error')
@@ -444,14 +385,14 @@ def google_callback():
         
         if not code:
             return redirect('/login?message=' + 
-                           'Cdigo OAuth no recibido&type=error')
+                           'Código OAuth no recibido&type=error')
         
         # Verificar state (seguridad)
         if state != session.get('oauth_state'):
             return redirect('/login?message=' + 
-                           'Estado OAuth invlido&type=error')
+                           'Estado OAuth inválido&type=error')
         
-        # Intercambiar cdigo por token y obtener datos del usuario
+        # Intercambiar código por token y obtener datos del usuario
         google_data = google_oauth.exchange_code_for_token(code, state)
         
         if not google_data:
@@ -463,7 +404,7 @@ def google_callback():
         
         if success:
             user = result
-            # Crear sesin
+            # Crear sesión
             session['user_id'] = user['id']
             session['username'] = user['username']
             session['email'] = user['email']
@@ -477,7 +418,7 @@ def google_callback():
             session.pop('oauth_state', None)
             
             return redirect('/?message=' + 
-                           f'Bienvenido {user["first_name"]}! Autenticado con Google&type=success')
+                           f'¡Bienvenido {user["first_name"]}! Autenticado con Google&type=success')
         else:
             return redirect('/login?message=' + 
                            f'Error Google: {result}&type=error')
@@ -490,62 +431,45 @@ def google_callback():
                        f'Error OAuth: {str(e)}&type=error')
 
 # ==========================================
-# MIDDLEWARE DE AUTENTICACIN
+# MIDDLEWARE DE AUTENTICACIÓN
 # ==========================================
 
 @app.before_request
 def require_auth():
-    """Middleware que requiere autenticacin para ciertas rutas"""
-    
-    # 🚧 TESTING MODE: Disable authentication completely
-    if DISABLE_AUTH:
-        # Auto-setup session if not exists
-        if 'user_id' not in session:
-            # Default to premium user for testing
-            session.permanent = True
-            session['user_id'] = DEVELOPER_USER['user_id']
-            session['username'] = DEVELOPER_USER['username']
-            session['email'] = DEVELOPER_USER['email']
-            session['first_name'] = DEVELOPER_USER['first_name']
-            session['last_name'] = DEVELOPER_USER['last_name']
-            session['account_type'] = DEVELOPER_USER['account_type']
-            session['user_type'] = DEVELOPER_USER['user_type']
-        return  # Skip all authentication checks
-    
-    # Rutas pblicas que no requieren autenticacin
+    """Middleware que requiere autenticación para ciertas rutas"""
+    # Rutas públicas que no requieren autenticación
     public_routes = [
         '/login', '/register', '/verify', '/logout', '/test-auth', '/debug-session',
         '/api/login', '/api/register', '/api/verify', '/api/resend-verification',
         '/auth/google', '/auth/google/callback',
-        '/dev-login',  # 🚧 Developer bypass route
         '/static'
     ]
     
-    # Verificar si la ruta actual es pblica
+    # Verificar si la ruta actual es pública
     for route in public_routes:
         if request.path.startswith(route):
             return
     
-    # Verificar si el usuario est autenticado
+    # Verificar si el usuario está autenticado
     if 'user_id' not in session:
-        print(f" DEBUG: Acceso denegado a {request.path}")
-        print(f" DEBUG: Session keys: {list(session.keys())}")
-        print(f" DEBUG: Session ID en cookies: {request.cookies.get('session')}")
-        print(f" DEBUG: Todas las cookies recibidas: {dict(request.cookies)}")
-        print(f" DEBUG: Headers relevantes: {dict(request.headers)}")
+        print(f"🔍 DEBUG: Acceso denegado a {request.path}")
+        print(f"🔍 DEBUG: Session keys: {list(session.keys())}")
+        print(f"🔍 DEBUG: Session ID en cookies: {request.cookies.get('session')}")
+        print(f"🔍 DEBUG: Todas las cookies recibidas: {dict(request.cookies)}")
+        print(f"🔍 DEBUG: Headers relevantes: {dict(request.headers)}")
         if request.path.startswith('/api/'):
             return jsonify({
                 'success': False,
-                'error': 'Autenticacin requerida'
+                'error': 'Autenticación requerida'
             }), 401
         else:
             return redirect('/login?message=' + 
                           'Debes iniciar sesión para acceder&type=warning')
     else:
-        print(f" DEBUG: Acceso permitido a {request.path} - user_id: {session.get('user_id')}")
+        print(f"🔍 DEBUG: Acceso permitido a {request.path} - user_id: {session.get('user_id')}")
 
 # ==========================================
-# FUNCIONES DE VALIDACIN PREMIUM
+# FUNCIONES DE VALIDACIÓN PREMIUM
 # ==========================================
 
 def validate_premium_feature(feature_name):
@@ -568,7 +492,7 @@ HTML_TEMPLATE = '''
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ML Bulk Mapper Pro - {{ user_info.get('first_name', 'Usuario') if user_info else 'Usuario' }}</title>
     <style>
-        /*  DISEO MOBILE-FIRST RESPONSIVE */
+        /* 📱 DISEÑO MOBILE-FIRST RESPONSIVE */
         * {
             box-sizing: border-box;
             margin: 0;
@@ -577,7 +501,7 @@ HTML_TEMPLATE = '''
         
         /* Header de usuario */
         .user-header {
-            background: linear-gradient(135deg, #3483fa, #2968c8);
+            background: linear-gradient(135deg, #3483fa, #1e88e5);
             color: white;
             padding: 15px 20px;
             border-radius: 12px;
@@ -587,7 +511,6 @@ HTML_TEMPLATE = '''
             align-items: center;
             flex-wrap: wrap;
             gap: 10px;
-            box-shadow: 0 4px 20px rgba(52, 131, 250, 0.25);
         }
         
         .user-info {
@@ -618,47 +541,6 @@ HTML_TEMPLATE = '''
             margin: 0;
             font-size: 14px;
             opacity: 0.9;
-        }
-
-        /* Small text utility for high contrast on gradients */
-        .small-contrast {
-            color: rgba(0,0,0,0.85) !important; /* dark text for legibility */
-            text-shadow: 0 1px 0 rgba(255,255,255,0.6); /* subtle light lift */
-            font-size: 14px;
-            opacity: 0.95;
-        }
-
-        /* White-on-dark pill for small text over colorful gradients */
-        .small-pill {
-            display: inline-block;
-            background: rgba(0,0,0,0.65); /* slightly darker for contrast */
-            color: #ffffff !important;
-            padding: 8px 12px; /* increased padding */
-            border-radius: 999px;
-            font-size: 13px;
-            line-height: 1;
-            box-shadow: 0 6px 18px rgba(0,0,0,0.28);
-            backdrop-filter: blur(6px);
-            -webkit-backdrop-filter: blur(6px);
-            border: 1px solid rgba(255,255,255,0.06);
-            opacity: 0.98;
-        }
-
-        /* Apply pill styling to all <small> by default, opt-out with .no-pill */
-        small:not(.no-pill) {
-            display: inline-block;
-            background: rgba(0,0,0,0.55);
-            color: #ffffff !important;
-            padding: 6px 10px;
-            border-radius: 999px;
-            font-size: 12px;
-            line-height: 1;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.22);
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
-            border: 1px solid rgba(255,255,255,0.05);
-            opacity: 0.95;
-            margin-left: 4px;
         }
         
         .account-badge {
@@ -709,9 +591,8 @@ HTML_TEMPLATE = '''
         
         /* Alert para usuarios gratuitos */
         .premium-alert {
-            background: linear-gradient(135deg, rgba(255, 241, 118, 0.3), rgba(255, 234, 167, 0.5));
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 234, 167, 0.7);
+            background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+            border: 1px solid #ffeaa7;
             color: #856404;
             padding: 15px;
             border-radius: 10px;
@@ -719,7 +600,6 @@ HTML_TEMPLATE = '''
             display: flex;
             align-items: center;
             gap: 12px;
-            box-shadow: 0 4px 16px rgba(255, 193, 7, 0.15);
         }
         
         .premium-alert i {
@@ -729,19 +609,18 @@ HTML_TEMPLATE = '''
         
         body {
             font-family: 'Proxima Nova', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #fff159 0%, #ffed69 50%, #3483fa 100%);
+            background: #ffffff;
             min-height: 100vh;
             padding: 20px;
             line-height: 1.6;
             color: #333;
-        }        /*  MOBILE FIRST - BASE STYLES */
+        }        /* 📱 MOBILE FIRST - BASE STYLES */
         .container {
-            background: rgba(255, 255, 255, 1);
-            backdrop-filter: blur(15px);
+            background: white;
             padding: 30px;
             border-radius: 16px;
-            box-shadow: 0 8px 32px rgba(52, 131, 250, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+            border: 1px solid #e8eaed;
             max-width: 1200px;
             width: 100%;
             margin: 0 auto;
@@ -785,7 +664,7 @@ HTML_TEMPLATE = '''
             font-size: 14px;
         }
         
-        /*  INPUTS OPTIMIZADOS PARA MVIL */
+        /* 📱 INPUTS OPTIMIZADOS PARA MÓVIL */
         input[type="file"], 
         input[type="text"], 
         input[type="password"], 
@@ -798,26 +677,25 @@ HTML_TEMPLATE = '''
             border-radius: 8px;
             font-size: 16px; /* Evita zoom en iOS */
             transition: all 0.3s ease;
-            background: rgba(255, 255, 255, 0.9);
+            background: #fafafa;
             -webkit-appearance: none;
             appearance: none;
-            min-height: 44px; /* Toque mnimo recomendado */
+            min-height: 44px; /* Toque mínimo recomendado */
         }
         
         input:focus, select:focus, textarea:focus {
             border-color: #3483fa;
-            background: rgba(255, 255, 255, 1);
-            box-shadow: 0 0 0 3px rgba(52, 131, 250, 0.15);
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(52, 131, 250, 0.1);
             outline: none;
         }
         
-        /*  CHECKBOXES MVIL-FRIENDLY */
+        /* 📱 CHECKBOXES MÓVIL-FRIENDLY */
         .checkbox-grid {
-            background: rgba(248, 249, 250, 0.9);
-            backdrop-filter: blur(5px);
+            background: #f8f9fa;
             padding: 12px;
             border-radius: 8px;
-            border: 1px solid rgba(233, 236, 239, 0.8);
+            border: 1px solid #e9ecef;
         }
         
         .checkbox-grid label {
@@ -845,7 +723,7 @@ HTML_TEMPLATE = '''
             accent-color: #3483fa;
         }
         
-        /*  BOTONES OPTIMIZADOS PARA TOUCH */
+        /* 📱 BOTONES OPTIMIZADOS PARA TOUCH */
         button { 
             background: linear-gradient(135deg, #3483fa, #2968c8);
             color: white; 
@@ -870,7 +748,7 @@ HTML_TEMPLATE = '''
             transform: translateY(0);
         }
         
-        /*  MENSAJES RESPONSIVE */
+        /* 📱 MENSAJES RESPONSIVE */
         .success, .error, .info-text, .ai-info { 
             padding: 16px;
             border-radius: 8px;
@@ -891,34 +769,29 @@ HTML_TEMPLATE = '''
             border-left: 4px solid #ff3333;
         }
         
-        /*  SECCIONES COLAPSABLES MVIL */
+        /* 📱 SECCIONES COLAPSABLES MÓVIL */
         .ai-section {
-            background: linear-gradient(135deg, rgba(52, 131, 250, 0.08), rgba(52, 131, 250, 0.12));
-            backdrop-filter: blur(5px);
+            background: linear-gradient(135deg, #f8fffe, #f0f9ff);
             padding: 16px;
             border-radius: 8px;
             margin: 20px 0;
-            border: 2px solid rgba(52, 131, 250, 0.3);
-            box-shadow: 0 4px 16px rgba(52, 131, 250, 0.1);
+            border: 2px solid #3483fa;
         }
         
         .mapping-section {
-            background: rgba(250, 250, 250, 0.8);
-            backdrop-filter: blur(5px);
+            background: #fafafa;
             padding: 16px;
             border-radius: 8px;
             margin: 16px 0;
-            border: 1px solid rgba(230, 230, 230, 0.8);
+            border: 1px solid #e6e6e6;
         }
         
         .manual-config-section {
-            background: linear-gradient(135deg, rgba(255, 248, 225, 0.9), rgba(255, 243, 196, 0.9));
-            backdrop-filter: blur(5px);
+            background: linear-gradient(135deg, #fff8e1, #fff3c4);
             padding: 16px;
             border-radius: 8px;
             margin: 20px 0;
-            border: 2px solid rgba(255, 152, 0, 0.4);
-            box-shadow: 0 4px 16px rgba(255, 152, 0, 0.1);
+            border: 2px solid #ff9800;
         }
         
         .manual-config-section h3 {
@@ -941,7 +814,7 @@ HTML_TEMPLATE = '''
             accent-color: #ff9800;
         }
         
-        /*  GRID RESPONSIVE PARA CHECKBOXES */
+        /* 📱 GRID RESPONSIVE PARA CHECKBOXES */
         .checkbox-group {
             display: grid;
             grid-template-columns: 1fr;
@@ -972,7 +845,7 @@ HTML_TEMPLATE = '''
             accent-color: #3483fa;
         }
         
-    /*  TEXTO Y TÍTULOS RESPONSIVE */
+        /* 📱 TEXTO Y TÍTULOS RESPONSIVE */
         h1 { 
             color: #3483fa; 
             font-weight: 700; 
@@ -1024,7 +897,7 @@ HTML_TEMPLATE = '''
             margin-right: 12px;
         }
         
-        /*  TABLET STYLES (768px+) */
+        /* 🖥️ TABLET STYLES (768px+) */
         @media (min-width: 768px) {
             body {
                 padding: 20px;
@@ -1053,7 +926,7 @@ HTML_TEMPLATE = '''
             }
         }
         
-        /*  DESKTOP STYLES (1024px+) */
+        /* 🖥️ DESKTOP STYLES (1024px+) */
         @media (min-width: 1024px) {
             body {
                 padding: 30px;
@@ -1081,14 +954,14 @@ HTML_TEMPLATE = '''
             }
         }
         
-        /*  LARGE DESKTOP (1440px+) */
+        /* 🖥️ LARGE DESKTOP (1440px+) */
         @media (min-width: 1440px) {
             .checkbox-group {
                 grid-template-columns: repeat(4, 1fr);
             }
         }
         
-        /*  NAVEGACIN TCTIL MEJORADA */
+        /* 📱 NAVEGACIÓN TÁCTIL MEJORADA */
         @media (hover: none) and (pointer: coarse) {
             button, .checkbox-item, .api-option {
                 min-height: 48px;
@@ -1100,31 +973,27 @@ HTML_TEMPLATE = '''
             }
         }
         
-        /*  MODO OSCURO (si el dispositivo lo prefiere) */
+        /* 🌙 MODO OSCURO (si el dispositivo lo prefiere) */
         @media (prefers-color-scheme: dark) {
-            /* Keep main container light to preserve Mercado Libre branding in testing
-               Use a subtle translucent white so elements remain readable */
             .container {
-                background: rgba(255, 255, 255, 0.95);
-                color: #222;
-                border-color: rgba(255,255,255,0.12);
-                box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+                background: #1a1a1a;
+                color: #ffffff;
+                border-color: #333;
             }
-
-            /* Inputs should remain light for clarity during testing */
+            
             input, select, textarea {
-                background: rgba(255,255,255,0.9);
-                color: #111;
-                border-color: rgba(0,0,0,0.08);
+                background: #2a2a2a;
+                color: #ffffff;
+                border-color: #444;
             }
-
+            
             .checkbox-item {
-                background: rgba(255,255,255,0.92);
-                border-color: rgba(0,0,0,0.06);
+                background: #2a2a2a;
+                border-color: #444;
             }
         }
         
-        /*  ANIMACIONES REDUCIDAS PARA ACCESIBILIDAD */
+        /* 🔄 ANIMACIONES REDUCIDAS PARA ACCESIBILIDAD */
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after {
                 animation-duration: 0.01ms !important;
@@ -1189,7 +1058,7 @@ HTML_TEMPLATE = '''
             font-weight: 600;
         }
         
-        /*  NUEVA SECCIN: LOADING SCREEN CREATIVO */
+        /* 🎬 NUEVA SECCIÓN: LOADING SCREEN CREATIVO */
         .loading-overlay {
             position: fixed;
             top: 0;
@@ -1273,7 +1142,7 @@ HTML_TEMPLATE = '''
         }
         small { color: #666; font-size: 12px; }
         
-        /*  ESTILOS ADICIONALES PARA LOADING MVIL */
+        /* 📱 ESTILOS ADICIONALES PARA LOADING MÓVIL */
         .step-icon {
             font-size: 18px;
             margin-right: 12px;
@@ -1301,7 +1170,7 @@ HTML_TEMPLATE = '''
             100% { transform: scale(1); }
         }
         
-        /*  MEJORAS ESPECFICAS PARA MVIL */
+        /* 📱 MEJORAS ESPECÍFICAS PARA MÓVIL */
         @media (max-width: 480px) {
             .loading-container {
                 padding: 24px 20px;
@@ -1383,26 +1252,26 @@ HTML_TEMPLATE = '''
     </style>
     
     <script>
-        //  JAVASCRIPT MVIL-OPTIMIZADO
+        // 📱 JAVASCRIPT MÓVIL-OPTIMIZADO
         
         // Prevenir zoom accidental en iOS
         document.addEventListener('gesturestart', function (e) {
             e.preventDefault();
         });
         
-        // Mejorar experiencia tctil
+        // Mejorar experiencia táctil
         document.addEventListener('DOMContentLoaded', function() {
-            // Agregar clases para dispositivos tctiles
+            // Agregar clases para dispositivos táctiles
             if ('ontouchstart' in window) {
                 document.body.classList.add('touch-device');
             }
             
-            // Mejorar scroll en dispositivos mviles
+            // Mejorar scroll en dispositivos móviles
             if (window.innerWidth <= 768) {
                 document.body.style.overflowX = 'hidden';
             }
             
-            // Auto-expandir textareas en mvil
+            // Auto-expandir textareas en móvil
             const textareas = document.querySelectorAll('textarea');
             textareas.forEach(textarea => {
                 textarea.addEventListener('focus', function() {
@@ -1414,7 +1283,7 @@ HTML_TEMPLATE = '''
                 });
             });
             
-            // Mejorar UX de checkboxes en mvil
+            // Mejorar UX de checkboxes en móvil
             const checkboxItems = document.querySelectorAll('.checkbox-item');
             checkboxItems.forEach(item => {
                 item.addEventListener('click', function(e) {
@@ -1437,7 +1306,7 @@ HTML_TEMPLATE = '''
             }
         });
         
-        // Funciones existentes adaptadas para mvil
+        // Funciones existentes adaptadas para móvil
         function showMobileLoader() {
             const overlay = document.getElementById('loadingOverlay');
             if (overlay) {
@@ -1474,14 +1343,14 @@ HTML_TEMPLATE = '''
             }, 200);
         }
         
-        // Optimizar formularios para mvil
+        // Optimizar formularios para móvil
         function toggleHelpSection() {
             const section = document.getElementById('helpSection');
             if (section) {
                 const isVisible = section.style.display !== 'none';
                 section.style.display = isVisible ? 'none' : 'block';
                 
-                // Scroll suave en mvil
+                // Scroll suave en móvil
                 if (!isVisible && window.innerWidth <= 768) {
                     setTimeout(() => {
                         section.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1498,10 +1367,10 @@ HTML_TEMPLATE = '''
                 const isVisible = section.style.display !== 'none';
                 section.style.display = isVisible ? 'none' : 'block';
                 button.textContent = isVisible ? 
-                    button.textContent.replace('', '') : 
-                    button.textContent.replace('', '');
+                    button.textContent.replace('🔼', '🔽') : 
+                    button.textContent.replace('🔽', '🔼');
                 
-                // Scroll suave en mvil
+                // Scroll suave en móvil
                 if (!isVisible && window.innerWidth <= 768) {
                     setTimeout(() => {
                         section.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1520,20 +1389,20 @@ HTML_TEMPLATE = '''
                 // Expand
                 content.style.maxHeight = '1000px'; // Large enough to fit content
                 icon.style.transform = 'rotate(180deg)';
-                icon.textContent = '';
+                icon.textContent = '▲';
                 badge.textContent = 'ABIERTO';
                 badge.style.background = 'rgba(76, 175, 80, 0.3)';
             } else {
                 // Collapse
                 content.style.maxHeight = '0px';
                 icon.style.transform = 'rotate(0deg)';
-                icon.textContent = '';
+                icon.textContent = '▼';
                 badge.textContent = 'CONFIGURAR';
                 badge.style.background = 'rgba(255,255,255,0.2)';
             }
         }
         
-        // Optimizar seleccin de APIs para mvil
+        // Optimizar selección de APIs para móvil
         function selectAIProvider(provider) {
             const buttons = document.querySelectorAll('.api-option input[type="radio"]');
             buttons.forEach(btn => {
@@ -1544,15 +1413,15 @@ HTML_TEMPLATE = '''
             });
         }
         
-        // Manejar orientacin en mvil
+        // Manejar orientación en móvil
         window.addEventListener('orientationchange', function() {
             setTimeout(() => {
-                // Reajustar layout despus del cambio de orientacin
+                // Reajustar layout después del cambio de orientación
                 window.scrollTo(0, 0);
             }, 100);
         });
         
-        // Optimizar rendimiento en mvil
+        // Optimizar rendimiento en móvil
         function debounce(func, wait) {
             let timeout;
             return function executedFunction(...args) {
@@ -1565,7 +1434,7 @@ HTML_TEMPLATE = '''
             };
         }
         
-        // Lazy loading para imgenes en mvil
+        // Lazy loading para imágenes en móvil
         if ('IntersectionObserver' in window) {
             const imageObserver = new IntersectionObserver((entries, observer) => {
                 entries.forEach(entry => {
@@ -1594,35 +1463,17 @@ HTML_TEMPLATE = '''
             </div>
             <div class="user-details">
                 <h3>{{ user_info.first_name }} {{ user_info.last_name }}</h3>
-                <p>{{ user_info.email }}  {{ user_info.user_type.title() }}</p>
+                <p>{{ user_info.email }} • {{ user_info.user_type.title() }}</p>
             </div>
         </div>
         <div class="user-actions">
             <span class="account-badge {{ 'badge-premium' if user_info.account_type == 'premium' else 'badge-free' }}">
-                {{ ' Premium' if user_info.account_type == 'premium' else ' Gratuito' }}
+                {{ '💎 Premium' if user_info.account_type == 'premium' else '🆓 Gratuito' }}
             </span>
             <a href="/logout" class="btn-logout">
-                <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+                <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
             </a>
         </div>
-    </div>
-    {% endif %}
-    
-    <!-- 🚧 TESTING CONTROLS - Only shown when auth is disabled -->
-    {% if user_info %}
-    <div class="testing-controls" style="background: rgba(255, 165, 0, 0.1); border: 2px dashed #ffa500; padding: 15px; margin: 20px auto; max-width: 1200px; border-radius: 10px; text-align: center;">
-    <h4 style="color: #ff8c00; margin-bottom: 10px;">🚧 MODO TESTING - Cambiar tipo de usuario</h4>
-        <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
-            <a href="/switch-user/premium" class="btn" style="background: linear-gradient(135deg, #3483fa, #2968c8); color: white; text-decoration: none; padding: 10px 20px; border-radius: 8px; font-weight: bold;">
-                🌟 Modo PREMIUM
-            </a>
-            <a href="/switch-user/regular" class="btn" style="background: linear-gradient(135deg, #6c757d, #495057); color: white; text-decoration: none; padding: 10px 20px; border-radius: 8px; font-weight: bold;">
-                👤 Modo GRATUITO
-            </a>
-        </div>
-                <p style="color: #666; font-size: 0.9rem; margin-top: 10px; font-style: italic;">
-            Estos controles solo están disponibles durante las pruebas (DISABLE_AUTH = True)
-        </p>
     </div>
     {% endif %}
     
@@ -1631,7 +1482,7 @@ HTML_TEMPLATE = '''
     <div class="premium-alert">
         <i class="fas fa-info-circle"></i>
         <div>
-            <strong>Cuenta gratuita:</strong> Tienes acceso al modo manual. 
+            <strong>Cuenta Gratuita:</strong> Tienes acceso al modo manual. 
             <strong>Actualiza a Premium</strong> para usar IA automática y generación desde prompt.
         </div>
     </div>
@@ -1642,7 +1493,7 @@ HTML_TEMPLATE = '''
             <h1 class="ml-logo">ML Bulk Mapper Pro <span class="ai-badge">AI POWERED</span></h1>
             <p style="color: #666; margin: 0;">Herramienta profesional para carga masiva en Mercado Libre</p>
             
-            <!-- BOTONES DE AYUDA Y DONACIN -->
+            <!-- BOTONES DE AYUDA Y DONACIÓN -->
             <div style="display: flex; justify-content: center; gap: 16px; margin-top: 20px;">
                 <button type="button" onclick="toggleHelpSection()" style="
                     background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
@@ -1657,7 +1508,7 @@ HTML_TEMPLATE = '''
                     box-shadow: 0 3px 10px rgba(23, 162, 184, 0.3);
                 " onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 5px 15px rgba(23, 162, 184, 0.4)'" 
                    onmouseout="this.style.transform='translateY(0px)'; this.style.boxShadow='0 3px 10px rgba(23, 162, 184, 0.3)'">
-                     Guía de Uso
+                    🆘 Guía de Uso
                 </button>
                 
                 <button type="button" onclick="toggleDonationSection()" style="
@@ -1673,12 +1524,12 @@ HTML_TEMPLATE = '''
                     box-shadow: 0 3px 10px rgba(233, 30, 99, 0.3);
                 " onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 5px 15px rgba(233, 30, 99, 0.4)'" 
                    onmouseout="this.style.transform='translateY(0px)'; this.style.boxShadow='0 3px 10px rgba(233, 30, 99, 0.3)'">
-                     Donar para Mascotas
+                    💝 Donar para Mascotas
                 </button>
             </div>
         </div>
         
-        <!--  SECCIN GUA DE USO COLAPSABLE -->
+        <!-- 🆘 SECCIÓN GUÍA DE USO COLAPSABLE -->
         <div class="help-section-collapsible">
             <div id="helpSectionContent" class="help-section-content" style="
                 max-height: 0;
@@ -1691,76 +1542,76 @@ HTML_TEMPLATE = '''
             ">
                 <div style="padding: 24px;">
                     <div style="text-align: center; margin-bottom: 20px;">
-                        <h3 style="color: #17a2b8; margin: 0; font-size: 20px;"> Guía completa de uso</h3>
+                        <h3 style="color: #17a2b8; margin: 0; font-size: 20px;">🆘 Guía Completa de Uso</h3>
                         <small style="color: #666;">Todo lo que necesitas saber para usar ML Bulk Mapper Pro</small>
                     </div>
                     
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 20px;">
                         <!-- Funcionalidades Principales -->
                         <div style="background: rgba(23, 162, 184, 0.1); padding: 16px; border-radius: 8px; border-left: 4px solid #17a2b8;">
-                            <h4 style="color: #17a2b8; margin-top: 0;"> Funcionalidades Principales</h4>
+                            <h4 style="color: #17a2b8; margin-top: 0;">🚀 Funcionalidades Principales</h4>
                             <ul style="margin: 0; padding-left: 20px; color: #333;">
-                                <li><strong>Detección inteligente:</strong> Lee automáticamente plantillas ML</li>
+                                <li><strong>Detección Inteligente:</strong> Lee automáticamente plantillas ML</li>
                                 <li><strong>Mapeo Anti-Errores:</strong> Cada campo va exactamente donde debe</li>
-                                <li><strong>IA avanzada:</strong> Completa datos faltantes automáticamente</li>
-                                <li><strong>Configuración manual:</strong> Valores masivos para toda la tienda</li>
+                                <li><strong>IA Avanzada:</strong> Completa datos faltantes automáticamente</li>
+                                <li><strong>Configuración Manual:</strong> Valores masivos para toda la tienda</li>
                                 <li><strong>Códigos EAN-13:</strong> Generación automática de códigos</li>
                             </ul>
                         </div>
                         
-                        <!-- Cmo Evitar Errores -->
+                        <!-- Cómo Evitar Errores -->
                         <div style="background: rgba(220, 53, 69, 0.1); padding: 16px; border-radius: 8px; border-left: 4px solid #dc3545;">
-                            <h4 style="color: #dc3545; margin-top: 0;"> Cómo evitar errores</h4>
+                            <h4 style="color: #dc3545; margin-top: 0;">⚠️ Cómo Evitar Errores</h4>
                             <ul style="margin: 0; padding-left: 20px; color: #333;">
                                 <li><strong>Plantilla ML:</strong> Descarga la plantilla oficial de tu categoría</li>
-                                <li><strong>Datos limpios:</strong> Asegúrate de que los precios sean solo números</li>
-                                <li><strong>SKU únicos:</strong> Cada producto debe tener SKU diferente</li>
-                                <li><strong>Campos obligatorios:</strong> Título, Precio, Stock son requeridos</li>
+                                <li><strong>Datos Limpios:</strong> Asegúrate que precios sean solo números</li>
+                                <li><strong>SKU Únicos:</strong> Cada producto debe tener SKU diferente</li>
+                                <li><strong>Campos Obligatorios:</strong> Título, Precio, Stock son requeridos</li>
                                 <li><strong>Formato Excel:</strong> Usa .xlsx para mejores resultados</li>
                             </ul>
                         </div>
                     </div>
                     
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 20px;">
-                        <!-- Garantía -->
-                        <div class="form-group">
-                            <label> Garantía:</label>
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 12px;">
-                                <div>
-                                    <label for="tipo_garantia">Tipo de garantía:</label>
-                                    <select name="tipo_garantia" id="tipo_garantia" style="width: 100%; max-width: 100%;">
-                                        <option value="">Sin configurar</option>
-                                        <option value="Garanta del vendedor">Garantía del vendedor</option>
-                                        <option value="Garanta de fbrica">Garantía de fábrica</option>
-                                        <option value="Sin garanta">Sin garantía</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label for="tiempo_garantia">Tiempo garantía:</label>
-                                    <input type="number" name="tiempo_garantia" id="tiempo_garantia" placeholder="ej: 12" min="0">
-                                    <label for="unidad_garantia">Unidad de tiempo:</label>
-                                    <select name="unidad_garantia" id="unidad_garantia">
-                                        <option value="dias">Días</option>
-                                        <option value="meses">Meses</option>
-                                        <option value="anios">Años</option>
-                                    </select>
-                                </div>
-                            </div>
+                        <!-- Paso a Paso -->
+                        <div style="background: rgba(40, 167, 69, 0.1); padding: 16px; border-radius: 8px; border-left: 4px solid #28a745;">
+                            <h4 style="color: #28a745; margin-top: 0;">📋 Proceso Paso a Paso</h4>
+                            <ol style="margin: 0; padding-left: 20px; color: #333;">
+                                <li><strong>Configura IA:</strong> Elige tu proveedor y API key</li>
+                                <li><strong>Sube Plantilla:</strong> Archivo oficial de ML (.xlsx)</li>
+                                <li><strong>Sube Datos:</strong> Tu archivo con productos</li>
+                                <li><strong>Selecciona Campos:</strong> Marca qué quieres mapear</li>
+                                <li><strong>Configura Valores:</strong> Masivos o selectivos</li>
+                                <li><strong>Procesa:</strong> Deja que la IA haga la magia ✨</li>
+                            </ol>
                         </div>
-                    
-                    <div style="background: rgba(255, 193, 7, 0.1); padding: 16px; border-radius: 8px; border-left: 4px solid #ffc107; margin-bottom: 20px;">
-                            <h4 style="color: #e67e22; margin-top: 0;"> Campos obligatorios de ML</h4>
-                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; color: #333;">
-                            <div><strong> Título:</strong> Nombre del producto</div>
-                            <div><strong> Precio:</strong> Solo números (sin $ ni símbolos)</div>
-                            <div><strong> Stock:</strong> Cantidad disponible</div>
-                            <div><strong> Marca:</strong> Fabricante del producto</div>
-                            <div><strong> Modelo:</strong> Versión específica</div>
-                            <div><strong> Envío:</strong> Configuración automática</div>
+                        
+                        <!-- Tips Avanzados -->
+                        <div style="background: rgba(111, 66, 193, 0.1); padding: 16px; border-radius: 8px; border-left: 4px solid #6f42c1;">
+                            <h4 style="color: #6f42c1; margin-top: 0;">💡 Tips Avanzados</h4>
+                            <ul style="margin: 0; padding-left: 20px; color: #333;">
+                                <li><strong>IA Research:</strong> Activa investigación para datos técnicos</li>
+                                <li><strong>Prompts Custom:</strong> Personaliza cómo la IA mejora títulos</li>
+                                <li><strong>Stock Selectivo:</strong> Formato "Fila:Cantidad" (ej: 8:50)</li>
+                                <li><strong>Descripción Global:</strong> Agrega info de tu tienda a todo</li>
+                                <li><strong>Moneda:</strong> Cambia a USD si vendes internacionalmente</li>
+                            </ul>
                         </div>
                     </div>
                     
-                    <!-- Botn de cierre -->
+                    <div style="background: rgba(255, 193, 7, 0.1); padding: 16px; border-radius: 8px; border-left: 4px solid #ffc107; margin-bottom: 20px;">
+                        <h4 style="color: #e67e22; margin-top: 0;">🎯 Campos Obligatorios de ML</h4>
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; color: #333;">
+                            <div><strong>✅ Título:</strong> Nombre del producto</div>
+                            <div><strong>✅ Precio:</strong> Solo números (sin $ ni símbolos)</div>
+                            <div><strong>✅ Stock:</strong> Cantidad disponible</div>
+                            <div><strong>✅ Marca:</strong> Fabricante del producto</div>
+                            <div><strong>✅ Modelo:</strong> Versión específica</div>
+                            <div><strong>✅ Envío:</strong> Configuración automática</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Botón de cierre -->
                     <div style="text-align: center; padding: 16px 0 8px 0; border-top: 1px solid rgba(23, 162, 184, 0.2); margin-top: 20px;">
                         <button type="button" onclick="toggleHelpSection()" style="
                             background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
@@ -1775,14 +1626,14 @@ HTML_TEMPLATE = '''
                             box-shadow: 0 3px 10px rgba(23, 162, 184, 0.3);
                         " onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 5px 15px rgba(23, 162, 184, 0.4)'" 
                            onmouseout="this.style.transform='translateY(0px)'; this.style.boxShadow='0 3px 10px rgba(23, 162, 184, 0.3)'">
-                             Cerrar Guía de Uso
+                            ⬆️ Cerrar Guía de Uso
                         </button>
                     </div>
                 </div>
             </div>
         </div>
         
-        <!--  SECCIN DONACIN PARA MASCOTAS COLAPSABLE -->
+        <!-- 💝 SECCIÓN DONACIÓN PARA MASCOTAS COLAPSABLE -->
         <div class="donation-section-collapsible">
             <div id="donationSectionContent" class="donation-section-content" style="
                 max-height: 0;
@@ -1795,102 +1646,102 @@ HTML_TEMPLATE = '''
             ">
                 <div style="padding: 24px;">
                     <div style="text-align: center; margin-bottom: 20px;">
-                        <h3 style="color: #e91e63; margin: 0; font-size: 20px;"> Apoya Mascotas de Montevideo</h3>
-                        <small style="color: #666;">Tu donacin salva vidas de perros y gatos de la calle</small>
+                        <h3 style="color: #e91e63; margin: 0; font-size: 20px;">💝 Apoya Mascotas de Montevideo</h3>
+                        <small style="color: #666;">Tu donación salva vidas de perros y gatos de la calle</small>
                     </div>
                     
                     <div style="background: rgba(233, 30, 99, 0.1); padding: 16px; border-radius: 8px; border-left: 4px solid #e91e63; margin-bottom: 20px; text-align: center;">
                         <p style="margin: 0; font-size: 16px; color: #333; line-height: 1.6;">
-                             <strong>Tu ayuda hace la diferencia!</strong> <br>
-                            Cada donacin que hagas apoya directamente a <strong>fundaciones reales de Montevideo</strong> que rescatan, curan y buscan hogares para mascotas abandonadas.
+                            🐕 <strong>¡Tu ayuda hace la diferencia!</strong> 🐱<br>
+                            Cada donación que hagas apoya directamente a <strong>fundaciones reales de Montevideo</strong> que rescatan, curan y buscan hogares para mascotas abandonadas.
                         </p>
                     </div>
                     
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
-                        <!-- Fundacin 1 -->
+                        <!-- Fundación 1 -->
                         <div style="background: white; padding: 16px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border: 1px solid #e91e63;">
-                            <h4 style="color: #e91e63; margin: 0 0 8px 0;"> Fundacin Peludo Feliz</h4>
+                            <h4 style="color: #e91e63; margin: 0 0 8px 0;">🏠 Fundación Peludo Feliz</h4>
                             <p style="margin: 0 0 12px 0; font-size: 14px; color: #555;">
-                                Rescate y rehabilitacin de perros y gatos en situacin de calle. Ms de 500 mascotas salvadas.
+                                Rescate y rehabilitación de perros y gatos en situación de calle. Más de 500 mascotas salvadas.
                             </p>
                             <div style="display: flex; gap: 8px;">
                                 <a href="https://instagram.com/peludo_feliz_uy" target="_blank" style="
                                     background: #e91e63; color: white; padding: 6px 12px; border-radius: 15px; 
                                     text-decoration: none; font-size: 12px; font-weight: 600;
-                                "> Instagram</a>
+                                ">📱 Instagram</a>
                                 <a href="https://facebook.com/peludofelizuy" target="_blank" style="
                                     background: #3b5998; color: white; padding: 6px 12px; border-radius: 15px; 
                                     text-decoration: none; font-size: 12px; font-weight: 600;
-                                "> Facebook</a>
+                                ">📘 Facebook</a>
                             </div>
                         </div>
                         
-                        <!-- Fundacin 2 -->
+                        <!-- Fundación 2 -->
                         <div style="background: white; padding: 16px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border: 1px solid #e91e63;">
-                            <h4 style="color: #e91e63; margin: 0 0 8px 0;"> Refugio Cuatro Patas</h4>
+                            <h4 style="color: #e91e63; margin: 0 0 8px 0;">🐾 Refugio Cuatro Patas</h4>
                             <p style="margin: 0 0 12px 0; font-size: 14px; color: #555;">
-                                Hogar temporal y adopcin responsable. Atencin veterinaria gratuita para mascotas rescatadas.
+                                Hogar temporal y adopción responsable. Atención veterinaria gratuita para mascotas rescatadas.
                             </p>
                             <div style="display: flex; gap: 8px;">
                                 <a href="https://instagram.com/cuatro_patas_uy" target="_blank" style="
                                     background: #e91e63; color: white; padding: 6px 12px; border-radius: 15px; 
                                     text-decoration: none; font-size: 12px; font-weight: 600;
-                                "> Instagram</a>
+                                ">📱 Instagram</a>
                                 <a href="https://facebook.com/cuatropatasuy" target="_blank" style="
                                     background: #3b5998; color: white; padding: 6px 12px; border-radius: 15px; 
                                     text-decoration: none; font-size: 12px; font-weight: 600;
-                                "> Facebook</a>
+                                ">📘 Facebook</a>
                             </div>
                         </div>
                     </div>
                     
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
-                        <!-- Fundacin 3 -->
+                        <!-- Fundación 3 -->
                         <div style="background: white; padding: 16px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border: 1px solid #e91e63;">
-                            <h4 style="color: #e91e63; margin: 0 0 8px 0;"> Rescate Amor Animal</h4>
+                            <h4 style="color: #e91e63; margin: 0 0 8px 0;">❤️ Rescate Amor Animal</h4>
                             <p style="margin: 0 0 12px 0; font-size: 14px; color: #555;">
-                                Enfoque en casos de emergencia veterinaria. Cirugas y tratamientos para mascotas heridas.
+                                Enfoque en casos de emergencia veterinaria. Cirugías y tratamientos para mascotas heridas.
                             </p>
                             <div style="display: flex; gap: 8px;">
                                 <a href="https://instagram.com/amor_animal_uy" target="_blank" style="
                                     background: #e91e63; color: white; padding: 6px 12px; border-radius: 15px; 
                                     text-decoration: none; font-size: 12px; font-weight: 600;
-                                "> Instagram</a>
+                                ">📱 Instagram</a>
                                 <a href="https://facebook.com/amoranimaluy" target="_blank" style="
                                     background: #3b5998; color: white; padding: 6px 12px; border-radius: 15px; 
                                     text-decoration: none; font-size: 12px; font-weight: 600;
-                                "> Facebook</a>
+                                ">📘 Facebook</a>
                             </div>
                         </div>
                         
-                        <!-- Fundacin 4 -->
+                        <!-- Fundación 4 -->
                         <div style="background: white; padding: 16px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border: 1px solid #e91e63;">
-                            <h4 style="color: #e91e63; margin: 0 0 8px 0;"> Hogar Esperanza</h4>
+                            <h4 style="color: #e91e63; margin: 0 0 8px 0;">🌟 Hogar Esperanza</h4>
                             <p style="margin: 0 0 12px 0; font-size: 14px; color: #555;">
-                                Especialistas en gatos ferales y socializacin. Programas de castracin masiva.
+                                Especialistas en gatos ferales y socialización. Programas de castración masiva.
                             </p>
                             <div style="display: flex; gap: 8px;">
                                 <a href="https://instagram.com/hogar_esperanza_uy" target="_blank" style="
                                     background: #e91e63; color: white; padding: 6px 12px; border-radius: 15px; 
                                     text-decoration: none; font-size: 12px; font-weight: 600;
-                                "> Instagram</a>
+                                ">📱 Instagram</a>
                                 <a href="https://facebook.com/hogaresperanzauy" target="_blank" style="
                                     background: #3b5998; color: white; padding: 6px 12px; border-radius: 15px; 
                                     text-decoration: none; font-size: 12px; font-weight: 600;
-                                "> Facebook</a>
+                                ">📘 Facebook</a>
                             </div>
                         </div>
                     </div>
                     
                     <div style="background: rgba(255, 193, 7, 0.1); padding: 16px; border-radius: 8px; border-left: 4px solid #ffc107; margin-bottom: 20px; text-align: center;">
                         <p style="margin: 0; font-size: 14px; color: #333; line-height: 1.6;">
-                             <strong>Cmo ayudar?</strong><br>
+                            💡 <strong>¿Cómo ayudar?</strong><br>
                             Visita las redes sociales de estas fundaciones, comparte sus publicaciones, haz donaciones directas o adopta una mascota. 
-                            <strong>Cada accin cuenta!</strong> 
+                            <strong>¡Cada acción cuenta!</strong> 🙏
                         </p>
                     </div>
                     
-                    <!-- Botn de cierre -->
+                    <!-- Botón de cierre -->
                     <div style="text-align: center; padding: 16px 0 8px 0; border-top: 1px solid rgba(233, 30, 99, 0.2); margin-top: 20px;">
                         <button type="button" onclick="toggleDonationSection()" style="
                             background: linear-gradient(135deg, #e91e63 0%, #c2185b 100%);
@@ -1905,7 +1756,7 @@ HTML_TEMPLATE = '''
                             box-shadow: 0 3px 10px rgba(233, 30, 99, 0.3);
                         " onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 5px 15px rgba(233, 30, 99, 0.4)'" 
                            onmouseout="this.style.transform='translateY(0px)'; this.style.boxShadow='0 3px 10px rgba(233, 30, 99, 0.3)'">
-                             Cerrar Seccin de Donaciones
+                            ⬆️ Cerrar Sección de Donaciones
                         </button>
                     </div>
                 </div>
@@ -1923,7 +1774,7 @@ HTML_TEMPLATE = '''
             </div>
         {% endif %}
         
-        <!--  SECCIN GENERACIN POR PROMPT COLAPSABLE -->
+        <!-- 🚀 SECCIÓN GENERACIÓN POR PROMPT COLAPSABLE -->
         <div class="prompt-generation-collapsible">
             <div class="prompt-generation-header" onclick="togglePromptSection()" style="
                 background: linear-gradient(135deg, #3483fa 0%, #2968c8 100%);
@@ -1940,9 +1791,9 @@ HTML_TEMPLATE = '''
             " onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 20px rgba(52, 131, 250, 0.3)'" 
                onmouseout="this.style.transform='translateY(0px)'; this.style.boxShadow='0 4px 15px rgba(52, 131, 250, 0.2)'">
                 <div style="display: flex; align-items: center; gap: 12px;">
-                    <span style="font-size: 24px;"></span>
+                    <span style="font-size: 24px;">✨</span>
                     <div>
-                        <h3 style="margin: 0; font-size: 18px; font-weight: 600;">Generación por prompt (IA)</h3>
+                        <h3 style="margin: 0; font-size: 18px; font-weight: 600;">Generación por Prompt IA</h3>
                         <small style="opacity: 0.9; font-size: 14px;">Crear plantillas desde descripción de texto</small>
                     </div>
                 </div>
@@ -1957,7 +1808,7 @@ HTML_TEMPLATE = '''
                     <span id="promptToggleIcon" style="
                         font-size: 20px;
                         transition: transform 0.3s ease;
-                    "></span>
+                    ">▼</span>
                 </div>
             </div>
             
@@ -1972,7 +1823,7 @@ HTML_TEMPLATE = '''
                 margin-bottom: 24px;
             ">
                 <div style="padding: 24px;">
-                        <div style="
+                    <div style="
                         background: linear-gradient(135deg, #e3f2fd, #e1f5fe);
                         padding: 16px;
                         border-radius: 8px;
@@ -1980,7 +1831,7 @@ HTML_TEMPLATE = '''
                         border-left: 4px solid #3483fa;
                         color: #1565c0;
                     ">
-                        <strong>Generación inteligente:</strong> Describe tus productos y la IA creará una plantilla ML completa con datos realistas y precios competitivos.
+                        <strong>Generación Inteligente:</strong> Describe tus productos y la IA creará una plantilla ML completa con datos realistas y precios competitivos.
                     </div>
                     
                     <form method="post" action="/generate-from-prompt" enctype="multipart/form-data">
@@ -2010,7 +1861,7 @@ HTML_TEMPLATE = '''
                                 required
                             ></textarea>
                             <small style="color: #666; display: block; margin-top: 6px;">
-                                Incluye cantidad, modelos, colores, capacidades y detalles especficos
+                                Incluye cantidad, modelos, colores, capacidades y detalles específicos
                             </small>
                         </div>
                         
@@ -2039,7 +1890,7 @@ HTML_TEMPLATE = '''
                             </div>
                             
                             <div class="form-group">
-                                <label style="font-weight: 600; color: #333;">Categora principal:</label>
+                                <label style="font-weight: 600; color: #333;">Categoría principal:</label>
                                 <select 
                                     name="main_category"
                                     style="
@@ -2057,13 +1908,13 @@ HTML_TEMPLATE = '''
                                     onfocus="this.style.borderColor='#3483fa'; this.style.background='#fff';"
                                     onblur="this.style.borderColor='#e6e6e6'; this.style.background='#fafafa';"
                                 >
-                                    <option value="electronica">Electrnicos</option>
+                                    <option value="electronica">Electrónicos</option>
                                     <option value="ropa">Ropa y Accesorios</option>
-                                    <option value="hogar">Hogar y Jardn</option>
+                                    <option value="hogar">Hogar y Jardín</option>
                                     <option value="deportes">Deportes y Fitness</option>
                                     <option value="belleza">Belleza y Cuidado</option>
                                     <option value="juguetes">Juguetes y Juegos</option>
-                                    <option value="libros">Libros y Msica</option>
+                                    <option value="libros">Libros y Música</option>
                                     <option value="autos">Autos y Motos</option>
                                     <option value="otros">Otros</option>
                                 </select>
@@ -2096,7 +1947,7 @@ HTML_TEMPLATE = '''
                             </div>
                         </div>
                         
-                        <!-- Configuracin de IA - Solo Premium -->
+                        <!-- Configuración de IA - Solo Premium -->
                         {% if not user_info or user_info.account_type == 'premium' %}
                         <div style="
                             background: #f8f9fa;
@@ -2105,7 +1956,7 @@ HTML_TEMPLATE = '''
                             margin: 20px 0;
                             border: 1px solid #e9ecef;
                         ">
-                            <h4 style="color: #333; margin: 0 0 16px 0; font-size: 16px; font-weight: 600;">Configuracin de IA</h4>
+                            <h4 style="color: #333; margin: 0 0 16px 0; font-size: 16px; font-weight: 600;">Configuración de IA</h4>
                             
                             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
                                 <div class="form-group">
@@ -2123,7 +1974,7 @@ HTML_TEMPLATE = '''
                                         "
                                     >
                                         <option value="groq">Groq (Gratis)</option>
-                                        <option value="deepseek">DeepSeek (Econmico)</option>
+                                        <option value="deepseek">DeepSeek (Económico)</option>
                                     </select>
                                 </div>
                                 
@@ -2158,8 +2009,8 @@ HTML_TEMPLATE = '''
                             margin: 20px 0;
                             text-align: center;
                         ">
-                            <h4 style="color: #856404; margin: 0 0 10px 0;"> Funcionalidad Premium</h4>
-                            <p style="margin: 0;">La configuracin de IA requiere cuenta Premium. Actualiza tu cuenta para acceder a esta funcionalidad.</p>
+                            <h4 style="color: #856404; margin: 0 0 10px 0;">🔒 Funcionalidad Premium</h4>
+                            <p style="margin: 0;">La configuración de IA requiere cuenta Premium. Actualiza tu cuenta para acceder a esta funcionalidad.</p>
                         </div>
                         {% endif %}
                         
@@ -2185,12 +2036,12 @@ HTML_TEMPLATE = '''
                         
                         <div style="text-align: center; margin-top: 12px;">
                             <small style="color: #666;">
-                                La IA crear una plantilla ML completa con productos realistas
+                                La IA creará una plantilla ML completa con productos realistas
                             </small>
                         </div>
                     </form>
                     
-                    <!-- Botn de cierre -->
+                    <!-- Botón de cierre -->
                     <div style="
                         text-align: center;
                         padding: 16px 0 8px 0;
@@ -2210,7 +2061,7 @@ HTML_TEMPLATE = '''
                             box-shadow: 0 3px 10px rgba(52, 131, 250, 0.3);
                         " onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 5px 15px rgba(52, 131, 250, 0.4)'" 
                            onmouseout="this.style.transform='translateY(0px)'; this.style.boxShadow='0 3px 10px rgba(52, 131, 250, 0.3)'">
-                            Cerrar generación por prompt
+                            Cerrar Generación por Prompt
                         </button>
                     </div>
                 </div>
@@ -2239,7 +2090,7 @@ HTML_TEMPLATE = '''
         
         <form method="post" enctype="multipart/form-data">
             
-            <!-- SECCIN IA COLAPSABLE - Solo Premium -->
+            <!-- SECCIÓN IA COLAPSABLE - Solo Premium -->
             {% if not user_info or user_info.account_type == 'premium' %}
             <div class="ai-section-collapsible">
                 <div class="ai-section-header" onclick="toggleAISection()" style="
@@ -2257,10 +2108,10 @@ HTML_TEMPLATE = '''
                 " onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 20px rgba(52, 131, 250, 0.3)'" 
                    onmouseout="this.style.transform='translateY(0px)'; this.style.boxShadow='0 4px 15px rgba(52, 131, 250, 0.2)'">
                     <div style="display: flex; align-items: center; gap: 12px;">
-                        <span style="font-size: 24px;"></span>
+                        <span style="font-size: 24px;">🤖</span>
                         <div>
-                            <h3 style="margin: 0; font-size: 18px; font-weight: 600;">Configuracin de Inteligencia Artificial</h3>
-                            <small class="small-pill">Haz clic para configurar la IA (Opcional)</small>
+                            <h3 style="margin: 0; font-size: 18px; font-weight: 600;">Configuración de Inteligencia Artificial</h3>
+                            <small style="opacity: 0.9; font-size: 14px;">Haz clic para configurar la IA (Opcional)</small>
                         </div>
                     </div>
                     <div style="display: flex; align-items: center; gap: 8px;">
@@ -2274,7 +2125,7 @@ HTML_TEMPLATE = '''
                         <span id="aiToggleIcon" style="
                             font-size: 20px;
                             transition: transform 0.3s ease;
-                        "></span>
+                        ">▼</span>
                     </div>
                 </div>
                 
@@ -2296,7 +2147,7 @@ HTML_TEMPLATE = '''
                             margin-bottom: 20px;
                             border-left: 4px solid #66b3ff;
                         ">
-                            <strong> La IA ayuda a completar automáticamente:</strong> códigos universales, marcas, modelos, descripciones y características técnicas que falten en tus datos.
+                            <strong>🎯 La IA ayuda a completar automáticamente:</strong> códigos universales, marcas, modelos, descripciones y características técnicas que falten en tus datos.
                         </div>
                         
                         <div class="form-group">
@@ -2306,7 +2157,7 @@ HTML_TEMPLATE = '''
                                     <input type="radio" name="ai_provider" value="groq" id="groq" checked onchange="updateAIStatus()">
                                     <label for="groq">
                                         <strong>Groq</strong> <span class="cost-badge">GRATIS</span>
-                                        <span class="quality-stars"></span><br>
+                                        <span class="quality-stars">★★★★★</span><br>
                                         <small>Rápido y gratuito. Recomendado para empezar.</small>
                                     </label>
                                 </div>
@@ -2315,8 +2166,8 @@ HTML_TEMPLATE = '''
                                     <input type="radio" name="ai_provider" value="deepseek" id="deepseek" onchange="updateAIStatus()">
                                     <label for="deepseek">
                                         <strong>DeepSeek</strong> <span class="cost-badge">$0.14/1M</span>
-                                        <span class="quality-stars"></span><br>
-                                        <small>Muy econmico y excelente calidad.</small>
+                                        <span class="quality-stars">★★★★★</span><br>
+                                        <small>Muy económico y excelente calidad.</small>
                                     </label>
                                 </div>
                                 
@@ -2332,8 +2183,8 @@ HTML_TEMPLATE = '''
                         
                         <div class="form-group" id="api_key_section">
                             <label for="ai_api_key">API Key (requerida para Groq/DeepSeek):</label>
-                            <input type="password" name="ai_api_key" id="ai_api_key" placeholder="Ingresa tu API key aqu" onchange="updateAIStatus()">
-                            <small>Para Groq: Regstrate gratis en <a href="https://groq.com" target="_blank" style="color: #66b3ff;">groq.com</a></small>
+                            <input type="password" name="ai_api_key" id="ai_api_key" placeholder="Ingresa tu API key aquí" onchange="updateAIStatus()">
+                            <small>Para Groq: Regístrate gratis en <a href="https://groq.com" target="_blank" style="color: #66b3ff;">groq.com</a></small>
                         </div>
                         
                         <div class="form-group">
@@ -2345,11 +2196,11 @@ HTML_TEMPLATE = '''
                                 </div>
                                 <div class="checkbox-item">
                                     <input type="checkbox" name="ai_fields" value="marca" id="ai_marca" checked>
-                                    <label for="ai_marca"><span class="ai-enhanced">Marca</span> (si no est en datos)</label>
+                                    <label for="ai_marca"><span class="ai-enhanced">Marca</span> (si no está en datos)</label>
                                 </div>
                                 <div class="checkbox-item">
                                     <input type="checkbox" name="ai_fields" value="modelo" id="ai_modelo" checked>
-                                    <label for="ai_modelo"><span class="ai-enhanced">Modelo</span> (si no est en datos)</label>
+                                    <label for="ai_modelo"><span class="ai-enhanced">Modelo</span> (si no está en datos)</label>
                                 </div>
                                 <div class="checkbox-item">
                                     <input type="checkbox" name="ai_fields" value="descripcion" id="ai_desc">
@@ -2366,7 +2217,7 @@ HTML_TEMPLATE = '''
                             </div>
                         </div>
                         
-                        <!-- Botn de cierre en la parte inferior -->
+                        <!-- Botón de cierre en la parte inferior -->
                         <div style="
                             text-align: center;
                             padding: 16px 0 8px 0;
@@ -2386,7 +2237,7 @@ HTML_TEMPLATE = '''
                                 box-shadow: 0 3px 10px rgba(102, 179, 255, 0.3);
                             " onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 5px 15px rgba(102, 179, 255, 0.4)'" 
                                onmouseout="this.style.transform='translateY(0px)'; this.style.boxShadow='0 3px 10px rgba(102, 179, 255, 0.3)'">
-                                 Cerrar Configuracin IA
+                                ⬆️ Cerrar Configuración IA
                             </button>
                         </div>
                     </div>
@@ -2407,7 +2258,7 @@ HTML_TEMPLATE = '''
                 <small>Recomendado: Excel o CSV para mejor mapeo</small>
             </div>
             
-            <h3>Configuracin de Mapeo</h3>
+            <h3>Configuración de Mapeo</h3>
             
             <div class="mapping-section">
                 <label>Selecciona los campos que quieres mapear desde tus datos:</label>
@@ -2453,7 +2304,7 @@ HTML_TEMPLATE = '''
             <h3>Valores por Defecto</h3>
             
             <div class="form-group">
-                <label for="condicion">Condicin del producto:</label>
+                <label for="condicion">Condición del producto:</label>
                 <select name="condicion">
                     <option value="Nuevo" selected>Nuevo</option>
                     <option value="Usado">Usado</option>
@@ -2465,7 +2316,7 @@ HTML_TEMPLATE = '''
                 <label for="moneda">Moneda:</label>
                 <select name="moneda">
                     <option value="$" selected>$ (Peso Uruguayo)</option>
-                    <option value="USD">USD (Dlar)</option>
+                    <option value="USD">USD (Dólar)</option>
                 </select>
             </div>
             
@@ -2480,9 +2331,9 @@ HTML_TEMPLATE = '''
                 margin: 24px 0;
                 text-align: center;
             ">
-                <h3 style="color: #856404; margin: 0 0 15px 0;"> Inteligencia Artificial - Premium</h3>
+                <h3 style="color: #856404; margin: 0 0 15px 0;">🤖 Inteligencia Artificial - Premium</h3>
                 <p style="margin: 0 0 15px 0; font-size: 16px;">
-                    La IA automtica para autocompletar productos requiere cuenta Premium.
+                    La IA automática para autocompletar productos requiere cuenta Premium.
                 </p>
                 <div style="
                     background: rgba(255,255,255,0.7);
@@ -2491,16 +2342,16 @@ HTML_TEMPLATE = '''
                     margin-top: 15px;
                 ">
                     <strong>Con Premium obtienes:</strong><br>
-                     Autocompletado inteligente de títulos<br>
-                     Detección automática de marcas y modelos<br>
-                     Optimización de precios con IA<br>
-                     Generación de descripciones atractivas<br>
-                     Códigos EAN-13 automáticos
+                    • Autocompletado inteligente de títulos<br>
+                    • Detección automática de marcas y modelos<br>
+                    • Optimización de precios con IA<br>
+                    • Generación de descripciones atractivas<br>
+                    • Códigos EAN-13 automáticos
                 </div>
             </div>
             {% endif %}
             
-            <!-- NUEVA SECCIN: CONFIGURACIN MANUAL MASIVA -->
+            <!-- NUEVA SECCIÓN: CONFIGURACIÓN MANUAL MASIVA -->
             {% if user_info and user_info.account_type == 'premium' %}
             <div class="manual-config-collapsible">
                 <div class="manual-config-header" onclick="toggleManualSection()" style="
@@ -2518,9 +2369,9 @@ HTML_TEMPLATE = '''
                 " onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 20px rgba(40, 167, 69, 0.4)'" 
                    onmouseout="this.style.transform='translateY(0px)'; this.style.boxShadow='0 4px 15px rgba(40, 167, 69, 0.3)'">
                     <div style="display: flex; align-items: center; gap: 12px;">
-                        <span style="font-size: 24px;"></span>
+                        <span style="font-size: 24px;">⚙️</span>
                         <div>
-                            <h3 style="margin: 0; font-size: 18px; font-weight: 600;">Configuracin Manual Masiva</h3>
+                            <h3 style="margin: 0; font-size: 18px; font-weight: 600;">Configuración Manual Masiva</h3>
                             <small style="opacity: 0.9; font-size: 14px;">Haz clic para configurar valores masivos (Opcional)</small>
                         </div>
                     </div>
@@ -2535,7 +2386,7 @@ HTML_TEMPLATE = '''
                         <span id="manualToggleIcon" style="
                             font-size: 20px;
                             transition: transform 0.3s ease;
-                        "></span>
+                        ">▼</span>
                     </div>
                 </div>
                 
@@ -2557,18 +2408,18 @@ HTML_TEMPLATE = '''
                             margin-bottom: 20px;
                             border-left: 4px solid #28a745;
                         ">
-                            <strong> Configura valores que se aplicarn a todos los productos o selectivamente por nmero de fila.</strong><br>
-                             <em>Perfecto para tiendas que manejan valores estndar en todos sus productos.</em>
+                            <strong>⚙️ Configura valores que se aplicarán a todos los productos o selectivamente por número de fila.</strong><br>
+                            💡 <em>Perfecto para tiendas que manejan valores estándar en todos sus productos.</em>
                         </div>
                 
                 <!-- Stock Masivo -->
                 <div class="form-group">
-                    <label> Stock:</label>
+                    <label>📦 Stock:</label>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 12px;">
                         <div>
                             <label for="stock_global">Stock para todos los productos:</label>
                             <input type="number" name="stock_global" id="stock_global" placeholder="ej: 100" min="0" style="width: 100%; max-width: 100%;">
-                            <small>Aplicar a todos los productos detectados</small>
+                            <small>Aplicará a todos los productos detectados</small>
                         </div>
                         <div>
                             <label for="stock_selective">Stock selectivo (Fila#:Cantidad):</label>
@@ -2580,17 +2431,17 @@ HTML_TEMPLATE = '''
                 
                 <!-- Marca y Modelo -->
                 <div class="form-group">
-                    <label> Marca y Modelo:</label>
+                    <label>🏷️ Marca y Modelo:</label>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 12px;">
                         <div>
                             <label for="marca_global">Marca para todos:</label>
                             <input type="text" name="marca_global" id="marca_global" placeholder="ej: Samsung, Apple, Sony" style="width: 100%; max-width: 100%;">
-                            <small>Se aplicar a todos los productos</small>
+                            <small>Se aplicará a todos los productos</small>
                         </div>
                         <div>
                             <label for="modelo_global">Modelo para todos:</label>
                             <input type="text" name="modelo_global" id="modelo_global" placeholder="ej: Pro Max, Standard" style="width: 100%; max-width: 100%;">
-                            <small>Se aplicar a todos los productos</small>
+                            <small>Se aplicará a todos los productos</small>
                         </div>
                     </div>
                     <div>
@@ -2602,25 +2453,25 @@ HTML_TEMPLATE = '''
                 
                 <!-- Retiro en Persona -->
                 <div class="form-group">
-                    <label> Retiro en Persona:</label>
+                    <label>🏪 Retiro en Persona:</label>
                     <div style="display: flex; gap: 20px; align-items: center;">
-                        <label><input type="radio" name="retiro_persona" value="Acepto">  Acepto (todos los productos)</label>
-                        <label><input type="radio" name="retiro_persona" value="No acepto">  No acepto (todos los productos)</label>
+                        <label><input type="radio" name="retiro_persona" value="Acepto"> ✅ Acepto (todos los productos)</label>
+                        <label><input type="radio" name="retiro_persona" value="No acepto"> ❌ No acepto (todos los productos)</label>
                         <label><input type="radio" name="retiro_persona" value="" checked> Sin configurar</label>
                     </div>
                 </div>
                 
                 <!-- NUEVA SECCIÓN: FORMAS DE ENVÍO -->
                 <div class="form-group">
-                    <label> Formas de envío:</label>
+                    <label>🚚 Formas de Envío:</label>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 12px;">
                         <div>
                             <label for="forma_envio_global">Forma de envío para todos:</label>
                             <select name="forma_envio_global" id="forma_envio_global" style="width: 100%; max-width: 100%;">
                                 <option value="">Sin configurar</option>
-                                <option value="Mercado Envos"> Mercado Envíos</option>
-                                <option value="Mercado Envos + Mercado Envos Flex"> Mercado Envíos + Mercado Envíos Flex</option>
-                                <option value="Acordar con el vendedor"> Acordar con el vendedor</option>
+                                <option value="Mercado Envíos">🚚 Mercado Envíos</option>
+                                <option value="Mercado Envíos + Mercado Envíos Flex">🚚⚡ Mercado Envíos + Mercado Envíos Flex</option>
+                                <option value="Acordar con el vendedor">🤝 Acordar con el vendedor</option>
                             </select>
                             <small>Aplica a todos los productos</small>
                         </div>
@@ -2634,14 +2485,14 @@ HTML_TEMPLATE = '''
                 
                 <!-- NUEVA SECCIÓN: COSTO DE ENVÍO -->
                 <div class="form-group">
-                    <label> Costo de envío:</label>
+                    <label>💰 Costo de Envío:</label>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 12px;">
                         <div>
                             <label for="costo_envio_global">Costo para todos los productos:</label>
                             <select name="costo_envio_global" id="costo_envio_global" style="width: 100%; max-width: 100%;">
                                 <option value="">Sin configurar</option>
-                                <option value="A cargo del comprador"> A cargo del comprador</option>
-                                <option value="Envo gratis"> Envío gratis</option>
+                                <option value="A cargo del comprador">💳 A cargo del comprador</option>
+                                <option value="Envío gratis">🆓 Envío gratis</option>
                             </select>
                             <small>Política de costo de envío general</small>
                         </div>
@@ -2653,31 +2504,31 @@ HTML_TEMPLATE = '''
                     </div>
                 </div>
                 
-                <!-- NUEVA SECCIN: VARIACIONES POR COLOR -->
+                <!-- NUEVA SECCIÓN: VARIACIONES POR COLOR -->
                 <div class="form-group">
-                    <label> Variaciones por Color:</label>
+                    <label>🎨 Variaciones por Color:</label>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 12px;">
                         <div>
                             <label for="color_global">Color base para todos:</label>
                             <select name="color_global" id="color_global" style="width: 100%; max-width: 100%;">
                                 <option value="">Sin configurar</option>
-                                <option value="Negro"> Negro</option>
-                                <option value="Blanco"> Blanco</option>
-                                <option value="Azul"> Azul</option>
-                                <option value="Rojo"> Rojo</option>
-                                <option value="Verde"> Verde</option>
-                                <option value="Amarillo"> Amarillo</option>
-                                <option value="Rosa"> Rosa</option>
-                                <option value="Gris"> Gris</option>
-                                <option value="Marrn"> Marrn</option>
-                                <option value="Multicolor"> Multicolor</option>
-                                <option value="Transparente"> Transparente</option>
+                                <option value="Negro">⚫ Negro</option>
+                                <option value="Blanco">⚪ Blanco</option>
+                                <option value="Azul">🔵 Azul</option>
+                                <option value="Rojo">🔴 Rojo</option>
+                                <option value="Verde">🟢 Verde</option>
+                                <option value="Amarillo">🟡 Amarillo</option>
+                                <option value="Rosa">🩷 Rosa</option>
+                                <option value="Gris">⬜ Gris</option>
+                                <option value="Marrón">🟤 Marrón</option>
+                                <option value="Multicolor">🌈 Multicolor</option>
+                                <option value="Transparente">💎 Transparente</option>
                             </select>
                         </div>
                         <div>
                             <label for="color_comercial_global">Nombre comercial del color:</label>
                             <input type="text" name="color_comercial_global" id="color_comercial_global" placeholder="ej: Azul Marino, Rojo Cereza" style="width: 100%; max-width: 100%;">
-                            <small>Nombre especfico o comercial del color</small>
+                            <small>Nombre específico o comercial del color</small>
                         </div>
                     </div>
                     <div>
@@ -2687,89 +2538,89 @@ HTML_TEMPLATE = '''
                     </div>
                 </div>
                 
-                <!-- Garanta -->
+                <!-- Garantía -->
                 <div class="form-group">
-                    <label> Garanta:</label>
+                    <label>🛡️ Garantía:</label>
                     <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
                         <div>
-                            <label for="tipo_garantia">Tipo de garanta:</label>
+                            <label for="tipo_garantia">Tipo de garantía:</label>
                             <select name="tipo_garantia" id="tipo_garantia">
                                 <option value="">Sin configurar</option>
-                                <option value="Garanta del vendedor">Garanta del vendedor</option>
-                                <option value="Garanta de fbrica">Garanta de fbrica</option>
-                                <option value="Sin garanta">Sin garanta</option>
+                                <option value="Garantía del vendedor">Garantía del vendedor</option>
+                                <option value="Garantía de fábrica">Garantía de fábrica</option>
+                                <option value="Sin garantía">Sin garantía</option>
                             </select>
                         </div>
                         <div>
-                            <label for="tiempo_garantia">Tiempo garanta:</label>
+                            <label for="tiempo_garantia">Tiempo garantía:</label>
                             <input type="number" name="tiempo_garantia" id="tiempo_garantia" placeholder="ej: 12" min="0">
                         </div>
                         <div>
                             <label for="unidad_garantia">Unidad de tiempo:</label>
                             <select name="unidad_garantia" id="unidad_garantia">
                                 <option value="">Seleccionar</option>
-                                <option value="das">Das</option>
+                                <option value="días">Días</option>
                                 <option value="meses" selected>Meses</option>
-                                <option value="aos">Aos</option>
+                                <option value="años">Años</option>
                             </select>
                         </div>
                     </div>
                 </div>
                 
-                <!-- Cdigos Universales -->
+                <!-- Códigos Universales -->
                 <div class="form-group">
-                    <label> Cdigos Universales:</label>
+                    <label>🔢 Códigos Universales:</label>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start;">
                         <div style="padding-right: 8px;">
-                            <label for="codigo_universal_masivo">Cdigo base para todos:</label>
+                            <label for="codigo_universal_masivo">Código base para todos:</label>
                             <input type="text" name="codigo_universal_masivo" id="codigo_universal_masivo" placeholder="ej: PROD, SKU, UPC">
-                            <small>Se aplicar como base a todos los productos</small>
+                            <small>Se aplicará como base a todos los productos</small>
                         </div>
                         <div style="padding-left: 8px;">
-                            <label for="codigo_universal_secuencial" style="display: block; margin-bottom: 8px;">Numeracin automtica:</label>
+                            <label for="codigo_universal_secuencial" style="display: block; margin-bottom: 8px;">Numeración automática:</label>
                             <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
                                 <input type="checkbox" name="codigo_universal_secuencial" id="codigo_universal_secuencial">
-                                Agregar numeracin secuencial
+                                Agregar numeración secuencial
                             </label>
                             <input type="number" name="codigo_universal_offset" id="codigo_universal_offset" placeholder="Empezar en (ej: 1001)" min="1">
                             <small>Ej: PROD0001, PROD0002, PROD0003...</small>
                         </div>
                     </div>
                     <div style="margin-top: 12px;">
-                        <label for="codigo_universal_selective">Cdigos especficos (Fila#:Cdigo):</label>
+                        <label for="codigo_universal_selective">Códigos específicos (Fila#:Código):</label>
                         <textarea name="codigo_universal_selective" id="codigo_universal_selective" rows="2" placeholder="ej: 8:UPC123456, 10:EAN987654, 12:CODE555"></textarea>
-                        <small>Formato: Fila_Excel:Cdigo_Especfico (separados por comas)</small>
+                        <small>Formato: Fila_Excel:Código_Específico (separados por comas)</small>
                     </div>
                 </div>
                 
-                <!-- Catlogo -->
+                <!-- Catálogo -->
                 <div class="form-group">
-                    <label> Catlogo:</label>
+                    <label>📚 Catálogo:</label>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 12px;">
                         <div>
-                            <label for="tiene_catalogo">Los productos tienen catlogo?</label>
+                            <label for="tiene_catalogo">¿Los productos tienen catálogo?</label>
                             <select name="tiene_catalogo" id="tiene_catalogo" style="width: 100%; max-width: 100%;">
                                 <option value="">Sin configurar</option>
-                                <option value="Si">S, tienen catlogo</option>
-                                <option value="No">No tienen catlogo</option>
+                                <option value="Si">Sí, tienen catálogo</option>
+                                <option value="No">No tienen catálogo</option>
                             </select>
                         </div>
                         <div>
-                            <label for="numero_catalogo_selective">Nmeros de catlogo selectivos:</label>
+                            <label for="numero_catalogo_selective">Números de catálogo selectivos:</label>
                             <textarea name="numero_catalogo_selective" id="numero_catalogo_selective" rows="2" placeholder="ej: 8:CAT001, 10:CAT002, 12:CAT003" style="width: 100%; max-width: 100%;"></textarea>
-                            <small>Formato: Fila_Excel:Cdigo_Catlogo</small>
+                            <small>Formato: Fila_Excel:Código_Catálogo</small>
                         </div>
                     </div>
                 </div>
                 
-                <!-- Descripción global -->
+                <!-- Descripción Global -->
                 <div class="form-group">
-                    <label> Descripción global de la tienda:</label>
-                    <textarea name="descripcion_global" id="descripcion_global" rows="4" placeholder="ej: Horario: Lunes a Viernes 9-18h | Ubicación: Centro de Montevideo | WhatsApp: 099123456 | Envíos a todo el país"></textarea>
+                    <label>📝 Descripción Global de la Tienda:</label>
+                    <textarea name="descripcion_global" id="descripcion_global" rows="4" placeholder="ej: 🕒 Horario: Lunes a Viernes 9-18h | 📍 Ubicación: Centro de Montevideo | 📞 WhatsApp: 099123456 | ✅ Envíos a todo el país"></textarea>
                     <small>Esta información se agregará al final de cada descripción de producto. Usa emojis para mejor visualización.</small>
                 </div>
                 
-                        <!-- Botn de cierre en la parte inferior -->
+                        <!-- Botón de cierre en la parte inferior -->
                         <div style="
                             text-align: center;
                             padding: 16px 0 8px 0;
@@ -2789,7 +2640,7 @@ HTML_TEMPLATE = '''
                                 box-shadow: 0 3px 10px rgba(40, 167, 69, 0.3);
                             " onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 5px 15px rgba(40, 167, 69, 0.4)'" 
                                onmouseout="this.style.transform='translateY(0px)'; this.style.boxShadow='0 3px 10px rgba(40, 167, 69, 0.3)'">
-                                 Cerrar Configuracin Manual
+                                ⬆️ Cerrar Configuración Manual
                             </button>
                         </div>
                     </div>
@@ -2797,7 +2648,7 @@ HTML_TEMPLATE = '''
             </div>
             
             {% else %}
-            <!-- Mensaje para usuarios gratuitos sobre configuracin manual -->
+            <!-- Mensaje para usuarios gratuitos sobre configuración manual -->
             <div style="
                 background: linear-gradient(135deg, #f8f9fa, #e9ecef);
                 border: 1px solid #dee2e6;
@@ -2807,9 +2658,9 @@ HTML_TEMPLATE = '''
                 margin: 24px 0;
                 text-align: center;
             ">
-                <h3 style="color: #6c757d; margin: 0 0 15px 0;"> Configuracin Manual Masiva - Premium</h3>
+                <h3 style="color: #6c757d; margin: 0 0 15px 0;">⚙️ Configuración Manual Masiva - Premium</h3>
                 <p style="margin: 0 0 15px 0; font-size: 16px;">
-                    Las opciones de configuracin masiva estn disponibles solo para cuentas Premium.
+                    Las opciones de configuración masiva están disponibles solo para cuentas Premium.
                 </p>
                 <div style="
                     background: rgba(255,255,255,0.8);
@@ -2818,16 +2669,16 @@ HTML_TEMPLATE = '''
                     margin-top: 15px;
                 ">
                     <strong>Con Premium puedes configurar:</strong><br>
-                     Categoras masivas automticas<br>
-                     Precios y comisiones globales<br>
-                     Envos configurados en lote<br>
-                     Garantas estandarizadas<br>
-                     Cdigos universales automticos
+                    • Categorías masivas automáticas<br>
+                    • Precios y comisiones globales<br>
+                    • Envíos configurados en lote<br>
+                    • Garantías estandarizadas<br>
+                    • Códigos universales automáticos
                 </div>
             </div>
             {% endif %}
             
-            <!-- NUEVA SECCIN: CONFIGURACIN AVANZADA DE IA -->
+            <!-- NUEVA SECCIÓN: CONFIGURACIÓN AVANZADA DE IA -->
             {% if user_info and user_info.account_type == 'premium' %}
             <div class="advanced-ai-collapsible">
                 <div class="advanced-ai-header" onclick="toggleAdvancedAISection()" style="
@@ -2845,10 +2696,10 @@ HTML_TEMPLATE = '''
                 " onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 20px rgba(111, 66, 193, 0.4)'" 
                    onmouseout="this.style.transform='translateY(0px)'; this.style.boxShadow='0 4px 15px rgba(111, 66, 193, 0.3)'">
                     <div style="display: flex; align-items: center; gap: 12px;">
-                        <span style="font-size: 24px;"></span>
+                        <span style="font-size: 24px;">🤖</span>
                         <div>
-                            <h3 style="margin: 0; font-size: 18px; font-weight: 600;">Configuracin Avanzada de IA</h3>
-                            <small class="small-pill">Haz clic para personalizar prompts de IA (Opcional)</small>
+                            <h3 style="margin: 0; font-size: 18px; font-weight: 600;">Configuración Avanzada de IA</h3>
+                            <small style="opacity: 0.9; font-size: 14px;">Haz clic para personalizar prompts de IA (Opcional)</small>
                         </div>
                     </div>
                     <div style="display: flex; align-items: center; gap: 8px;">
@@ -2862,7 +2713,7 @@ HTML_TEMPLATE = '''
                         <span id="advancedAIToggleIcon" style="
                             font-size: 20px;
                             transition: transform 0.3s ease;
-                        "></span>
+                        ">▼</span>
                     </div>
                 </div>
                 
@@ -2884,25 +2735,25 @@ HTML_TEMPLATE = '''
                             margin-bottom: 20px;
                             border-left: 4px solid #6f42c1;
                         ">
-                            <strong> Personaliza cómo la IA procesará y mejorará tus productos automáticamente.</strong><br>
-                             <em>La IA se enfocará primero en campos OBLIGATORIOS y luego en mejoras adicionales.</em>
+                            <strong>🤖 Personaliza cómo la IA procesará y mejorará tus productos automáticamente.</strong><br>
+                            💡 <em>La IA se enfocará primero en campos OBLIGATORIOS y luego en mejoras adicionales.</em>
                         </div>
                 
                 <!-- Prompts Personalizados -->
                 <div class="form-group">
-                    <label> Mejora de Títulos (SEO):</label>
+                    <label>✨ Mejora de Títulos (SEO):</label>
                     <textarea name="ai_titulo_prompt" id="ai_titulo_prompt" rows="3" placeholder="ej: Mejora este título para que sea más atractivo y tenga mejor SEO. Incluye palabras clave relevantes sin hacer spam. Mantén el estilo profesional y claro."></textarea>
                     <small>Instrucciones para que la IA mejore los títulos con SEO optimizado</small>
                 </div>
                 
                 <div class="form-group">
-                    <label> Mejora de Descripciones:</label>
+                    <label>📝 Mejora de Descripciones:</label>
                     <textarea name="ai_descripcion_prompt" id="ai_descripcion_prompt" rows="4" placeholder="ej: Crea una descripción detallada y persuasiva. Incluye beneficios del producto, características técnicas importantes y llamadas a la acción. Usa un tono profesional pero cercano."></textarea>
                     <small>Instrucciones para generar descripciones más completas y atractivas</small>
                 </div>
                 
                 <div class="form-group">
-                    <label> Investigacin de Productos:</label>
+                    <label>🔍 Investigación de Productos:</label>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 12px;">
                         <div>
                             <label>
@@ -2912,18 +2763,18 @@ HTML_TEMPLATE = '''
                             <small>La IA investigará automáticamente especificaciones técnicas</small>
                         </div>
                         <div>
-                            <label for="ai_research_prompt">Instrucciones de investigacin:</label>
-                            <textarea name="ai_research_prompt" id="ai_research_prompt" rows="3" placeholder="ej: Busca informacin tcnica como peso, dimensiones, material, compatibilidad. Agrega solo datos verificables y relevantes para la categora del producto." style="width: 100%; max-width: 100%;"></textarea>
+                            <label for="ai_research_prompt">Instrucciones de investigación:</label>
+                            <textarea name="ai_research_prompt" id="ai_research_prompt" rows="3" placeholder="ej: Busca información técnica como peso, dimensiones, material, compatibilidad. Agrega solo datos verificables y relevantes para la categoría del producto." style="width: 100%; max-width: 100%;"></textarea>
                         </div>
                     </div>
                 </div>
                 
                 <!-- Campos Obligatorios IA -->
                 <div class="form-group">
-                    <label> Enfoque en Campos Obligatorios:</label>
+                    <label>⚡ Enfoque en Campos Obligatorios:</label>
                     <div class="checkbox-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
                         <label><input type="checkbox" name="ai_enforce_titulo" checked> Título optimizado</label>
-                        <label><input type="checkbox" name="ai_enforce_precio" checked> Validacin de precios</label>
+                        <label><input type="checkbox" name="ai_enforce_precio" checked> Validación de precios</label>
                         <label><input type="checkbox" name="ai_enforce_stock" checked> Stock realista</label>
                         <label><input type="checkbox" name="ai_enforce_marca" checked> Marca detectada</label>
                         <label><input type="checkbox" name="ai_enforce_modelo" checked> Modelo identificado</label>
@@ -2934,7 +2785,7 @@ HTML_TEMPLATE = '''
                 
                 <!-- Mejoras Opcionales -->
                 <div class="form-group">
-                    <label> Mejoras Adicionales Opcionales:</label>
+                    <label>🚀 Mejoras Adicionales Opcionales:</label>
                     <div class="checkbox-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
                         <label><input type="checkbox" name="ai_add_peso"> Peso del producto</label>
                         <label><input type="checkbox" name="ai_add_dimensiones"> Dimensiones</label>
@@ -2943,47 +2794,47 @@ HTML_TEMPLATE = '''
                         <label><input type="checkbox" name="ai_add_garantia"> Información de garantía</label>
                         <label><input type="checkbox" name="ai_add_usos"> Usos recomendados</label>
                     </div>
-                    <small>Campos adicionales que la IA puede completar si encuentra informacin relevante</small>
+                    <small>Campos adicionales que la IA puede completar si encuentra información relevante</small>
                 </div>
                 
-                <!-- Estilo de Comunicacin -->
+                <!-- Estilo de Comunicación -->
                 <div class="form-group">
-                    <label> Estilo de Comunicación:</label>
+                    <label>🎭 Estilo de Comunicación:</label>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 12px;">
                         <div>
                             <label for="ai_tone">Tono de voz:</label>
                             <select name="ai_tone" id="ai_tone" style="width: 100%; max-width: 100%;">
-                                <option value="profesional"> Profesional</option>
-                                <option value="amigable" selected> Amigable</option>
-                                <option value="tecnico"> Tcnico</option>
-                                <option value="persuasivo"> Persuasivo</option>
-                                <option value="minimalista"> Minimalista</option>
+                                <option value="profesional">🏢 Profesional</option>
+                                <option value="amigable" selected>😊 Amigable</option>
+                                <option value="tecnico">🔧 Técnico</option>
+                                <option value="persuasivo">💪 Persuasivo</option>
+                                <option value="minimalista">✨ Minimalista</option>
                             </select>
                         </div>
                         <div>
-                            <label for="ai_target">Pblico objetivo:</label>
+                            <label for="ai_target">Público objetivo:</label>
                             <select name="ai_target" id="ai_target" style="width: 100%; max-width: 100%;">
-                                <option value="general" selected> Pblico general</option>
-                                <option value="profesional"> Profesionales</option>
-                                <option value="hogar"> Uso domstico</option>
-                                <option value="tecnico"> Usuarios tcnicos</option>
-                                <option value="empresarial"> Empresarial</option>
+                                <option value="general" selected>👥 Público general</option>
+                                <option value="profesional">👔 Profesionales</option>
+                                <option value="hogar">🏠 Uso doméstico</option>
+                                <option value="tecnico">⚙️ Usuarios técnicos</option>
+                                <option value="empresarial">🏭 Empresarial</option>
                             </select>
                         </div>
                     </div>
                 </div>
                 
-                <!-- Gestin de Fotos - Coming Soon -->
+                <!-- Gestión de Fotos - Coming Soon -->
                 <div class="form-group" style="background: linear-gradient(135deg, #f5f5f5, #e8e8e8); padding: 16px; border-radius: 6px; border: 2px dashed #ccc;">
-                    <label> Gestin Automtica de Fotos:</label>
+                    <label>📸 Gestión Automática de Fotos:</label>
                     <div style="text-align: center; color: #666; padding: 20px;">
-                        <h4 style="color: #999;"> COMING SOON </h4>
-                        <p>Prximamente podrs conectar tu cuenta de ML para obtener automticamente las URLs de las fotos de tus productos.</p>
-                        <small>Esta funcionalidad estar disponible en futuras actualizaciones.</small>
+                        <h4 style="color: #999;">🚧 COMING SOON 🚧</h4>
+                        <p>Próximamente podrás conectar tu cuenta de ML para obtener automáticamente las URLs de las fotos de tus productos.</p>
+                        <small>Esta funcionalidad estará disponible en futuras actualizaciones.</small>
                     </div>
                 </div>
                 
-                        <!-- Botn de cierre en la parte inferior -->
+                        <!-- Botón de cierre en la parte inferior -->
                         <div style="
                             text-align: center;
                             padding: 16px 0 8px 0;
@@ -3003,7 +2854,7 @@ HTML_TEMPLATE = '''
                                 box-shadow: 0 3px 10px rgba(111, 66, 193, 0.3);
                             " onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 5px 15px rgba(111, 66, 193, 0.4)'" 
                                onmouseout="this.style.transform='translateY(0px)'; this.style.boxShadow='0 3px 10px rgba(111, 66, 193, 0.3)'">
-                                 Cerrar Configuracin Avanzada
+                                ⬆️ Cerrar Configuración Avanzada
                             </button>
                         </div>
                     </div>
@@ -3011,7 +2862,7 @@ HTML_TEMPLATE = '''
             </div>
             
             {% else %}
-            <!-- Mensaje para usuarios gratuitos sobre configuracin avanzada de IA -->
+            <!-- Mensaje para usuarios gratuitos sobre configuración avanzada de IA -->
             <div style="
                 background: linear-gradient(135deg, #f3e7ff, #e8d5ff);
                 border: 1px solid #d4b3ff;
@@ -3021,9 +2872,9 @@ HTML_TEMPLATE = '''
                 margin: 24px 0;
                 text-align: center;
             ">
-                <h3 style="color: #6b21a8; margin: 0 0 15px 0;"> Configuracin Avanzada de IA - Premium</h3>
+                <h3 style="color: #6b21a8; margin: 0 0 15px 0;">🤖 Configuración Avanzada de IA - Premium</h3>
                 <p style="margin: 0 0 15px 0; font-size: 16px;">
-                    La personalizacin avanzada de prompts de IA est disponible solo para cuentas Premium.
+                    La personalización avanzada de prompts de IA está disponible solo para cuentas Premium.
                 </p>
                 <div style="
                     background: rgba(255,255,255,0.8);
@@ -3032,11 +2883,11 @@ HTML_TEMPLATE = '''
                     margin-top: 15px;
                 ">
                     <strong>Con Premium puedes personalizar:</strong><br>
-                     Prompts de mejora de ttulos SEO<br>
-                     Instrucciones de descripcin automtica<br>
-                     Investigacin automtica de productos<br>
-                     Estilo de comunicacin personalizado<br>
-                     Enfoque en campos especficos
+                    • Prompts de mejora de títulos SEO<br>
+                    • Instrucciones de descripción automática<br>
+                    • Investigación automática de productos<br>
+                    • Estilo de comunicación personalizado<br>
+                    • Enfoque en campos específicos
                 </div>
             </div>
             {% endif %}
@@ -3060,15 +2911,15 @@ HTML_TEMPLATE = '''
                     min-width: 300px;
                 " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 25px rgba(52, 131, 250, 0.4)'" 
                    onmouseout="this.style.transform='translateY(0px)'; this.style.boxShadow='0 6px 20px rgba(52, 131, 250, 0.3)'">
-                     Procesar y Generar Archivo ML
+                    🚀 Procesar y Generar Archivo ML
                 </button>
                 <div style="margin-top: 12px; color: #666; font-size: 14px;">
-                     El procesamiento puede tomar entre 10-30 segundos
+                    ⏱️ El procesamiento puede tomar entre 10-30 segundos
                 </div>
             </div>
             
             {% else %}
-            <!-- Botn deshabilitado para usuarios gratuitos -->
+            <!-- Botón deshabilitado para usuarios gratuitos -->
             <div style="text-align: center; margin: 40px 0; padding: 20px;">
                 <div style="
                     background: linear-gradient(135deg, #ffc107, #ffb300);
@@ -3078,7 +2929,7 @@ HTML_TEMPLATE = '''
                     border-radius: 12px;
                     margin-bottom: 20px;
                 ">
-                    <h3 style="margin: 0 0 15px 0;"> Procesamiento Premium Requerido</h3>
+                    <h3 style="margin: 0 0 15px 0;">🔒 Procesamiento Premium Requerido</h3>
                     <p style="margin: 0 0 15px 0; font-size: 16px;">
                         Para procesar archivos y usar las funciones de IA necesitas una cuenta Premium.
                     </p>
@@ -3092,7 +2943,7 @@ HTML_TEMPLATE = '''
                         display: inline-block;
                         margin-top: 10px;
                     ">
-                         Obtener Premium
+                        ⭐ Obtener Premium
                     </a>
                 </div>
                 
@@ -3110,52 +2961,52 @@ HTML_TEMPLATE = '''
                     min-width: 300px;
                     opacity: 0.6;
                 ">
-                     Procesamiento Bloqueado
+                    🔒 Procesamiento Bloqueado
                 </button>
                 <div style="margin-top: 12px; color: #6c757d; font-size: 14px;">
-                     Requiere cuenta Premium para procesar
+                    ⚠️ Requiere cuenta Premium para procesar
                 </div>
             </div>
             {% endif %}
         </form>
         
-        <!--  PANTALLA DE CARGA CREATIVA CON VERSCULOS BBLICOS -->
+        <!-- 🎬 PANTALLA DE CARGA CREATIVA CON VERSÍCULOS BÍBLICOS -->
         <div class="loading-overlay" id="loadingOverlay">
             <div class="loading-container">
                 <div class="loading-logo">
-                    <span class="ml-animation"></span> ML Bulk Mapper Pro
+                    <span class="ml-animation">🚀</span> ML Bulk Mapper Pro
                 </div>
                 <div class="progress-container">
                     <div class="progress-bar" id="progressBar">0%</div>
                 </div>
                 <div class="loading-steps" id="loadingSteps">
                     <div class="loading-step" id="step1">
-                        <span class="loading-step-icon"></span>
+                        <span class="loading-step-icon">📁</span>
                         <span>Cargando archivos...</span>
                     </div>
                     <div class="loading-step" id="step2">
-                        <span class="loading-step-icon"></span>
+                        <span class="loading-step-icon">🔍</span>
                         <span>Analizando estructura de datos...</span>
                     </div>
                     <div class="loading-step" id="step3">
-                        <span class="loading-step-icon"></span>
+                        <span class="loading-step-icon">🧠</span>
                         <span>Procesando con IA...</span>
                     </div>
                     <div class="loading-step" id="step4">
-                        <span class="loading-step-icon"></span>
-                        <span>Aplicando configuracin manual...</span>
+                        <span class="loading-step-icon">🔧</span>
+                        <span>Aplicando configuración manual...</span>
                     </div>
                     <div class="loading-step" id="step5">
-                        <span class="loading-step-icon"></span>
+                        <span class="loading-step-icon">📊</span>
                         <span>Generando archivo ML...</span>
                     </div>
                     <div class="loading-step" id="step6">
-                        <span class="loading-step-icon"></span>
-                        <span>Completado!</span>
+                        <span class="loading-step-icon">✅</span>
+                        <span>¡Completado!</span>
                     </div>
                 </div>
                 
-                <!-- VERSCULOS BBLICOS CON EL NOMBRE DE JEHOV -->
+                <!-- VERSÍCULOS BÍBLICOS CON EL NOMBRE DE JEHOVÁ -->
                 <div class="bible-verse-container" id="bibleVerseContainer" style="
                     margin: 30px 0;
                     padding: 20px;
@@ -3166,7 +3017,7 @@ HTML_TEMPLATE = '''
                     max-width: 500px;
                 ">
                     <div style="font-size: 16px; line-height: 1.6; color: #333; font-style: italic; margin-bottom: 8px;" id="verseText">
-                        "Confa en Jehov con todo tu corazn, y no te apoyes en tu propia prudencia."
+                        "Confía en Jehová con todo tu corazón, y no te apoyes en tu propia prudencia."
                     </div>
                     <div style="font-size: 14px; color: #666; font-weight: 600;" id="verseReference">
                         - Proverbios 3:5
@@ -3174,13 +3025,13 @@ HTML_TEMPLATE = '''
                 </div>
                 
                 <p style="color: #666; font-size: 14px; margin-top: 20px;">
-                     Este proceso puede tomar entre 10-30 segundos dependiendo del tamao de tu archivo
+                    ⏱️ Este proceso puede tomar entre 10-30 segundos dependiendo del tamaño de tu archivo
                 </p>
             </div>
         </div>
         
         <script>
-        //  FUNCIONES PARA SECCIN IA COLAPSABLE
+        // 🤖 FUNCIONES PARA SECCIÓN IA COLAPSABLE
         let aiSectionExpanded = false;
         
         function toggleAISection() {
@@ -3191,13 +3042,13 @@ HTML_TEMPLATE = '''
                 // Colapsar
                 content.style.maxHeight = '0px';
                 icon.style.transform = 'rotate(0deg)';
-                icon.textContent = '';
+                icon.textContent = '▼';
                 aiSectionExpanded = false;
             } else {
-                // Expandir - Usar scrollHeight + padding extra para el botn
+                // Expandir - Usar scrollHeight + padding extra para el botón
                 content.style.maxHeight = (content.scrollHeight + 50) + 'px';
                 icon.style.transform = 'rotate(180deg)';
-                icon.textContent = '';
+                icon.textContent = '▲';
                 aiSectionExpanded = true;
             }
         }
@@ -3213,7 +3064,7 @@ HTML_TEMPLATE = '''
                 badge.textContent = 'MANUAL';
                 badge.style.background = 'rgba(255,193,7,0.3)';
             } else if ((groqSelected || deepseekSelected) && apiKey.length > 10) {
-                badge.textContent = 'CONFIGURADO ';
+                badge.textContent = 'CONFIGURADO ✓';
                 badge.style.background = 'rgba(40,167,69,0.3)';
             } else if (groqSelected || deepseekSelected) {
                 badge.textContent = 'API KEY FALTA';
@@ -3224,7 +3075,7 @@ HTML_TEMPLATE = '''
             }
         }
         
-        //  FUNCIONES PARA SECCIN MANUAL COLAPSABLE
+        // 🔧 FUNCIONES PARA SECCIÓN MANUAL COLAPSABLE
         let manualSectionExpanded = false;
         
         function toggleManualSection() {
@@ -3235,18 +3086,18 @@ HTML_TEMPLATE = '''
                 // Colapsar
                 content.style.maxHeight = '0px';
                 icon.style.transform = 'rotate(0deg)';
-                icon.textContent = '';
+                icon.textContent = '▼';
                 manualSectionExpanded = false;
             } else {
-                // Expandir - Usar scrollHeight + padding extra para el botn
+                // Expandir - Usar scrollHeight + padding extra para el botón
                 content.style.maxHeight = (content.scrollHeight + 50) + 'px';
                 icon.style.transform = 'rotate(180deg)';
-                icon.textContent = '';
+                icon.textContent = '▲';
                 manualSectionExpanded = true;
             }
         }
         
-        //  FUNCIONES PARA SECCIN IA AVANZADA COLAPSABLE
+        // 🚀 FUNCIONES PARA SECCIÓN IA AVANZADA COLAPSABLE
         let advancedAISectionExpanded = false;
         
         function toggleAdvancedAISection() {
@@ -3257,18 +3108,18 @@ HTML_TEMPLATE = '''
                 // Colapsar
                 content.style.maxHeight = '0px';
                 icon.style.transform = 'rotate(0deg)';
-                icon.textContent = '';
+                icon.textContent = '▼';
                 advancedAISectionExpanded = false;
             } else {
-                // Expandir - Usar scrollHeight + padding extra para el botn
+                // Expandir - Usar scrollHeight + padding extra para el botón
                 content.style.maxHeight = (content.scrollHeight + 50) + 'px';
                 icon.style.transform = 'rotate(180deg)';
-                icon.textContent = '';
+                icon.textContent = '▲';
                 advancedAISectionExpanded = true;
             }
         }
         
-        //  FUNCIONES PARA SECCIN AYUDA COLAPSABLE
+        // 🆘 FUNCIONES PARA SECCIÓN AYUDA COLAPSABLE
         let helpSectionExpanded = false;
         
         function toggleHelpSection() {
@@ -3285,7 +3136,7 @@ HTML_TEMPLATE = '''
             }
         }
         
-        //  FUNCIONES PARA SECCIN DONACIN COLAPSABLE
+        // 💝 FUNCIONES PARA SECCIÓN DONACIÓN COLAPSABLE
         let donationSectionExpanded = false;
         
         function toggleDonationSection() {
@@ -3302,51 +3153,51 @@ HTML_TEMPLATE = '''
             }
         }
         
-        // Inicializar estado al cargar la pgina
+        // Inicializar estado al cargar la página
         document.addEventListener('DOMContentLoaded', function() {
             updateAIStatus();
         });
         
-        //  VERSCULOS BBLICOS CON EL NOMBRE DE JEHOV
+        // 📖 VERSÍCULOS BÍBLICOS CON EL NOMBRE DE JEHOVÁ
         const bibleVerses = [
             {
-                text: "Confa en Jehov con todo tu corazn, y no te apoyes en tu propia prudencia.",
+                text: "Confía en Jehová con todo tu corazón, y no te apoyes en tu propia prudencia.",
                 reference: "Proverbios 3:5"
             },
             {
-                text: "Jehov tu Dios est en medio de ti como poderoso salvador.",
-                reference: "Sofonas 3:17"
+                text: "Jehová tu Dios está en medio de ti como poderoso salvador.",
+                reference: "Sofonías 3:17"
             },
             {
-                text: "Jehov es mi pastor; nada me faltar.",
+                text: "Jehová es mi pastor; nada me faltará.",
                 reference: "Salmo 23:1"
             },
             {
-                text: "Cuando pases por las aguas, yo estar contigo, dice Jehov.",
-                reference: "Isaas 43:2"
+                text: "Cuando pases por las aguas, yo estaré contigo, dice Jehová.",
+                reference: "Isaías 43:2"
             },
             {
-                text: "Jehov pelear por vosotros, y vosotros estaris tranquilos.",
-                reference: "xodo 14:14"
+                text: "Jehová peleará por vosotros, y vosotros estaréis tranquilos.",
+                reference: "Éxodo 14:14"
             },
             {
-                text: "Los ojos de Jehov contemplan toda la tierra para mostrar su poder a favor de los que tienen corazn perfecto para con l.",
-                reference: "2 Crnicas 16:9"
+                text: "Los ojos de Jehová contemplan toda la tierra para mostrar su poder a favor de los que tienen corazón perfecto para con él.",
+                reference: "2 Crónicas 16:9"
             },
             {
-                text: "Echad sobre Jehov vuestras cargas, y l os sustentar.",
+                text: "Echad sobre Jehová vuestras cargas, y él os sustentará.",
                 reference: "Salmo 55:22"
             },
             {
-                text: "Jehov est cerca de todos los que le invocan, de todos los que le invocan de veras.",
+                text: "Jehová está cerca de todos los que le invocan, de todos los que le invocan de veras.",
                 reference: "Salmo 145:18"
             },
             {
-                text: "Porque yo soy Jehov tu Dios, quien te sostiene de tu mano derecha, y te dice: No temas, yo te ayudo.",
-                reference: "Isaas 41:13"
+                text: "Porque yo soy Jehová tu Dios, quien te sostiene de tu mano derecha, y te dice: No temas, yo te ayudo.",
+                reference: "Isaías 41:13"
             },
             {
-                text: "As ha dicho Jehov: No temis ni os amedrentis; esforzaos y sed valientes.",
+                text: "Así ha dicho Jehová: No temáis ni os amedrentéis; esforzaos y sed valientes.",
                 reference: "Deuteronomio 31:6"
             }
         ];
@@ -3361,7 +3212,7 @@ HTML_TEMPLATE = '''
             document.getElementById('verseReference').textContent = `- ${verse.reference}`;
         }
         
-        //  SISTEMA DE CARGA CREATIVO
+        // 🎬 SISTEMA DE CARGA CREATIVO
         document.querySelector('form').addEventListener('submit', function(e) {
             const templateFile = document.querySelector('input[name="template"]').files[0];
             const contentFile = document.querySelector('input[name="content"]').files[0];
@@ -3383,10 +3234,10 @@ HTML_TEMPLATE = '''
             
             overlay.style.display = 'flex';
             
-            // Mostrar primer versculo
+            // Mostrar primer versículo
             updateBibleVerse();
             
-            // Cambiar versculos cada 4 segundos
+            // Cambiar versículos cada 4 segundos
             const verseInterval = setInterval(updateBibleVerse, 4000);
             
             let currentStep = 0;
@@ -3429,7 +3280,7 @@ HTML_TEMPLATE = '''
                     completeStep(steps[currentStep - 1]);
                     activateStep(steps[currentStep]);
                     clearInterval(progressInterval);
-                    clearInterval(verseInterval); // Detener rotacin de versculos
+                    clearInterval(verseInterval); // Detener rotación de versículos
                 }
             }, 800);
         }
@@ -3442,13 +3293,13 @@ HTML_TEMPLATE = '''
             const step = document.getElementById(stepId);
             step.classList.remove('active');
             step.classList.add('completed');
-            step.querySelector('.loading-step-icon').textContent = '';
+            step.querySelector('.loading-step-icon').textContent = '✅';
         }
         </script>
         
         {% if output_file %}
             <div class="success">
-                <strong>Archivo generado exitosamente!</strong><br>
+                <strong>¡Archivo generado exitosamente!</strong><br>
                 {{ ai_summary if ai_summary else '' }}<br>
                 {{ manual_summary if manual_summary else '' }}<br>
                 <a href="{{ url_for('download_file', filename=output_file) }}" style="color: #00a650; font-weight: 600;">Descargar archivo para Mercado Libre</a>
@@ -3457,14 +3308,14 @@ HTML_TEMPLATE = '''
         
         <div class="creator-signature">
             Desarrollado por <span class="creator-name">Joss Mateo</span><br>
-            <small>Herramienta profesional para automatizacin de Mercado Libre</small>
+            <small>Herramienta profesional para automatización de Mercado Libre</small>
         </div>
     </div>
     
-    <!--  LOADING OVERLAY MVIL-OPTIMIZADO -->
+    <!-- 📱 LOADING OVERLAY MÓVIL-OPTIMIZADO -->
     <div id="loadingOverlay" class="loading-overlay">
         <div class="loading-container">
-            <div class="loading-logo"> ML Mapper Pro</div>
+            <div class="loading-logo">🚀 ML Mapper Pro</div>
             <div style="color: #666; margin-bottom: 20px;">Procesando con IA...</div>
             
             <div class="progress-container">
@@ -3473,25 +3324,25 @@ HTML_TEMPLATE = '''
             
             <div class="loading-steps">
                 <div class="loading-step">
-                    <span class="step-icon"></span>
+                    <span class="step-icon">📄</span>
                     <span class="step-text">Leyendo archivo...</span>
                 </div>
                 <div class="loading-step">
-                    <span class="step-icon"></span>
+                    <span class="step-icon">🤖</span>
                     <span class="step-text">Procesando con IA...</span>
                 </div>
                 <div class="loading-step">
-                    <span class="step-icon"></span>
+                    <span class="step-icon">📋</span>
                     <span class="step-text">Generando template ML...</span>
                 </div>
                 <div class="loading-step">
-                    <span class="step-icon"></span>
-                    <span class="step-text">Completado!</span>
+                    <span class="step-icon">✅</span>
+                    <span class="step-text">¡Completado!</span>
                 </div>
             </div>
             
             <div style="color: #999; font-size: 12px; margin-top: 16px;">
-                 Esto puede tomar unos momentos en dispositivos mviles
+                ⏱️ Esto puede tomar unos momentos en dispositivos móviles
             </div>
         </div>
     </div>
@@ -3500,20 +3351,20 @@ HTML_TEMPLATE = '''
 </html>
 '''
 
-# Funcin para analizar plantilla ML y extraer estructura
+# Función para analizar plantilla ML y extraer estructura
 def analyze_ml_template(file_path):
-    """Analiza la plantilla de ML y extrae la estructura de categoras con deteccin inteligente"""
-    #  FIX CRTICO: Usar data_only=True (compatible con todas las versiones)
+    """Analiza la plantilla de ML y extrae la estructura de categorías con detección inteligente"""
+    # 🔧 FIX CRÍTICO: Usar data_only=True (compatible con todas las versiones)
     try:
         wb = openpyxl.load_workbook(file_path, data_only=True)
     except TypeError:
         # Fallback para versiones muy antiguas
         wb = openpyxl.load_workbook(file_path)
     
-    # Encontrar hoja de categora (no Ayuda ni Legales)
+    # Encontrar hoja de categoría (no Ayuda ni Legales)
     category_sheet = None
     
-    #  BUSCAR HOJA CORRECTA: Evitar hojas de ayuda/legales
+    # 🎯 BUSCAR HOJA CORRECTA: Evitar hojas de ayuda/legales
     priority_sheets = []
     for sheet_name in wb.sheetnames:
         sheet_name_lower = sheet_name.lower()
@@ -3521,23 +3372,23 @@ def analyze_ml_template(file_path):
             priority_sheets.append(sheet_name)
     
     if priority_sheets:
-        category_sheet = wb[priority_sheets[0]]  # Usar la primera hoja vlida
+        category_sheet = wb[priority_sheets[0]]  # Usar la primera hoja válida
     else:
         category_sheet = wb.active  # Fallback
     
     if not category_sheet:
-        raise ValueError("No se encontr hoja de categora en la plantilla ML")
+        raise ValueError("No se encontró hoja de categoría en la plantilla ML")
 
-    #  EXTRAER HEADERS DE FILA 3 CON MAPEO INTELIGENTE
+    # 🎯 EXTRAER HEADERS DE FILA 3 CON MAPEO INTELIGENTE
     headers = {}
     obligatory_fields = {}
     
     # Headers conocidos de ML para mapeo inteligente
     ml_header_mapping = {
-        'cdigo de catlogo': 'catalogo',
-        'ttulo': 'titulo',
-        'condicin': 'condicion',
-        'cdigo universal': 'codigo_universal',
+        'código de catálogo': 'catalogo',
+        'título': 'titulo',
+        'condición': 'condicion',
+        'código universal': 'codigo_universal',
         'color': 'color',
         'nombre comercial': 'color_comercial',
         'fotos': 'fotos',
@@ -3545,21 +3396,21 @@ def analyze_ml_template(file_path):
         'stock': 'stock',
         'precio': 'precio',
         'moneda': 'moneda',
-        'descripcin': 'descripcion',
+        'descripción': 'descripcion',
         'cargo por venta': 'cargo_venta',
-        'forma de envo': 'forma_envio',
-        'costo de envo': 'costo_envio',
+        'forma de envío': 'forma_envio',
+        'costo de envío': 'costo_envio',
         'retiro en persona': 'retiro_persona',
-        'tipo de garanta': 'garantia_tipo',
-        'tiempo de garanta': 'garantia_tiempo',
+        'tipo de garantía': 'garantia_tipo',
+        'tiempo de garantía': 'garantia_tiempo',
         'unidad de tiempo': 'garantia_unidad',
         'tienda oficial': 'tienda_oficial',
         'marca': 'marca',
         'modelo': 'modelo',
         'formato de venta': 'formato_venta',
         'unidades por pack': 'unidades_pack',
-        'dimetro': 'diametro',
-        'unidad de dimetro': 'unidad_diametro',
+        'diámetro': 'diametro',
+        'unidad de diámetro': 'unidad_diametro',
         'largo': 'largo',
         'unidad de largo': 'unidad_largo',
         'material': 'material',
@@ -3570,7 +3421,7 @@ def analyze_ml_template(file_path):
     }
     
     for col in range(1, category_sheet.max_column + 1):
-        header = safe_get_cell_value(category_sheet, 3, col)  # FILA 3 es donde estn los headers
+        header = safe_get_cell_value(category_sheet, 3, col)  # FILA 3 es donde están los headers
         obligatory = safe_get_cell_value(category_sheet, 4, col)  # FILA 4 indica obligatoriedad
         
         if header and len(str(header).strip()) > 0:
@@ -3592,7 +3443,7 @@ def analyze_ml_template(file_path):
             break
     
     if not category_sheet:
-        raise ValueError("No se encontr hoja de categora en la plantilla ML")
+        raise ValueError("No se encontró hoja de categoría en la plantilla ML")
     
     # Extraer headers (fila 3) con manejo seguro de MergedCell
     headers = {}
@@ -3603,11 +3454,11 @@ def analyze_ml_template(file_path):
     
     return category_sheet, headers
 
-# Funcin mejorada para leer datos de productos
+# Función mejorada para leer datos de productos
 def read_product_data(file_path, file_ext):
     """Lee datos de productos desde diferentes formatos con manejo de MergedCell"""
     if file_ext in ['xlsx', 'xls']:
-        #  FIX CRTICO: Manejo de MergedCell y data_only=True para frmulas
+        # 🔧 FIX CRÍTICO: Manejo de MergedCell y data_only=True para fórmulas
         try:
             wb = openpyxl.load_workbook(file_path, data_only=True)
         except TypeError:
@@ -3640,13 +3491,13 @@ def read_product_data(file_path, file_ext):
                     value = safe_get_cell_value(sheet, row, col)
                     
                     if value is not None:
-                        #  Para precios, asegurar que sean nmeros vlidos
+                        # 💰 Para precios, asegurar que sean números válidos
                         if 'precio' in headers[col-1]:
                             try:
                                 # Convertir a float y formatear
                                 if isinstance(value, str) and value.startswith('='):
-                                    # Si todava hay frmula, evaluar manualmente o usar valor por defecto
-                                    print(f"  Frmula detectada en precio: {value}")
+                                    # Si todavía hay fórmula, evaluar manualmente o usar valor por defecto
+                                    print(f"⚠️  Fórmula detectada en precio: {value}")
                                     product[headers[col-1]] = "0"  # Valor por defecto
                                 else:
                                     value = float(value)
@@ -3672,8 +3523,8 @@ def read_product_data(file_path, file_ext):
         return products
     
     else:
-        # Para PDF, DOCX, TXT - retornar datos bsicos
-        return [{'content': f'Datos extrados de {file_path}'}]
+        # Para PDF, DOCX, TXT - retornar datos básicos
+        return [{'content': f'Datos extraídos de {file_path}'}]
 
 @app.route('/', methods=['GET', 'POST'])
 @login_required
@@ -3690,7 +3541,7 @@ def index():
                                            message_type="error",
                                            user_info=session)
             
-            # Obtener configuracin IA
+            # Obtener configuración IA
             ai_provider = request.form.get('ai_provider', 'manual')
             
             # Validar funcionalidades premium
@@ -3727,12 +3578,12 @@ def index():
             content_ext = content_filename.split('.')[-1].lower()
             products = read_product_data(content_path, content_ext)
             
-            # Obtener configuracin de mapeo
+            # Obtener configuración de mapeo
             selected_fields = request.form.getlist('map_fields')
             condicion = request.form.get('condicion', 'Nuevo')
             moneda = request.form.get('moneda', '$')
             
-            #  NUEVA CONFIGURACIN MANUAL MASIVA
+            # 🔧 NUEVA CONFIGURACIÓN MANUAL MASIVA
             manual_config = {
                 'stock_global': request.form.get('stock_global'),
                 'stock_selective': request.form.get('stock_selective'),
@@ -3746,7 +3597,7 @@ def index():
                 'tiene_catalogo': request.form.get('tiene_catalogo'),
                 'numero_catalogo_selective': request.form.get('numero_catalogo_selective'),
                 'descripcion_global': request.form.get('descripcion_global'),
-                #  NUEVAS CONFIGURACIONES
+                # 🆕 NUEVAS CONFIGURACIONES
                 'forma_envio_global': request.form.get('forma_envio_global'),
                 'forma_envio_selective': request.form.get('forma_envio_selective'),
                 'costo_envio_global': request.form.get('costo_envio_global'),
@@ -3754,14 +3605,14 @@ def index():
                 'color_global': request.form.get('color_global'),
                 'color_comercial_global': request.form.get('color_comercial_global'),
                 'color_selective': request.form.get('color_selective'),
-                #  CDIGOS UNIVERSALES
+                # 🔢 CÓDIGOS UNIVERSALES
                 'codigo_universal_masivo': request.form.get('codigo_universal_masivo'),
                 'codigo_universal_secuencial': request.form.get('codigo_universal_secuencial') == 'on',
                 'codigo_universal_offset': int(request.form.get('codigo_universal_offset', 1)) if request.form.get('codigo_universal_offset') else 1,
                 'codigo_universal_selective': request.form.get('codigo_universal_selective')
             }
             
-            #  NUEVA CONFIGURACIN AVANZADA DE IA
+            # 🤖 NUEVA CONFIGURACIÓN AVANZADA DE IA
             ai_config = {
                 'titulo_prompt': request.form.get('ai_titulo_prompt', ''),
                 'descripcion_prompt': request.form.get('ai_descripcion_prompt', ''),
@@ -3783,31 +3634,31 @@ def index():
                 'target': request.form.get('ai_target', 'general')
             }
             
-            #  PROCESAR CON IA - Enriquecer datos de productos
+            # 🧠 PROCESAR CON IA - Enriquecer datos de productos
             ai_summary = ""
-            debug_info = []  #  NUEVO: Log de debug detallado
+            debug_info = []  # 🔍 NUEVO: Log de debug detallado
             
-            debug_info.append(" INICIANDO PROCESAMIENTO...")
-            debug_info.append(f" Total productos detectados: {len(products)}")
-            debug_info.append(f" Campos a mapear: {selected_fields}")
-            debug_info.append(f" IA habilitada: {'S' if ai_provider != 'manual' else 'No'}")
-            debug_info.append(f" Configuracin manual: {'Activa' if any(manual_config.values()) else 'No configurada'}")
+            debug_info.append("🔍 INICIANDO PROCESAMIENTO...")
+            debug_info.append(f"📊 Total productos detectados: {len(products)}")
+            debug_info.append(f"📋 Campos a mapear: {selected_fields}")
+            debug_info.append(f"🧠 IA habilitada: {'Sí' if ai_provider != 'manual' else 'No'}")
+            debug_info.append(f"🔧 Configuración manual: {'Activa' if any(manual_config.values()) else 'No configurada'}")
             
-            #  Debug precios ANTES del procesamiento IA
+            # 🔍 Debug precios ANTES del procesamiento IA
             precios_detectados_input = 0
             for i, product in enumerate(products):
                 precio_value = find_product_value(product, 'precio')
                 if precio_value:
                     precios_detectados_input += 1
-                    debug_info.append(f" INPUT Precio fila {i+2}: {precio_value}")
-            debug_info.append(f" Total precios detectados en INPUT: {precios_detectados_input}")
+                    debug_info.append(f"💰 INPUT Precio fila {i+2}: {precio_value}")
+            debug_info.append(f"💰 Total precios detectados en INPUT: {precios_detectados_input}")
             
             if ai_provider != 'manual' and ai_fields:
                 enhanced_products = []
                 ai_stats = {'enhanced': 0, 'total': len(products)}
                 
                 for product in products:
-                    # Determinar qu campos faltan
+                    # Determinar qué campos faltan
                     missing_fields = []
                     for field in ai_fields:
                         if not find_product_value(product, field):
@@ -3819,14 +3670,14 @@ def index():
                             ai_data = local_ai_enhancer.generate_missing_data(product, missing_fields)
                             product.update(ai_data)
                             ai_stats['enhanced'] += 1
-                            debug_info.append(f" IA mejor producto: {missing_fields}")
+                            debug_info.append(f"🧠 IA mejoró producto: {missing_fields}")
                         except Exception as e:
-                            debug_info.append(f" Error IA para producto {product}: {e}")
+                            debug_info.append(f"❌ Error IA para producto {product}: {e}")
                     
                     enhanced_products.append(product)
                 
                 products = enhanced_products
-                ai_summary = f" IA proces {ai_stats['enhanced']}/{ai_stats['total']} productos, completando {len(ai_fields)} tipos de campos."
+                ai_summary = f"🧠 IA procesó {ai_stats['enhanced']}/{ai_stats['total']} productos, completando {len(ai_fields)} tipos de campos."
                 debug_info.append(ai_summary)
             
             # Crear archivo de salida
@@ -3839,8 +3690,8 @@ def index():
             # Procesar y llenar datos
             wb_output = openpyxl.load_workbook(output_path)
             
-            #  PROCESAR CONFIGURACIONES MANUALES SELECTIVAS
-            debug_info.append(" PROCESANDO CONFIGURACIONES MANUALES...")
+            # 🛠️ PROCESAR CONFIGURACIONES MANUALES SELECTIVAS
+            debug_info.append("🔧 PROCESANDO CONFIGURACIONES MANUALES...")
             
             # Configuraciones selectivas por fila
             stock_overrides = {}
@@ -3856,9 +3707,9 @@ def index():
                         if ':' in item:
                             row, stock = item.strip().split(':', 1)
                             stock_overrides[int(row)] = stock.strip()
-                            debug_info.append(f" Stock selectivo fila {row}: {stock}")
+                            debug_info.append(f"📦 Stock selectivo fila {row}: {stock}")
                 except Exception as e:
-                    debug_info.append(f" Error en stock selectivo: {e}")
+                    debug_info.append(f"⚠️ Error en stock selectivo: {e}")
             
             # Procesar marca/modelo selectivo
             if manual_config.get('marca_modelo_selective'):
@@ -3869,33 +3720,33 @@ def index():
                             if len(parts) >= 3:
                                 row, marca, modelo = parts[0], parts[1], ':'.join(parts[2:])
                                 marca_modelo_overrides[int(row)] = {'marca': marca.strip(), 'modelo': modelo.strip()}
-                                debug_info.append(f" Marca/Modelo fila {row}: {marca}/{modelo}")
+                                debug_info.append(f"🏷️ Marca/Modelo fila {row}: {marca}/{modelo}")
                 except Exception as e:
-                    debug_info.append(f" Error en marca/modelo selectivo: {e}")
+                    debug_info.append(f"⚠️ Error en marca/modelo selectivo: {e}")
             
-            #  Procesar forma de envo selectiva
+            # 🆕 Procesar forma de envío selectiva
             if manual_config.get('forma_envio_selective'):
                 try:
                     for item in manual_config['forma_envio_selective'].split(','):
                         if ':' in item:
                             row, forma = item.strip().split(':', 1)
                             forma_envio_overrides[int(row)] = forma.strip()
-                            debug_info.append(f" Forma envo fila {row}: {forma}")
+                            debug_info.append(f"🚚 Forma envío fila {row}: {forma}")
                 except Exception as e:
-                    debug_info.append(f" Error en forma envo selectiva: {e}")
+                    debug_info.append(f"⚠️ Error en forma envío selectiva: {e}")
             
-            #  Procesar costo de envo selectivo
+            # 🆕 Procesar costo de envío selectivo
             if manual_config.get('costo_envio_selective'):
                 try:
                     for item in manual_config['costo_envio_selective'].split(','):
                         if ':' in item:
                             row, costo = item.strip().split(':', 1)
                             costo_envio_overrides[int(row)] = costo.strip()
-                            debug_info.append(f" Costo envo fila {row}: {costo}")
+                            debug_info.append(f"💰 Costo envío fila {row}: {costo}")
                 except Exception as e:
-                    debug_info.append(f" Error en costo envo selectivo: {e}")
+                    debug_info.append(f"⚠️ Error en costo envío selectivo: {e}")
             
-            #  Procesar color selectivo
+            # 🆕 Procesar color selectivo
             if manual_config.get('color_selective'):
                 try:
                     for item in manual_config['color_selective'].split(','):
@@ -3904,11 +3755,11 @@ def index():
                             if len(parts) >= 3:
                                 row, color, nombre_comercial = parts[0], parts[1], ':'.join(parts[2:])
                                 color_overrides[int(row)] = {'color': color.strip(), 'nombre_comercial': nombre_comercial.strip()}
-                                debug_info.append(f" Color fila {row}: {color}/{nombre_comercial}")
+                                debug_info.append(f"🎨 Color fila {row}: {color}/{nombre_comercial}")
                 except Exception as e:
-                    debug_info.append(f" Error en color selectivo: {e}")
+                    debug_info.append(f"⚠️ Error en color selectivo: {e}")
             
-            # Encontrar hoja de categora
+            # Encontrar hoja de categoría
             category_sheet_name = None
             for sheet_name in wb_output.sheetnames:
                 if sheet_name.lower() not in ['ayuda', 'legales', 'extra info']:
@@ -3916,7 +3767,7 @@ def index():
                     break
             
             if not category_sheet_name:
-                raise ValueError("No se encontr hoja de categora en la plantilla")
+                raise ValueError("No se encontró hoja de categoría en la plantilla")
             
             output_sheet = wb_output[category_sheet_name]
             
@@ -3925,11 +3776,11 @@ def index():
             
             wb_output.save(output_path)
             
-            success_message = f"Archivo generado exitosamente! {len(products)} productos procesados."
+            success_message = f"¡Archivo generado exitosamente! {len(products)} productos procesados."
             if ai_provider != 'manual':
                 success_message += f" Con IA {ai_provider.upper()}."
             
-            # Agregar informacin sobre configuracin manual aplicada
+            # Agregar información sobre configuración manual aplicada
             manual_summary = ""
             if manual_config:
                 applied_configs = []
@@ -3944,19 +3795,19 @@ def index():
                 if manual_config.get('retiro_persona'):
                     applied_configs.append(f"Retiro persona: {manual_config['retiro_persona']}")
                 if manual_config.get('tipo_garantia'):
-                    applied_configs.append(f"Garanta: {manual_config['tipo_garantia']}")
+                    applied_configs.append(f"Garantía: {manual_config['tipo_garantia']}")
                 if manual_config.get('descripcion_global'):
-                    applied_configs.append("Descripcin global agregada")
-                #  NUEVAS CONFIGURACIONES
+                    applied_configs.append("Descripción global agregada")
+                # 🆕 NUEVAS CONFIGURACIONES
                 if manual_config.get('forma_envio_global'):
-                    applied_configs.append(f"Forma envo: {manual_config['forma_envio_global']}")
+                    applied_configs.append(f"Forma envío: {manual_config['forma_envio_global']}")
                 if manual_config.get('costo_envio_global'):
-                    applied_configs.append(f"Costo envo: {manual_config['costo_envio_global']}")
+                    applied_configs.append(f"Costo envío: {manual_config['costo_envio_global']}")
                 if manual_config.get('color_global'):
                     applied_configs.append(f"Color: {manual_config['color_global']}")
                 
                 if applied_configs:
-                    manual_summary = f" Configuracin manual aplicada: {', '.join(applied_configs)}"
+                    manual_summary = f"⚙️ Configuración manual aplicada: {', '.join(applied_configs)}"
             
             # Convertir debug_info a string para mostrar
             debug_info_str = '\n'.join(debug_info) if debug_info else None
@@ -3977,32 +3828,32 @@ def index():
     return render_template_string(HTML_TEMPLATE, user_info=session)
 
 def fill_ml_template(sheet, headers, products, selected_fields, condicion, moneda, manual_config=None, obligatory_fields=None, debug_info=None):
-    """Llena la plantilla ML con datos de productos y configuracin manual masiva con mapeo inteligente"""
+    """Llena la plantilla ML con datos de productos y configuración manual masiva con mapeo inteligente"""
     
     if debug_info is None:
         debug_info = []
         
-    debug_info.append(" INICIANDO MAPEO INTELIGENTE ML...")
-    debug_info.append(f" Headers ML detectados: {len(headers)}")
-    debug_info.append(f" Productos a mapear: {len(products)}")
-    debug_info.append(f" Campos obligatorios detectados: {sum(1 for v in (obligatory_fields or {}).values() if v)}")
+    debug_info.append("📋 INICIANDO MAPEO INTELIGENTE ML...")
+    debug_info.append(f"📊 Headers ML detectados: {len(headers)}")
+    debug_info.append(f"📦 Productos a mapear: {len(products)}")
+    debug_info.append(f"⚡ Campos obligatorios detectados: {sum(1 for v in (obligatory_fields or {}).values() if v)}")
     
-    #  MAPEO DINMICO INTELIGENTE basado en headers detectados
+    # 🎯 MAPEO DINÁMICO INTELIGENTE basado en headers detectados
     ml_columns = {}
     
-    # Buscar columnas por contenido de header (ms flexible)
+    # Buscar columnas por contenido de header (más flexible)
     for col, header in headers.items():
         if isinstance(header, str):
             header_lower = header.lower()
             
             # Mapeo inteligente basado en palabras clave
-            if 'ttulo' in header_lower and 'incluye producto' in header_lower:
+            if 'título' in header_lower and 'incluye producto' in header_lower:
                 ml_columns['titulo'] = col
-            elif header_lower.strip() == 'condicin':
+            elif header_lower.strip() == 'condición':
                 ml_columns['condicion'] = col
-            elif 'cdigo universal' in header_lower:
+            elif 'código universal' in header_lower:
                 ml_columns['codigo_universal'] = col
-            elif 'vara por' in header_lower and 'color' in header_lower and 'comercial' not in header_lower:
+            elif 'varía por' in header_lower and 'color' in header_lower and 'comercial' not in header_lower:
                 ml_columns['color'] = col
             elif 'nombre comercial' in header_lower and 'color' in header_lower:
                 ml_columns['color_comercial'] = col
@@ -4014,48 +3865,48 @@ def fill_ml_template(sheet, headers, products, selected_fields, condicion, moned
                 ml_columns['precio'] = col
             elif header_lower.strip() == 'moneda':
                 ml_columns['moneda'] = col
-            elif header_lower.strip() == 'descripcin':
+            elif header_lower.strip() == 'descripción':
                 ml_columns['descripcion'] = col
-            elif 'forma de envo' in header_lower:
+            elif 'forma de envío' in header_lower:
                 ml_columns['forma_envio'] = col
-            elif 'costo de envo' in header_lower:
+            elif 'costo de envío' in header_lower:
                 ml_columns['costo_envio'] = col
             elif 'retiro en persona' in header_lower:
                 ml_columns['retiro_persona'] = col
-            elif 'tipo de garanta' in header_lower:
+            elif 'tipo de garantía' in header_lower:
                 ml_columns['garantia_tipo'] = col
-            elif 'tiempo de garanta' in header_lower:
+            elif 'tiempo de garantía' in header_lower:
                 ml_columns['garantia_tiempo'] = col
-            elif 'unidad de tiempo' in header_lower and 'garanta' in header_lower:
+            elif 'unidad de tiempo' in header_lower and 'garantía' in header_lower:
                 ml_columns['garantia_unidad'] = col
             elif header_lower.strip() == 'marca':
                 ml_columns['marca'] = col
             elif header_lower.strip() == 'modelo':
                 ml_columns['modelo'] = col
-            elif 'cdigo de catlogo' in header_lower:
+            elif 'código de catálogo' in header_lower:
                 ml_columns['catalogo'] = col
             elif header_lower.strip() == 'material':
                 ml_columns['material'] = col
             elif header_lower.strip() == 'peso':
                 ml_columns['peso'] = col
-            elif 'dimetro' in header_lower and 'unidad' not in header_lower:
+            elif 'diámetro' in header_lower and 'unidad' not in header_lower:
                 ml_columns['diametro'] = col
             elif 'largo' in header_lower and 'unidad' not in header_lower:
                 ml_columns['largo'] = col
     
-    debug_info.append(" MAPEO DINMICO COMPLETADO:")
+    debug_info.append("� MAPEO DINÁMICO COMPLETADO:")
     for field, col in ml_columns.items():
         obligatorio = obligatory_fields.get(col, False) if obligatory_fields else False
-        status = " OBLIGATORIO" if obligatorio else " Opcional"
+        status = "⚡ OBLIGATORIO" if obligatorio else "📋 Opcional"
         col_letter = chr(64 + col) if col <= 26 else f"A{chr(64 + col - 26)}"
         debug_info.append(f"  {field} -> Columna {col_letter} ({col}) - {status}")
     
-    # Contadores para estadsticas
+    # Contadores para estadísticas
     productos_mapeados = 0
     precios_mapeados = 0
     campos_aplicados = {field: 0 for field in ml_columns.keys()}
     
-    #  Procesar configuraciones selectivas (acceder desde manual_config)
+    # 🛠️ Procesar configuraciones selectivas (acceder desde manual_config)
     stock_overrides = {}
     marca_modelo_overrides = {}
     forma_envio_overrides = {}
@@ -4085,7 +3936,7 @@ def fill_ml_template(sheet, headers, products, selected_fields, condicion, moned
             except:
                 pass
         
-        # Procesar forma de envo selectiva
+        # Procesar forma de envío selectiva
         if manual_config.get('forma_envio_selective'):
             try:
                 for item in manual_config['forma_envio_selective'].split(','):
@@ -4095,7 +3946,7 @@ def fill_ml_template(sheet, headers, products, selected_fields, condicion, moned
             except:
                 pass
         
-        # Procesar costo de envo selectivo
+        # Procesar costo de envío selectivo
         if manual_config.get('costo_envio_selective'):
             try:
                 for item in manual_config['costo_envio_selective'].split(','):
@@ -4119,12 +3970,12 @@ def fill_ml_template(sheet, headers, products, selected_fields, condicion, moned
     
     # Mapear cada producto
     for i, product in enumerate(products):
-        row_num = i + 8  #  FIX CRTICO: Fila en Excel (empezando desde la 8, NO desde la 4)
+        row_num = i + 8  # 🎯 FIX CRÍTICO: Fila en Excel (empezando desde la 8, NO desde la 4)
         producto_mapeado = False
         
-        debug_info.append(f" Procesando producto {i+1}/{len(products)} (fila {row_num})")
+        debug_info.append(f"📦 Procesando producto {i+1}/{len(products)} (fila {row_num})")
         
-        # Mapear campos bsicos
+        # Mapear campos básicos
         for field in selected_fields:
             if field in ml_columns:
                 col = ml_columns[field]
@@ -4135,12 +3986,12 @@ def fill_ml_template(sheet, headers, products, selected_fields, condicion, moned
                     campos_aplicados[field] += 1
                     producto_mapeado = True
                     
-                    #  Debug especial para precios
+                    # 💰 Debug especial para precios
                     if field == 'precio':
                         precios_mapeados += 1
-                        debug_info.append(f" PRECIO MAPEADO fila {row_num}: {value}")
+                        debug_info.append(f"💰 PRECIO MAPEADO fila {row_num}: {value}")
         
-        #  APLICAR CONFIGURACIONES MANUALES GLOBALES Y SELECTIVAS
+        # 🔧 APLICAR CONFIGURACIONES MANUALES GLOBALES Y SELECTIVAS
         
         # Stock
         if manual_config.get('stock_global') and 'stock' in ml_columns:
@@ -4180,9 +4031,9 @@ def fill_ml_template(sheet, headers, products, selected_fields, condicion, moned
                 campos_aplicados['modelo'] += 1
                 producto_mapeado = True
         
-        #  NUEVAS CONFIGURACIONES
+        # 🆕 NUEVAS CONFIGURACIONES
         
-        # Forma de envo
+        # Forma de envío
         if manual_config.get('forma_envio_global') and 'forma_envio' in ml_columns:
             if row_num not in forma_envio_overrides:
                 safe_set_cell_value(sheet, row_num, ml_columns['forma_envio'], manual_config['forma_envio_global'])
@@ -4194,7 +4045,7 @@ def fill_ml_template(sheet, headers, products, selected_fields, condicion, moned
             campos_aplicados['forma_envio'] += 1
             producto_mapeado = True
         
-        # Costo de envo
+        # Costo de envío
         if manual_config.get('costo_envio_global') and 'costo_envio' in ml_columns:
             if row_num not in costo_envio_overrides:
                 safe_set_cell_value(sheet, row_num, ml_columns['costo_envio'], manual_config['costo_envio_global'])
@@ -4236,7 +4087,7 @@ def fill_ml_template(sheet, headers, products, selected_fields, condicion, moned
             campos_aplicados['retiro_persona'] += 1
             producto_mapeado = True
         
-        # Garanta
+        # Garantía
         if manual_config.get('tipo_garantia') and 'garantia_tipo' in ml_columns:
             safe_set_cell_value(sheet, row_num, ml_columns['garantia_tipo'], manual_config['tipo_garantia'])
             campos_aplicados['garantia_tipo'] += 1
@@ -4252,15 +4103,15 @@ def fill_ml_template(sheet, headers, products, selected_fields, condicion, moned
             campos_aplicados['garantia_unidad'] += 1
             producto_mapeado = True
         
-        # Cdigos universales masivos
+        # Códigos universales masivos
         if manual_config.get('codigo_universal_masivo') and 'codigo_universal' in ml_columns:
             codigo_masivo = manual_config['codigo_universal_masivo']
-            # Agregar nmero secuencial si se especifica
+            # Agregar número secuencial si se especifica
             if manual_config.get('codigo_universal_secuencial', False):
-                # Usar el ndice actual + offset si se especifica
+                # Usar el índice actual + offset si se especifica
                 offset = manual_config.get('codigo_universal_offset', 1)
-                numero_secuencial = row_num - 7 + offset  #  FIX: Ajustar porque empezamos en fila 8 (no 4)
-                codigo_final = f"{codigo_masivo}{numero_secuencial:04d}"  # Formato con 4 dgitos
+                numero_secuencial = row_num - 7 + offset  # 🎯 FIX: Ajustar porque empezamos en fila 8 (no 4)
+                codigo_final = f"{codigo_masivo}{numero_secuencial:04d}"  # Formato con 4 dígitos
             else:
                 codigo_final = codigo_masivo
             
@@ -4268,7 +4119,7 @@ def fill_ml_template(sheet, headers, products, selected_fields, condicion, moned
             campos_aplicados['codigo_universal'] += 1
             producto_mapeado = True
         
-        # Valores por defecto (condicin, moneda, envo)
+        # Valores por defecto (condición, moneda, envío)
         if 'condicion' in ml_columns:
             safe_set_cell_value(sheet, row_num, ml_columns['condicion'], condicion)
             campos_aplicados['condicion'] += 1
@@ -4279,9 +4130,9 @@ def fill_ml_template(sheet, headers, products, selected_fields, condicion, moned
             campos_aplicados['moneda'] += 1
             producto_mapeado = True
         
-        #  VALORES POR DEFECTO PARA ENVO (CAMPOS OBLIGATORIOS)
+        # 🚚 VALORES POR DEFECTO PARA ENVÍO (CAMPOS OBLIGATORIOS)
         if 'forma_envio' in ml_columns and not manual_config.get('forma_envio_global'):
-            safe_set_cell_value(sheet, row_num, ml_columns['forma_envio'], 'Mercado Envos')
+            safe_set_cell_value(sheet, row_num, ml_columns['forma_envio'], 'Mercado Envíos')
             campos_aplicados['forma_envio'] += 1
             producto_mapeado = True
             
@@ -4295,7 +4146,7 @@ def fill_ml_template(sheet, headers, products, selected_fields, condicion, moned
             campos_aplicados['retiro_persona'] += 1
             producto_mapeado = True
         
-        # Descripcin global
+        # Descripción global
         if manual_config.get('descripcion_global') and 'descripcion' in ml_columns:
             existing_desc = find_product_value(product, 'descripcion') or ""
             combined_desc = f"{existing_desc}\n\n{manual_config['descripcion_global']}" if existing_desc else manual_config['descripcion_global']
@@ -4306,35 +4157,35 @@ def fill_ml_template(sheet, headers, products, selected_fields, condicion, moned
         if producto_mapeado:
             productos_mapeados += 1
     
-    #  Generar estadsticas finales
-    debug_info.append(" ESTADSTICAS FINALES DE MAPEO:")
-    debug_info.append(f" Productos mapeados: {productos_mapeados}/{len(products)}")
-    debug_info.append(f" Precios mapeados: {precios_mapeados}")
+    # 📊 Generar estadísticas finales
+    debug_info.append("📊 ESTADÍSTICAS FINALES DE MAPEO:")
+    debug_info.append(f"✅ Productos mapeados: {productos_mapeados}/{len(products)}")
+    debug_info.append(f"💰 Precios mapeados: {precios_mapeados}")
     
     for campo, cantidad in campos_aplicados.items():
         if cantidad > 0:
-            debug_info.append(f" {campo}: {cantidad} valores aplicados")
+            debug_info.append(f"📋 {campo}: {cantidad} valores aplicados")
     
     return debug_info
     
     # Mapeo de campos
     field_mapping = {
-        'titulo': 'Ttulo: incluye producto, marca, modelo y destaca sus caractersticas principales',
+        'titulo': 'Título: incluye producto, marca, modelo y destaca sus características principales',
         'precio': 'Precio',
         'stock': 'Stock',
         'sku': 'SKU',
-        'descripcion': 'Descripcin',
+        'descripcion': 'Descripción',
         'marca': 'Marca',
         'modelo': 'Modelo',
-        'codigo_universal': 'Cdigo universal de producto',
+        'codigo_universal': 'Código universal de producto',
         'color': 'Color',
         'peso': 'Peso',
         'retiro_persona': 'Acepto retiro del comprador en domicilio del vendedor',
-        'tipo_garantia': 'Tipo de garanta',
-        'tiempo_garantia': 'Tiempo de garanta',
-        'unidad_garantia': 'Unidad de tiempo de la garanta',
-        'catalogo': 'El producto tiene catlogo',
-        'numero_catalogo': 'Nmero de catlogo'
+        'tipo_garantia': 'Tipo de garantía',
+        'tiempo_garantia': 'Tiempo de garantía',
+        'unidad_garantia': 'Unidad de tiempo de la garantía',
+        'catalogo': 'El producto tiene catálogo',
+        'numero_catalogo': 'Número de catálogo'
     }
     
     # Encontrar columnas en la plantilla
@@ -4345,7 +4196,7 @@ def fill_ml_template(sheet, headers, products, selected_fields, condicion, moned
                 column_map[field] = col_num
                 break
     
-    # Procesar configuracin selectiva de la configuracin manual
+    # Procesar configuración selectiva de la configuración manual
     stock_selective_dict = {}
     marca_modelo_selective_dict = {}
     catalogo_selective_dict = {}
@@ -4374,7 +4225,7 @@ def fill_ml_template(sheet, headers, products, selected_fields, condicion, moned
             except Exception as e:
                 print(f"Error procesando marca/modelo selectivo: {e}")
         
-        # Procesar catlogo selectivo
+        # Procesar catálogo selectivo
         if manual_config.get('numero_catalogo_selective'):
             try:
                 for item in manual_config['numero_catalogo_selective'].split(','):
@@ -4382,9 +4233,9 @@ def fill_ml_template(sheet, headers, products, selected_fields, condicion, moned
                         fila, numero = item.strip().split(':')
                         catalogo_selective_dict[int(fila)] = numero
             except Exception as e:
-                print(f"Error procesando catlogo selectivo: {e}")
+                print(f"Error procesando catálogo selectivo: {e}")
         
-        # Procesar cdigos universales selectivos
+        # Procesar códigos universales selectivos
         if manual_config.get('codigo_universal_selective'):
             try:
                 for item in manual_config['codigo_universal_selective'].split(','):
@@ -4392,14 +4243,14 @@ def fill_ml_template(sheet, headers, products, selected_fields, condicion, moned
                         fila, codigo = item.strip().split(':')
                         codigo_universal_selective_dict[int(fila)] = codigo
             except Exception as e:
-                print(f"Error procesando cdigo universal selectivo: {e}")
+                print(f"Error procesando código universal selectivo: {e}")
     
     # Llenar datos para cada producto
-    start_row = 8  # Comenzar despus de las filas de headers e instrucciones
+    start_row = 8  # Comenzar después de las filas de headers e instrucciones
     
     for i, product in enumerate(products):
         row_num = start_row + i
-        excel_row = row_num  # Fila real en Excel para configuracin selectiva
+        excel_row = row_num  # Fila real en Excel para configuración selectiva
         
         # Llenar campos seleccionados del archivo de datos
         for field in selected_fields:
@@ -4411,7 +4262,7 @@ def fill_ml_template(sheet, headers, products, selected_fields, condicion, moned
                 if value:
                     safe_set_cell_value(sheet, row_num, col_num, value)
         
-        #  APLICAR CONFIGURACIN MANUAL MASIVA
+        # 🔧 APLICAR CONFIGURACIÓN MANUAL MASIVA
         if manual_config:
             
             # Stock: selectivo tiene prioridad sobre global
@@ -4440,7 +4291,7 @@ def fill_ml_template(sheet, headers, products, selected_fields, condicion, moned
             if manual_config.get('retiro_persona') and 'retiro_persona' in column_map:
                 safe_set_cell_value(sheet, row_num, column_map['retiro_persona'], manual_config['retiro_persona'])
             
-            # Garanta
+            # Garantía
             if manual_config.get('tipo_garantia') and 'tipo_garantia' in column_map:
                 safe_set_cell_value(sheet, row_num, column_map['tipo_garantia'], manual_config['tipo_garantia'])
             if manual_config.get('tiempo_garantia') and 'tiempo_garantia' in column_map:
@@ -4448,19 +4299,19 @@ def fill_ml_template(sheet, headers, products, selected_fields, condicion, moned
             if manual_config.get('unidad_garantia') and 'unidad_garantia' in column_map:
                 safe_set_cell_value(sheet, row_num, column_map['unidad_garantia'], manual_config['unidad_garantia'])
             
-            # Catlogo
+            # Catálogo
             if manual_config.get('tiene_catalogo') and 'catalogo' in column_map:
                 safe_set_cell_value(sheet, row_num, column_map['catalogo'], manual_config['tiene_catalogo'])
             
-            # Nmero de catlogo selectivo
+            # Número de catálogo selectivo
             if excel_row in catalogo_selective_dict and 'numero_catalogo' in column_map:
                 safe_set_cell_value(sheet, row_num, column_map['numero_catalogo'], catalogo_selective_dict[excel_row])
             
-            # Cdigo universal selectivo (sobrescribe el masivo si existe)
+            # Código universal selectivo (sobrescribe el masivo si existe)
             if excel_row in codigo_universal_selective_dict and 'codigo_universal' in column_map:
                 safe_set_cell_value(sheet, row_num, column_map['codigo_universal'], codigo_universal_selective_dict[excel_row])
             
-            # Descripcin global: agregar al final de descripcin existente
+            # Descripción global: agregar al final de descripción existente
             if manual_config.get('descripcion_global') and 'descripcion' in column_map:
                 existing_desc = safe_get_cell_value(sheet, row_num, column_map['descripcion']) or ""
                 if existing_desc:
@@ -4469,10 +4320,10 @@ def fill_ml_template(sheet, headers, products, selected_fields, condicion, moned
                     new_desc = manual_config['descripcion_global']
                 safe_set_cell_value(sheet, row_num, column_map['descripcion'], new_desc)
         
-        # Llenar valores por defecto estndar
-        if 'Condicin' in [headers.get(col) for col in headers]:
+        # Llenar valores por defecto estándar
+        if 'Condición' in [headers.get(col) for col in headers]:
             for col_num, header in headers.items():
-                if 'Condicin' in header:
+                if 'Condición' in header:
                     safe_set_cell_value(sheet, row_num, col_num, condicion)
                     break
         
@@ -4505,10 +4356,10 @@ def find_product_value(product, field):
                 if variation in key.lower():
                     value = product[key]
                     
-                    #  CONVERSIN ESPECIAL PARA PRECIOS Y NMEROS
+                    # 🎯 CONVERSIÓN ESPECIAL PARA PRECIOS Y NÚMEROS
                     if field in ['precio', 'stock']:
                         try:
-                            # Remover smbolos de moneda y espacios
+                            # Remover símbolos de moneda y espacios
                             if isinstance(value, str):
                                 cleaned_value = value.replace('$', '').replace(',', '').replace(' ', '').strip()
                                 return float(cleaned_value)
@@ -4553,36 +4404,36 @@ def generate_from_prompt():
         
         if not product_prompt:
             return render_template_string(HTML_TEMPLATE, 
-                error=" Por favor describe los productos que quieres generar.",
-                debug_info="Prompt vaco")
+                error="❌ Por favor describe los productos que quieres generar.",
+                debug_info="Prompt vacío")
         
         if not ai_api_key:
             return render_template_string(HTML_TEMPLATE, 
-                error=" Por favor ingresa tu API Key para usar la IA.",
+                error="❌ Por favor ingresa tu API Key para usar la IA.",
                 debug_info="API Key requerida")
         
-        # Validar lmites
+        # Validar límites
         if total_products > 100:
-            total_products = 100  # Lmite de seguridad
+            total_products = 100  # Límite de seguridad
         
-        # Inicializar AI enhancer para generacin
+        # Inicializar AI enhancer para generación
         from ai_enhancer import AIProductEnhancer
         generator = AIProductEnhancer(provider=ai_provider, api_key=ai_api_key)
         
-        #  PROMPT MEJORADO PARA GENERACIN COMPLETA
+        # 🧠 PROMPT MEJORADO PARA GENERACIÓN COMPLETA
         generation_prompt = f"""
-    MISIÓN: Genera exactamente {total_products} productos reales para vender en Mercado Libre Uruguay.
+        MISIÓN: Genera exactamente {total_products} productos reales para vender en Mercado Libre Uruguay.
         
-    DESCRIPCIÓN DEL USUARIO: {product_prompt}
+        DESCRIPCIÓN DEL USUARIO: {product_prompt}
         
-        CATEGORA: {main_category}
+        CATEGORÍA: {main_category}
         ESTILO: {generation_style}
         
-        INSTRUCCIONES ESPECFICAS:
+        INSTRUCCIONES ESPECÍFICAS:
         1. Genera productos REALES y EXISTENTES que se puedan comprar en Uruguay
         2. Usa precios realistas en pesos uruguayos ($)
-        3. Incluye variaciones realistas (colores, tamaos, capacidades)
-        4. Cada producto debe tener datos completos y nicos
+        3. Incluye variaciones realistas (colores, tamaños, capacidades)
+        4. Cada producto debe tener datos completos y únicos
         
         FORMATO REQUERIDO - RESPONDE SOLO CON JSON:
         [
@@ -4594,7 +4445,7 @@ def generate_from_prompt():
             "modelo": "Galaxy S24",
             "descripcion": "Descripción detallada del producto",
             "condicion": "Nuevo",
-            "categoria": "Electrnicos > Celulares",
+            "categoria": "Electrónicos > Celulares",
             "codigo_universal": "1234567890123",
             "peso": "200g",
             "color": "Negro",
@@ -4603,10 +4454,10 @@ def generate_from_prompt():
         ]
         
         IMPORTANTE: 
-        - Responde SOLO con el JSON vlido
+        - Responde SOLO con el JSON válido
         - NO agregues texto adicional 
         - Genera exactamente {total_products} productos
-    - Los códigos EAN-13 deben tener 13 dígitos
+        - Los códigos EAN-13 deben tener 13 dígitos
         """
         
         # Generar productos con IA
@@ -4618,18 +4469,18 @@ def generate_from_prompt():
             try:
                 products_data = json.loads(ai_response)
             except json.JSONDecodeError:
-                # Si no es JSON vlido, intentar extraer JSON del texto
+                # Si no es JSON válido, intentar extraer JSON del texto
                 import re
                 json_match = re.search(r'\[.*\]', ai_response, re.DOTALL)
                 if json_match:
                     products_data = json.loads(json_match.group())
                 else:
-                    raise ValueError("No se pudo extraer JSON vlido de la respuesta")
+                    raise ValueError("No se pudo extraer JSON válido de la respuesta")
             
             if not isinstance(products_data, list):
                 raise ValueError("La respuesta debe ser una lista de productos")
             
-            #  CREAR PLANTILLA ML CON PRODUCTOS GENERADOS
+            # 📊 CREAR PLANTILLA ML CON PRODUCTOS GENERADOS
             template_filename = f"ML_Generated_Prompt_{datetime.now().strftime('%d-%m-%H_%M_%S')}.xlsx"
             template_path = os.path.join(app.config['UPLOAD_FOLDER'], template_filename)
             
@@ -4638,7 +4489,7 @@ def generate_from_prompt():
             ws = wb.active
             ws.title = "Productos ML"
             
-            #  ESTRUCTURA COMPLETA DE MERCADO LIBRE
+            # 🏗️ ESTRUCTURA COMPLETA DE MERCADO LIBRE
             headers = [
                 "Título: incluye producto, marca, modelo y destaca sus características principales",
                 "Precio",
@@ -4659,13 +4510,13 @@ def generate_from_prompt():
                 "Profundidad de la unidad",
                 "Peso de la unidad",
                 "Código de color",
-                "Edad mnima recomendada",
-                "Edad mxima recomendada",
+                "Edad mínima recomendada",
+                "Edad máxima recomendada",
                 "Características del producto",
                 "Kit",
                 "Formato",
                 "Unidades por pack",
-                "Lnea",
+                "Línea",
                 "SKU"
             ]
             
@@ -4687,12 +4538,12 @@ def generate_from_prompt():
                 ws.cell(row=row, column=6, value=product.get('modelo', ''))
                 ws.cell(row=row, column=7, value=product.get('condicion', 'Nuevo'))
                 ws.cell(row=row, column=8, value=product.get('descripcion', ''))
-                ws.cell(row=row, column=9, value="")  # Fotos - vaco para que el usuario agregue
-                ws.cell(row=row, column=10, value="")  # Video - vaco
+                ws.cell(row=row, column=9, value="")  # Fotos - vacío para que el usuario agregue
+                ws.cell(row=row, column=10, value="")  # Video - vacío
                 ws.cell(row=row, column=11, value=product.get('garantia', '12 meses'))
                 ws.cell(row=row, column=12, value=product.get('peso', ''))
                 ws.cell(row=row, column=13, value=product.get('color', ''))
-                # Resto de columnas pueden quedar vacas o con valores por defecto
+                # Resto de columnas pueden quedar vacías o con valores por defecto
             
             # Ajustar ancho de columnas
             for col in ws.columns:
@@ -4710,47 +4561,47 @@ def generate_from_prompt():
             # Guardar archivo
             wb.save(template_path)
             
-            # Crear estadsticas de generacin
+            # Crear estadísticas de generación
             total_generated = len(products_data)
             success_message = f"""
-             <strong>Plantilla generada exitosamente!</strong><br><br>
-             <strong>Estadsticas:</strong><br>
-             Productos generados: {total_generated}<br>
-             Categora principal: {main_category}<br>
-             Estilo: {generation_style}<br>
-             Proveedor IA: {ai_provider.upper()}<br><br>
-             <strong>Productos incluidos:</strong><br>
+            🎉 <strong>¡Plantilla generada exitosamente!</strong><br><br>
+            📊 <strong>Estadísticas:</strong><br>
+            • Productos generados: {total_generated}<br>
+            • Categoría principal: {main_category}<br>
+            • Estilo: {generation_style}<br>
+            • Proveedor IA: {ai_provider.upper()}<br><br>
+            📋 <strong>Productos incluidos:</strong><br>
             """
             
             # Agregar resumen de productos
             for i, product in enumerate(products_data[:5], 1):  # Mostrar solo los primeros 5
-                success_message += f" {product.get('marca', 'N/A')} {product.get('modelo', 'N/A')} - ${product.get('precio', 0):,}<br>"
+                success_message += f"• {product.get('marca', 'N/A')} {product.get('modelo', 'N/A')} - ${product.get('precio', 0):,}<br>"
             
             if total_generated > 5:
-                success_message += f" ... y {total_generated - 5} productos ms<br>"
+                success_message += f"• ... y {total_generated - 5} productos más<br>"
             
             success_message += f"""<br>
-             <a href="/download/{template_filename}" style="color: #3483fa; font-weight: 600;">
+            ⬇️ <a href="/download/{template_filename}" style="color: #3483fa; font-weight: 600;">
                 DESCARGAR PLANTILLA ML GENERADA
             </a>
             """
             
             return render_template_string(HTML_TEMPLATE, 
                 success=success_message,
-                debug_info=f" Generacin exitosa: {total_generated} productos creados con {ai_provider}")
+                debug_info=f"✅ Generación exitosa: {total_generated} productos creados con {ai_provider}")
                 
         except Exception as ai_error:
-            error_msg = f" Error generando productos con IA: {str(ai_error)}"
+            error_msg = f"❌ Error generando productos con IA: {str(ai_error)}"
             return render_template_string(HTML_TEMPLATE, 
                 error=error_msg,
                 debug_info=f"AI Error: {str(ai_error)}")
         
     except Exception as e:
-        error_msg = f" Error en generacin por prompt: {str(e)}"
+        error_msg = f"❌ Error en generación por prompt: {str(e)}"
         return render_template_string(HTML_TEMPLATE, 
             error=error_msg,
             debug_info=f"General Error: {str(e)}")
 
 if __name__ == '__main__':
-    print(" Iniciando Mercado Libre Bulk Mapper Pro en http://localhost:5003")
+    print("🚀 Iniciando Mercado Libre Bulk Mapper Pro en http://localhost:5003")
     app.run(debug=True, host='localhost', port=5003)

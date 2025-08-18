@@ -155,7 +155,7 @@
             <div class="login-body">
                 <div id="alertContainer"></div>
                 
-                <form id="loginForm">
+                <form id="loginForm" action="/login" method="POST">
                     <div class="mb-3">
                         <label for="email" class="form-label">
                             <i class="fas fa-envelope me-2"></i>Email
@@ -218,11 +218,12 @@
             const data = Object.fromEntries(formData);
             
             try {
-                const response = await fetch('/api/login', {
+                const response = await fetch('/login', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
+                    credentials: 'same-origin',  // Incluir cookies de sesión
                     body: JSON.stringify(data)
                 });
                 
@@ -230,20 +231,22 @@
                 
                 if (result.success) {
                     showAlert('¡Bienvenido de vuelta!', 'success');
-                    setTimeout(() => {
-                        window.location.href = '/';
-                    }, 1500);
+                    console.log('🔍 Login exitoso, redirigiendo...');
+                    // Redirigir inmediatamente para evitar problemas de sesión
+                    window.location.href = '/';
                 } else {
                     showAlert(result.error || 'Error al iniciar sesión');
                 }
             } catch (error) {
-                showAlert('Error de conexión. Intenta de nuevo.');
+                console.log('🔍 AJAX falló, intentando form submit tradicional...');
+                // Si AJAX falla, usar form submit tradicional
+                this.submit();
             }
         });
         
         function loginWithGoogle() {
-            // Aquí integrarías con Google OAuth
-            showAlert('Funcionalidad Google OAuth en desarrollo', 'info');
+            // Redirigir a la ruta de Google OAuth
+            window.location.href = '/auth/google';
         }
         
         // Verificar si hay mensajes de la URL

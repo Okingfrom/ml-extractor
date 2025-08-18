@@ -204,7 +204,7 @@ class MLOutputAnalyzer:
     
     def save_report(self, filename="test_analysis_report.json"):
         """Save detailed analysis report"""
-        report_path = f"/home/granaventura/Desktop/ML EXTRACTOR/{filename}"
+        report_path = f"./{filename}"
         with open(report_path, 'w', encoding='utf-8') as f:
             json.dump(self.results, f, indent=2, ensure_ascii=False)
         print(f"\n📋 Full report saved: {report_path}")
@@ -218,7 +218,7 @@ def main():
     analyzer = MLOutputAnalyzer()
     
     # List available files
-    uploads_dir = "/home/granaventura/Desktop/ML EXTRACTOR/uploads"
+    uploads_dir = "./uploads"
     print(f"\n📁 Available files in uploads:")
     
     input_files = []

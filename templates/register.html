@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔐 Registro - ML Extractor</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .register-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .register-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            width: 100%;
+            max-width: 600px;
+        }
+        
+        .register-header {
+            background: linear-gradient(45deg, #3483fa, #1e88e5);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .register-header h2 {
+            margin: 0;
+            font-weight: 600;
+        }
+        
+        .register-body {
+            padding: 40px;
+        }
+        
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+        
+        .step {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #dee2e6;
+            color: #6c757d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 10px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .step.active {
+            background: #3483fa;
+            color: white;
+        }
+        
+        .step.completed {
+            background: #28a745;
+            color: white;
+        }
+        
+        .step-content {
+            display: none;
+        }
+        
+        .step-content.active {
+            display: block;
+        }
+        
+        .form-control {
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 12px 15px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus {
+            border-color: #3483fa;
+            box-shadow: 0 0 0 0.2rem rgba(52, 131, 250, 0.25);
+        }
+        
+        .btn-register {
+            background: linear-gradient(45deg, #3483fa, #1e88e5);
+            border: none;
+            border-radius: 10px;
+            padding: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+        
+        .btn-register:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(52, 131, 250, 0.3);
+        }
+        
+        .btn-next, .btn-prev {
+            padding: 10px 30px;
+            border-radius: 25px;
+            border: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-next {
+            background: #3483fa;
+            color: white;
+        }
+        
+        .btn-prev {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .password-strength {
+            margin-top: 5px;
+        }
+        
+        .strength-weak { color: #dc3545; }
+        .strength-medium { color: #ffc107; }
+        .strength-strong { color: #28a745; }
+        
+        .alert-custom {
+            border: none;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .login-link {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #dee2e6;
+        }
+        
+        .login-link a {
+            color: #3483fa;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+        
+        @media (max-width: 768px) {
+            .register-body {
+                padding: 20px;
+            }
+            
+            .register-header {
+                padding: 20px;
+            }
+            
+            .step {
+                width: 35px;
+                height: 35px;
+                margin: 0 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="register-container">
+        <div class="register-card">
+            <div class="register-header">
+                <i class="fas fa-user-plus fa-2x mb-3"></i>
+                <h2>Crear Cuenta</h2>
+                <p class="mb-0">Únete a ML Extractor</p>
+            </div>
+            
+            <div class="register-body">
+                <div id="alertContainer"></div>
+                
+                <!-- Indicador de pasos -->
+                <div class="step-indicator">
+                    <div class="step active" id="step1">1</div>
+                    <div class="step" id="step2">2</div>
+                    <div class="step" id="step3">3</div>
+                </div>
+                
+                <form id="registerForm">
+                    <!-- Paso 1: Información personal -->
+                    <div class="step-content active" id="content1">
+                        <h4 class="mb-4 text-center">Información Personal</h4>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="first_name" class="form-label">
+                                    <i class="fas fa-user me-2"></i>Nombre
+                                </label>
+                                <input type="text" class="form-control" id="first_name" name="first_name" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="last_name" class="form-label">
+                                    <i class="fas fa-user me-2"></i>Apellido
+                                </label>
+                                <input type="text" class="form-control" id="last_name" name="last_name" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="username" class="form-label">
+                                <i class="fas fa-at me-2"></i>Nombre de usuario
+                            </label>
+                            <input type="text" class="form-control" id="username" name="username" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="email" class="form-label">
+                                <i class="fas fa-envelope me-2"></i>Email
+                            </label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="phone" class="form-label">
+                                <i class="fas fa-phone me-2"></i>Teléfono
+                            </label>
+                            <input type="tel" class="form-control" id="phone" name="phone" 
+                                   placeholder="+573001234567" required>
+                            <small class="text-muted">Formato: +país + número</small>
+                        </div>
+                        
+                        <div class="text-end">
+                            <button type="button" class="btn btn-next" onclick="nextStep(1)">
+                                Siguiente <i class="fas fa-arrow-right ms-2"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Paso 2: Contraseña y tipo de usuario -->
+                    <div class="step-content" id="content2">
+                        <h4 class="mb-4 text-center">Seguridad y Tipo de Cuenta</h4>
+                        
+                        <div class="mb-3">
+                            <label for="password" class="form-label">
+                                <i class="fas fa-lock me-2"></i>Contraseña
+                            </label>
+                            <input type="password" class="form-control" id="password" name="password" 
+                                   onkeyup="checkPasswordStrength()" required>
+                            <div id="passwordStrength" class="password-strength"></div>
+                            <small class="text-muted">
+                                Debe contener: mayúscula, minúscula, número y símbolo
+                            </small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="confirm_password" class="form-label">
+                                <i class="fas fa-lock me-2"></i>Confirmar contraseña
+                            </label>
+                            <input type="password" class="form-control" id="confirm_password" 
+                                   name="confirm_password" onkeyup="checkPasswordMatch()" required>
+                            <div id="passwordMatch"></div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="user_type" class="form-label">
+                                <i class="fas fa-briefcase me-2"></i>Tipo de vendedor
+                            </label>
+                            <select class="form-control" id="user_type" name="user_type" required>
+                                <option value="">Selecciona tu tipo</option>
+                                <option value="seller">🛍️ Vendedor individual</option>
+                                <option value="business">🏢 Empresa</option>
+                                <option value="dropshipper">📦 Dropshipper</option>
+                                <option value="wholesaler">🏭 Mayorista</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="account_type" class="form-label">
+                                <i class="fas fa-crown me-2"></i>Tipo de cuenta
+                            </label>
+                            <select class="form-control" id="account_type" name="account_type" required>
+                                <option value="free">🆓 Gratuita (Solo modo manual)</option>
+                                <option value="premium">💎 Premium (IA + Generación por prompt)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <button type="button" class="btn btn-prev" onclick="prevStep(2)">
+                                <i class="fas fa-arrow-left me-2"></i>Anterior
+                            </button>
+                            <button type="button" class="btn btn-next" onclick="nextStep(2)">
+                                Siguiente <i class="fas fa-arrow-right ms-2"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Paso 3: Información empresarial (opcional) -->
+                    <div class="step-content" id="content3">
+                        <h4 class="mb-4 text-center">Información Empresarial (Opcional)</h4>
+                        
+                        <div class="mb-3">
+                            <label for="company_name" class="form-label">
+                                <i class="fas fa-building me-2"></i>Nombre de la empresa
+                            </label>
+                            <input type="text" class="form-control" id="company_name" name="company_name">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="company_location" class="form-label">
+                                <i class="fas fa-map-marker-alt me-2"></i>Ubicación
+                            </label>
+                            <input type="text" class="form-control" id="company_location" 
+                                   name="company_location" placeholder="Ciudad, País">
+                        </div>
+                        
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="terms" required>
+                            <label class="form-check-label" for="terms">
+                                Acepto los <a href="#" target="_blank">términos y condiciones</a>
+                            </label>
+                        </div>
+                        
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="newsletter">
+                            <label class="form-check-label" for="newsletter">
+                                Deseo recibir noticias y actualizaciones
+                            </label>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <button type="button" class="btn btn-prev" onclick="prevStep(3)">
+                                <i class="fas fa-arrow-left me-2"></i>Anterior
+                            </button>
+                            <button type="submit" class="btn btn-register">
+                                <i class="fas fa-user-plus me-2"></i>Crear Cuenta
+                            </button>
+                        </div>
+                    </div>
+                </form>
+                
+                <div class="login-link">
+                    <p>¿Ya tienes cuenta? <a href="/login">Inicia sesión aquí</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentStep = 1;
+        
+        function showAlert(message, type = 'danger') {
+            const alertContainer = document.getElementById('alertContainer');
+            alertContainer.innerHTML = `
+                <div class="alert alert-${type} alert-custom alert-dismissible fade show" role="alert">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+        }
+        
+        function nextStep(step) {
+            if (validateStep(step)) {
+                currentStep++;
+                updateStepIndicator();
+                showStepContent();
+            }
+        }
+        
+        function prevStep(step) {
+            currentStep--;
+            updateStepIndicator();
+            showStepContent();
+        }
+        
+        function validateStep(step) {
+            if (step === 1) {
+                const requiredFields = ['first_name', 'last_name', 'username', 'email', 'phone'];
+                for (let field of requiredFields) {
+                    if (!document.getElementById(field).value) {
+                        showAlert('Por favor completa todos los campos obligatorios');
+                        return false;
+                    }
+                }
+                
+                const email = document.getElementById('email').value;
+                const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailPattern.test(email)) {
+                    showAlert('Email inválido');
+                    return false;
+                }
+                
+                const phone = document.getElementById('phone').value;
+                const phonePattern = /^\+\d{10,15}$/;
+                if (!phonePattern.test(phone)) {
+                    showAlert('Teléfono inválido (formato: +país + número)');
+                    return false;
+                }
+            }
+            
+            if (step === 2) {
+                const password = document.getElementById('password').value;
+                const confirmPassword = document.getElementById('confirm_password').value;
+                
+                if (!checkPasswordValidation(password)) {
+                    showAlert('La contraseña no cumple los requisitos');
+                    return false;
+                }
+                
+                if (password !== confirmPassword) {
+                    showAlert('Las contraseñas no coinciden');
+                    return false;
+                }
+                
+                if (!document.getElementById('user_type').value) {
+                    showAlert('Selecciona tu tipo de vendedor');
+                    return false;
+                }
+                
+                if (!document.getElementById('account_type').value) {
+                    showAlert('Selecciona tu tipo de cuenta');
+                    return false;
+                }
+            }
+            
+            return true;
+        }
+        
+        function updateStepIndicator() {
+            for (let i = 1; i <= 3; i++) {
+                const step = document.getElementById(`step${i}`);
+                if (i < currentStep) {
+                    step.className = 'step completed';
+                } else if (i === currentStep) {
+                    step.className = 'step active';
+                } else {
+                    step.className = 'step';
+                }
+            }
+        }
+        
+        function showStepContent() {
+            for (let i = 1; i <= 3; i++) {
+                const content = document.getElementById(`content${i}`);
+                if (i === currentStep) {
+                    content.className = 'step-content active';
+                } else {
+                    content.className = 'step-content';
+                }
+            }
+        }
+        
+        function checkPasswordStrength() {
+            const password = document.getElementById('password').value;
+            const strengthDiv = document.getElementById('passwordStrength');
+            
+            let strength = 0;
+            let feedback = [];
+            
+            if (password.length >= 8) strength++;
+            else feedback.push('al menos 8 caracteres');
+            
+            if (/[A-Z]/.test(password)) strength++;
+            else feedback.push('una mayúscula');
+            
+            if (/[a-z]/.test(password)) strength++;
+            else feedback.push('una minúscula');
+            
+            if (/\d/.test(password)) strength++;
+            else feedback.push('un número');
+            
+            if (/[!@#$%^&*]/.test(password)) strength++;
+            else feedback.push('un símbolo (!@#$%^&*)');
+            
+            if (strength <= 2) {
+                strengthDiv.innerHTML = '<small class="strength-weak">Débil - Falta: ' + feedback.join(', ') + '</small>';
+            } else if (strength <= 4) {
+                strengthDiv.innerHTML = '<small class="strength-medium">Media - Falta: ' + feedback.join(', ') + '</small>';
+            } else {
+                strengthDiv.innerHTML = '<small class="strength-strong">Fuerte ✓</small>';
+            }
+        }
+        
+        function checkPasswordMatch() {
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm_password').value;
+            const matchDiv = document.getElementById('passwordMatch');
+            
+            if (confirmPassword) {
+                if (password === confirmPassword) {
+                    matchDiv.innerHTML = '<small class="strength-strong">Las contraseñas coinciden ✓</small>';
+                } else {
+                    matchDiv.innerHTML = '<small class="strength-weak">Las contraseñas no coinciden ✗</small>';
+                }
+            } else {
+                matchDiv.innerHTML = '';
+            }
+        }
+        
+        function checkPasswordValidation(password) {
+            return password.length >= 8 && 
+                   /[A-Z]/.test(password) && 
+                   /[a-z]/.test(password) && 
+                   /\d/.test(password) && 
+                   /[!@#$%^&*]/.test(password);
+        }
+        
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if (!document.getElementById('terms').checked) {
+                showAlert('Debes aceptar los términos y condiciones');
+                return;
+            }
+            
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData);
+            
+            try {
+                const response = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert('¡Cuenta creada exitosamente! Revisa tu email para verificar.', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/verify?email=' + encodeURIComponent(data.email);
+                    }, 2000);
+                } else {
+                    showAlert(result.error || 'Error al crear la cuenta');
+                }
+            } catch (error) {
+                showAlert('Error de conexión. Intenta de nuevo.');
+            }
+        });
+        
+        // Verificar mensajes de la URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const message = urlParams.get('message');
+        const type = urlParams.get('type') || 'info';
+        
+        if (message) {
+            showAlert(decodeURIComponent(message), type);
+        }
+    </script>
+</body>
+</html>
