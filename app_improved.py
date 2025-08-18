@@ -2096,7 +2096,7 @@ HTML_TEMPLATE = '''
                             </div>
                         </div>
                         
-                        <!-- Configuracin de IA - Solo Premium -->
+                        <!-- Configuración de IA - Solo Premium -->
                         {% if not user_info or user_info.account_type == 'premium' %}
                         <div style="
                             background: #f8f9fa;
@@ -2105,7 +2105,7 @@ HTML_TEMPLATE = '''
                             margin: 20px 0;
                             border: 1px solid #e9ecef;
                         ">
-                            <h4 style="color: #333; margin: 0 0 16px 0; font-size: 16px; font-weight: 600;">Configuracin de IA</h4>
+                            <h4 style="color: #333; margin: 0 0 16px 0; font-size: 16px; font-weight: 600;">Configuración de IA</h4>
                             
                             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
                                 <div class="form-group">
@@ -2159,7 +2159,7 @@ HTML_TEMPLATE = '''
                             text-align: center;
                         ">
                             <h4 style="color: #856404; margin: 0 0 10px 0;"> Funcionalidad Premium</h4>
-                            <p style="margin: 0;">La configuracin de IA requiere cuenta Premium. Actualiza tu cuenta para acceder a esta funcionalidad.</p>
+                            <p style="margin: 0;">La configuración de IA requiere cuenta Premium. Actualiza tu cuenta para acceder a esta funcionalidad.</p>
                         </div>
                         {% endif %}
                         
@@ -2259,7 +2259,7 @@ HTML_TEMPLATE = '''
                     <div style="display: flex; align-items: center; gap: 12px;">
                         <span style="font-size: 24px;"></span>
                         <div>
-                            <h3 style="margin: 0; font-size: 18px; font-weight: 600;">Configuracin de Inteligencia Artificial</h3>
+                            <h3 style="margin: 0; font-size: 18px; font-weight: 600;">Configuración de Inteligencia Artificial</h3>
                             <small class="small-pill">Haz clic para configurar la IA (Opcional)</small>
                         </div>
                     </div>
@@ -2386,7 +2386,7 @@ HTML_TEMPLATE = '''
                                 box-shadow: 0 3px 10px rgba(102, 179, 255, 0.3);
                             " onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 5px 15px rgba(102, 179, 255, 0.4)'" 
                                onmouseout="this.style.transform='translateY(0px)'; this.style.boxShadow='0 3px 10px rgba(102, 179, 255, 0.3)'">
-                                 Cerrar Configuracin IA
+                                 Cerrar Configuración IA
                             </button>
                         </div>
                     </div>
@@ -2407,7 +2407,7 @@ HTML_TEMPLATE = '''
                 <small>Recomendado: Excel o CSV para mejor mapeo</small>
             </div>
             
-            <h3>Configuracin de Mapeo</h3>
+            <h3>Configuración de Mapeo</h3>
             
             <div class="mapping-section">
                 <label>Selecciona los campos que quieres mapear desde tus datos:</label>
@@ -2500,7 +2500,7 @@ HTML_TEMPLATE = '''
             </div>
             {% endif %}
             
-            <!-- NUEVA SECCIN: CONFIGURACIN MANUAL MASIVA -->
+            <!-- NUEVA SECCIN: CONFIGURACIÓN MANUAL MASIVA -->
             {% if user_info and user_info.account_type == 'premium' %}
             <div class="manual-config-collapsible">
                 <div class="manual-config-header" onclick="toggleManualSection()" style="
@@ -2520,7 +2520,7 @@ HTML_TEMPLATE = '''
                     <div style="display: flex; align-items: center; gap: 12px;">
                         <span style="font-size: 24px;"></span>
                         <div>
-                            <h3 style="margin: 0; font-size: 18px; font-weight: 600;">Configuracin Manual Masiva</h3>
+                            <h3 style="margin: 0; font-size: 18px; font-weight: 600;">Configuración Manual Masiva</h3>
                             <small style="opacity: 0.9; font-size: 14px;">Haz clic para configurar valores masivos (Opcional)</small>
                         </div>
                     </div>
@@ -2789,7 +2789,7 @@ HTML_TEMPLATE = '''
                                 box-shadow: 0 3px 10px rgba(40, 167, 69, 0.3);
                             " onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 5px 15px rgba(40, 167, 69, 0.4)'" 
                                onmouseout="this.style.transform='translateY(0px)'; this.style.boxShadow='0 3px 10px rgba(40, 167, 69, 0.3)'">
-                                 Cerrar Configuracin Manual
+                                 Cerrar Configuración Manual
                             </button>
                         </div>
                     </div>
@@ -2797,7 +2797,7 @@ HTML_TEMPLATE = '''
             </div>
             
             {% else %}
-            <!-- Mensaje para usuarios gratuitos sobre configuracin manual -->
+            <!-- Mensaje para usuarios gratuitos sobre configuración manual -->
             <div style="
                 background: linear-gradient(135deg, #f8f9fa, #e9ecef);
                 border: 1px solid #dee2e6;
@@ -2807,9 +2807,9 @@ HTML_TEMPLATE = '''
                 margin: 24px 0;
                 text-align: center;
             ">
-                <h3 style="color: #6c757d; margin: 0 0 15px 0;"> Configuracin Manual Masiva - Premium</h3>
+                <h3 style="color: #6c757d; margin: 0 0 15px 0;"> Configuración Manual Masiva - Premium</h3>
                 <p style="margin: 0 0 15px 0; font-size: 16px;">
-                    Las opciones de configuracin masiva estn disponibles solo para cuentas Premium.
+                    Las opciones de configuración masiva estn disponibles solo para cuentas Premium.
                 </p>
                 <div style="
                     background: rgba(255,255,255,0.8);
@@ -2827,7 +2827,7 @@ HTML_TEMPLATE = '''
             </div>
             {% endif %}
             
-            <!-- NUEVA SECCIN: CONFIGURACIN AVANZADA DE IA -->
+            <!-- NUEVA SECCIN: CONFIGURACIÓN AVANZADA DE IA -->
             {% if user_info and user_info.account_type == 'premium' %}
             <div class="advanced-ai-collapsible">
                 <div class="advanced-ai-header" onclick="toggleAdvancedAISection()" style="
@@ -2847,7 +2847,7 @@ HTML_TEMPLATE = '''
                     <div style="display: flex; align-items: center; gap: 12px;">
                         <span style="font-size: 24px;"></span>
                         <div>
-                            <h3 style="margin: 0; font-size: 18px; font-weight: 600;">Configuracin Avanzada de IA</h3>
+                            <h3 style="margin: 0; font-size: 18px; font-weight: 600;">Configuración Avanzada de IA</h3>
                             <small class="small-pill">Haz clic para personalizar prompts de IA (Opcional)</small>
                         </div>
                     </div>
@@ -3003,7 +3003,7 @@ HTML_TEMPLATE = '''
                                 box-shadow: 0 3px 10px rgba(111, 66, 193, 0.3);
                             " onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 5px 15px rgba(111, 66, 193, 0.4)'" 
                                onmouseout="this.style.transform='translateY(0px)'; this.style.boxShadow='0 3px 10px rgba(111, 66, 193, 0.3)'">
-                                 Cerrar Configuracin Avanzada
+                                 Cerrar Configuración Avanzada
                             </button>
                         </div>
                     </div>
@@ -3011,7 +3011,7 @@ HTML_TEMPLATE = '''
             </div>
             
             {% else %}
-            <!-- Mensaje para usuarios gratuitos sobre configuracin avanzada de IA -->
+            <!-- Mensaje para usuarios gratuitos sobre configuración avanzada de IA -->
             <div style="
                 background: linear-gradient(135deg, #f3e7ff, #e8d5ff);
                 border: 1px solid #d4b3ff;
@@ -3021,7 +3021,7 @@ HTML_TEMPLATE = '''
                 margin: 24px 0;
                 text-align: center;
             ">
-                <h3 style="color: #6b21a8; margin: 0 0 15px 0;"> Configuracin Avanzada de IA - Premium</h3>
+                <h3 style="color: #6b21a8; margin: 0 0 15px 0;"> Configuración Avanzada de IA - Premium</h3>
                 <p style="margin: 0 0 15px 0; font-size: 16px;">
                     La personalizacin avanzada de prompts de IA est disponible solo para cuentas Premium.
                 </p>
@@ -3143,7 +3143,7 @@ HTML_TEMPLATE = '''
                     </div>
                     <div class="loading-step" id="step4">
                         <span class="loading-step-icon"></span>
-                        <span>Aplicando configuracin manual...</span>
+                        <span>Aplicando configuración manual...</span>
                     </div>
                     <div class="loading-step" id="step5">
                         <span class="loading-step-icon"></span>
@@ -3690,7 +3690,7 @@ def index():
                                            message_type="error",
                                            user_info=session)
             
-            # Obtener configuracin IA
+            # Obtener configuración IA
             ai_provider = request.form.get('ai_provider', 'manual')
             
             # Validar funcionalidades premium
@@ -3727,12 +3727,12 @@ def index():
             content_ext = content_filename.split('.')[-1].lower()
             products = read_product_data(content_path, content_ext)
             
-            # Obtener configuracin de mapeo
+            # Obtener configuración de mapeo
             selected_fields = request.form.getlist('map_fields')
             condicion = request.form.get('condicion', 'Nuevo')
             moneda = request.form.get('moneda', '$')
             
-            #  NUEVA CONFIGURACIN MANUAL MASIVA
+            #  NUEVA CONFIGURACIÓN MANUAL MASIVA
             manual_config = {
                 'stock_global': request.form.get('stock_global'),
                 'stock_selective': request.form.get('stock_selective'),
@@ -3761,7 +3761,7 @@ def index():
                 'codigo_universal_selective': request.form.get('codigo_universal_selective')
             }
             
-            #  NUEVA CONFIGURACIN AVANZADA DE IA
+            #  NUEVA CONFIGURACIÓN AVANZADA DE IA
             ai_config = {
                 'titulo_prompt': request.form.get('ai_titulo_prompt', ''),
                 'descripcion_prompt': request.form.get('ai_descripcion_prompt', ''),
@@ -3791,7 +3791,7 @@ def index():
             debug_info.append(f" Total productos detectados: {len(products)}")
             debug_info.append(f" Campos a mapear: {selected_fields}")
             debug_info.append(f" IA habilitada: {'S' if ai_provider != 'manual' else 'No'}")
-            debug_info.append(f" Configuracin manual: {'Activa' if any(manual_config.values()) else 'No configurada'}")
+            debug_info.append(f" Configuración manual: {'Activa' if any(manual_config.values()) else 'No configurada'}")
             
             #  Debug precios ANTES del procesamiento IA
             precios_detectados_input = 0
@@ -3929,7 +3929,7 @@ def index():
             if ai_provider != 'manual':
                 success_message += f" Con IA {ai_provider.upper()}."
             
-            # Agregar informacin sobre configuracin manual aplicada
+            # Agregar informacin sobre configuración manual aplicada
             manual_summary = ""
             if manual_config:
                 applied_configs = []
@@ -3956,7 +3956,7 @@ def index():
                     applied_configs.append(f"Color: {manual_config['color_global']}")
                 
                 if applied_configs:
-                    manual_summary = f" Configuracin manual aplicada: {', '.join(applied_configs)}"
+                    manual_summary = f" Configuración manual aplicada: {', '.join(applied_configs)}"
             
             # Convertir debug_info a string para mostrar
             debug_info_str = '\n'.join(debug_info) if debug_info else None
@@ -3977,7 +3977,7 @@ def index():
     return render_template_string(HTML_TEMPLATE, user_info=session)
 
 def fill_ml_template(sheet, headers, products, selected_fields, condicion, moneda, manual_config=None, obligatory_fields=None, debug_info=None):
-    """Llena la plantilla ML con datos de productos y configuracin manual masiva con mapeo inteligente"""
+    """Llena la plantilla ML con datos de productos y configuración manual masiva con mapeo inteligente"""
     
     if debug_info is None:
         debug_info = []
@@ -4345,7 +4345,7 @@ def fill_ml_template(sheet, headers, products, selected_fields, condicion, moned
                 column_map[field] = col_num
                 break
     
-    # Procesar configuracin selectiva de la configuracin manual
+    # Procesar configuración selectiva de la configuración manual
     stock_selective_dict = {}
     marca_modelo_selective_dict = {}
     catalogo_selective_dict = {}
@@ -4399,7 +4399,7 @@ def fill_ml_template(sheet, headers, products, selected_fields, condicion, moned
     
     for i, product in enumerate(products):
         row_num = start_row + i
-        excel_row = row_num  # Fila real en Excel para configuracin selectiva
+        excel_row = row_num  # Fila real en Excel para configuración selectiva
         
         # Llenar campos seleccionados del archivo de datos
         for field in selected_fields:
@@ -4411,7 +4411,7 @@ def fill_ml_template(sheet, headers, products, selected_fields, condicion, moned
                 if value:
                     safe_set_cell_value(sheet, row_num, col_num, value)
         
-        #  APLICAR CONFIGURACIN MANUAL MASIVA
+        #  APLICAR CONFIGURACIÓN MANUAL MASIVA
         if manual_config:
             
             # Stock: selectivo tiene prioridad sobre global
