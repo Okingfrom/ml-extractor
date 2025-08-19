@@ -151,13 +151,37 @@ def switch_user(user_type):
 
 @app.route('/test-auth')
 def test_auth():
-    """Página de prueba para verificar autenticación (deshabilitada en esta rama)."""
-    return "<h1>Test Auth Disabled</h1><p>This endpoint is disabled for production review. Use staging for detailed auth debugging.</p>"
+    """Página de prueba para verificar autenticación"""
+    return f"""
+    <h1> Test de Autenticación</h1>
+    <p>Ruta actual: {request.path}</p>
+    <p>User ID: {session.get('user_id', 'No definido')}</p>
+    <p>Username: {session.get('username', 'No definido')}</p>
+    <p>Email: {session.get('email', 'No definido')}</p>
+    <p>Account Type: {session.get('account_type', 'No definido')}</p>
+    <p>Sesión completa: {dict(session)}</p>
+    <p>Session ID en cookies: {request.cookies.get('session', 'No definido')}</p>
+    <p>Todas las cookies: {dict(request.cookies)}</p>
+    <br>
+    <a href="/login">Ir a Login</a> | <a href="/logout">Logout</a> | <a href="/debug-session">Debug Session</a>
+    """
 
 @app.route('/debug-session')
 def debug_session():
-    """Debug session endpoint disabled in this branch for safety."""
-    return "<h1>Debug Session Disabled</h1><p>Session debugging is disabled in this branch. Use staging for debugging.</p>"
+    """Ruta especial para debug de sesión - sin protección"""
+    print(f" DEBUG SESSION: Session keys: {list(session.keys())}")
+    print(f" DEBUG SESSION: Session dict: {dict(session)}")
+    print(f" DEBUG SESSION: Cookies: {dict(request.cookies)}")
+    
+    return f"""
+    <h1> Debug de Sesión</h1>
+    <p><strong>Session Keys:</strong> {list(session.keys())}</p>
+    <p><strong>Session Dict:</strong> {dict(session)}</p>
+    <p><strong>Cookies:</strong> {dict(request.cookies)}</p>
+    <p><strong>Request Headers:</strong> {dict(request.headers)}</p>
+    <br>
+    <a href="/login">Ir a Login</a> | <a href="/test-auth">Test Auth</a>
+    """
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -178,9 +202,9 @@ def login():
         success, result = user_manager.login_user(email, password, request.remote_addr)
         
         if success:
-            # Crear sesin
+            # Crear sesión
             user = result
-            session.permanent = True  # Hacer la sesin permanente
+            session.permanent = True  # Hacer la sesión permanente
             session['user_id'] = user['id']
             session['username'] = user['username']
             session['email'] = user['email']
@@ -189,8 +213,8 @@ def login():
             session['account_type'] = user['account_type']
             session['user_type'] = user['user_type']
             
-            # Debug: verificar que la sesin se guard
-            print(f" DEBUG: Sesin creada para user_id: {session.get('user_id')}")
+            # Debug: verificar que la sesión se guarde
+            print(f" DEBUG: Sesión creada para user_id: {session.get('user_id')}")
             print(f" DEBUG: Session keys despus de login: {list(session.keys())}")
             print(f" DEBUG: Session ID: {request.cookies.get('session')}")
             print(f" DEBUG: Todas las cookies: {dict(request.cookies)}")
@@ -245,7 +269,7 @@ def verify():
 
 @app.route('/logout')
 def logout():
-    """Cerrar sesin"""
+    """Cerrar sesión"""
     user_id = session.get('user_id')
     if user_id:
         user_manager.db.log_activity(user_id, 'user_logout', None, request.remote_addr)
@@ -287,9 +311,9 @@ def api_login():
         success, result = user_manager.login_user(email, password, request.remote_addr)
         
         if success:
-            # Crear sesin
+            # Crear sesión
             user = result
-            session.permanent = True  # Hacer la sesin permanente
+            session.permanent = True  # Hacer la sesión permanente
             session['user_id'] = user['id']
             session['username'] = user['username']
             session['email'] = user['email']
@@ -298,8 +322,8 @@ def api_login():
             session['account_type'] = user['account_type']
             session['user_type'] = user['user_type']
             
-            # Debug: verificar que la sesin se guard
-            print(f" DEBUG: Sesin creada para user_id: {session.get('user_id')}")
+            # Debug: verificar que la sesión se guarde
+            print(f" DEBUG: Sesión creada para user_id: {session.get('user_id')}")
             
             return jsonify({
                 'success': True,
@@ -426,12 +450,12 @@ def google_callback():
         
         if not code:
             return redirect('/login?message=' + 
-                           'Cdigo OAuth no recibido&type=error')
+                           'Código OAuth no recibido&type=error')
         
         # Verificar state (seguridad)
         if state != session.get('oauth_state'):
             return redirect('/login?message=' + 
-                           'Estado OAuth invlido&type=error')
+                           'Estado OAuth inválido&type=error')
         
         # Intercambiar cdigo por token y obtener datos del usuario
         google_data = google_oauth.exchange_code_for_token(code, state)
@@ -445,7 +469,7 @@ def google_callback():
         
         if success:
             user = result
-            # Crear sesin
+            # Crear sesión
             session['user_id'] = user['id']
             session['username'] = user['username']
             session['email'] = user['email']
@@ -1690,7 +1714,7 @@ HTML_TEMPLATE = '''
                             </ul>
                         </div>
                         
-                        <!-- Cmo Evitar Errores -->
+                        <!-- Cómo Evitar Errores -->
                         <div style="background: rgba(220, 53, 69, 0.1); padding: 16px; border-radius: 8px; border-left: 4px solid #dc3545;">
                             <h4 style="color: #dc3545; margin-top: 0;"> Cómo evitar errores</h4>
                             <ul style="margin: 0; padding-left: 20px; color: #333;">
@@ -1712,9 +1736,9 @@ HTML_TEMPLATE = '''
                                     <label for="tipo_garantia">Tipo de garantía:</label>
                                     <select name="tipo_garantia" id="tipo_garantia" style="width: 100%; max-width: 100%;">
                                         <option value="">Sin configurar</option>
-                                        <option value="Garanta del vendedor">Garantía del vendedor</option>
-                                        <option value="Garanta de fbrica">Garantía de fábrica</option>
-                                        <option value="Sin garanta">Sin garantía</option>
+                                        <option value="Garantia del vendedor">Garantía del vendedor</option>
+                                        <option value="Garantia de fabrica">Garantía de fábrica</option>
+                                        <option value="Sin garantia">Sin garantía</option>
                                     </select>
                                 </div>
                                 <div>
@@ -1866,7 +1890,7 @@ HTML_TEMPLATE = '''
                     
                     <div style="background: rgba(255, 193, 7, 0.1); padding: 16px; border-radius: 8px; border-left: 4px solid #ffc107; margin-bottom: 20px; text-align: center;">
                         <p style="margin: 0; font-size: 14px; color: #333; line-height: 1.6;">
-                             <strong>Cmo ayudar?</strong><br>
+                             <strong>¿Cómo ayudar?</strong><br>
                             Visita las redes sociales de estas fundaciones, comparte sus publicaciones, haz donaciones directas o adopta una mascota. 
                             <strong>Cada accin cuenta!</strong> 
                         </p>
@@ -1992,7 +2016,7 @@ HTML_TEMPLATE = '''
                                 required
                             ></textarea>
                             <small style="color: #666; display: block; margin-top: 6px;">
-                                Incluye cantidad, modelos, colores, capacidades y detalles especficos
+                                Incluye cantidad, modelos, colores, capacidades y detalles específicos
                             </small>
                         </div>
                         
@@ -2600,8 +2624,8 @@ HTML_TEMPLATE = '''
                             <label for="forma_envio_global">Forma de envío para todos:</label>
                             <select name="forma_envio_global" id="forma_envio_global" style="width: 100%; max-width: 100%;">
                                 <option value="">Sin configurar</option>
-                                <option value="Mercado Envos"> Mercado Envíos</option>
-                                <option value="Mercado Envos + Mercado Envos Flex"> Mercado Envíos + Mercado Envíos Flex</option>
+                                <option value="Mercado Envios"> Mercado Envíos</option>
+                                <option value="Mercado Envios + Mercado Envios Flex"> Mercado Envíos + Mercado Envíos Flex</option>
                                 <option value="Acordar con el vendedor"> Acordar con el vendedor</option>
                             </select>
                             <small>Aplica a todos los productos</small>
@@ -2623,7 +2647,7 @@ HTML_TEMPLATE = '''
                             <select name="costo_envio_global" id="costo_envio_global" style="width: 100%; max-width: 100%;">
                                 <option value="">Sin configurar</option>
                                 <option value="A cargo del comprador"> A cargo del comprador</option>
-                                <option value="Envo gratis"> Envío gratis</option>
+                                <option value="Envio gratis"> Envío gratis</option>
                             </select>
                             <small>Política de costo de envío general</small>
                         </div>
@@ -2651,7 +2675,7 @@ HTML_TEMPLATE = '''
                                 <option value="Amarillo"> Amarillo</option>
                                 <option value="Rosa"> Rosa</option>
                                 <option value="Gris"> Gris</option>
-                                <option value="Marrn"> Marrn</option>
+                                <option value="Marron"> Marrón</option>
                                 <option value="Multicolor"> Multicolor</option>
                                 <option value="Transparente"> Transparente</option>
                             </select>
@@ -2659,7 +2683,7 @@ HTML_TEMPLATE = '''
                         <div>
                             <label for="color_comercial_global">Nombre comercial del color:</label>
                             <input type="text" name="color_comercial_global" id="color_comercial_global" placeholder="ej: Azul Marino, Rojo Cereza" style="width: 100%; max-width: 100%;">
-                            <small>Nombre especfico o comercial del color</small>
+                            <small>Nombre específico o comercial del color</small>
                         </div>
                     </div>
                     <div>
@@ -2669,21 +2693,21 @@ HTML_TEMPLATE = '''
                     </div>
                 </div>
                 
-                <!-- Garanta -->
+                <!-- Garantía -->
                 <div class="form-group">
-                    <label> Garanta:</label>
+                    <label> Garantía:</label>
                     <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
                         <div>
-                            <label for="tipo_garantia">Tipo de garanta:</label>
+                            <label for="tipo_garantia">Tipo de garantía:</label>
                             <select name="tipo_garantia" id="tipo_garantia">
                                 <option value="">Sin configurar</option>
-                                <option value="Garanta del vendedor">Garanta del vendedor</option>
-                                <option value="Garanta de fbrica">Garanta de fbrica</option>
-                                <option value="Sin garanta">Sin garanta</option>
+                                <option value="Garantia del vendedor">Garantía del vendedor</option>
+                                <option value="Garantia de fabrica">Garantía de fábrica</option>
+                                <option value="Sin garantia">Sin garantía</option>
                             </select>
                         </div>
                         <div>
-                            <label for="tiempo_garantia">Tiempo garanta:</label>
+                            <label for="tiempo_garantia">Tiempo de garantía:</label>
                             <input type="number" name="tiempo_garantia" id="tiempo_garantia" placeholder="ej: 12" min="0">
                         </div>
                         <div>
@@ -2698,29 +2722,29 @@ HTML_TEMPLATE = '''
                     </div>
                 </div>
                 
-                <!-- Cdigos Universales -->
+                <!-- Códigos Universales -->
                 <div class="form-group">
-                    <label> Cdigos Universales:</label>
+                    <label> Códigos Universales:</label>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start;">
                         <div style="padding-right: 8px;">
-                            <label for="codigo_universal_masivo">Cdigo base para todos:</label>
+                            <label for="codigo_universal_masivo">Código base para todos:</label>
                             <input type="text" name="codigo_universal_masivo" id="codigo_universal_masivo" placeholder="ej: PROD, SKU, UPC">
-                            <small>Se aplicar como base a todos los productos</small>
+                            <small>Se aplicará como base a todos los productos</small>
                         </div>
                         <div style="padding-left: 8px;">
-                            <label for="codigo_universal_secuencial" style="display: block; margin-bottom: 8px;">Numeracin automtica:</label>
+                            <label for="codigo_universal_secuencial" style="display: block; margin-bottom: 8px;">Numeración automática:</label>
                             <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
                                 <input type="checkbox" name="codigo_universal_secuencial" id="codigo_universal_secuencial">
-                                Agregar numeracin secuencial
+                                Agregar numeración secuencial
                             </label>
                             <input type="number" name="codigo_universal_offset" id="codigo_universal_offset" placeholder="Empezar en (ej: 1001)" min="1">
                             <small>Ej: PROD0001, PROD0002, PROD0003...</small>
                         </div>
                     </div>
                     <div style="margin-top: 12px;">
-                        <label for="codigo_universal_selective">Cdigos especficos (Fila#:Cdigo):</label>
+                        <label for="codigo_universal_selective">Códigos específicos (Fila#:Código):</label>
                         <textarea name="codigo_universal_selective" id="codigo_universal_selective" rows="2" placeholder="ej: 8:UPC123456, 10:EAN987654, 12:CODE555"></textarea>
-                        <small>Formato: Fila_Excel:Cdigo_Especfico (separados por comas)</small>
+                        <small>Formato: Fila_Excel:Código_Especifico (separados por comas)</small>
                     </div>
                 </div>
                 
@@ -2732,14 +2756,14 @@ HTML_TEMPLATE = '''
                             <label for="tiene_catalogo">Los productos tienen catlogo?</label>
                             <select name="tiene_catalogo" id="tiene_catalogo" style="width: 100%; max-width: 100%;">
                                 <option value="">Sin configurar</option>
-                                <option value="Si">S, tienen catlogo</option>
+                                <option value="Si">Sí, tienen catálogo</option>
                                 <option value="No">No tienen catlogo</option>
                             </select>
                         </div>
                         <div>
-                            <label for="numero_catalogo_selective">Nmeros de catlogo selectivos:</label>
+                            <label for="numero_catalogo_selective">Números de catálogo selectivos:</label>
                             <textarea name="numero_catalogo_selective" id="numero_catalogo_selective" rows="2" placeholder="ej: 8:CAT001, 10:CAT002, 12:CAT003" style="width: 100%; max-width: 100%;"></textarea>
-                            <small>Formato: Fila_Excel:Cdigo_Catlogo</small>
+                            <small>Formato: Fila_Excel:Código_Catálogo</small>
                         </div>
                     </div>
                 </div>
@@ -2802,9 +2826,9 @@ HTML_TEMPLATE = '''
                     <strong>Con Premium puedes configurar:</strong><br>
                      Categoras masivas automticas<br>
                      Precios y comisiones globales<br>
-                     Envos configurados en lote<br>
-                     Garantas estandarizadas<br>
-                     Cdigos universales automticos
+                     Envíos configurados en lote<br>
+                     Garantías estandarizadas<br>
+                     Códigos universales automáticos
                 </div>
             </div>
             {% endif %}
@@ -2884,7 +2908,7 @@ HTML_TEMPLATE = '''
                 </div>
                 
                 <div class="form-group">
-                    <label> Investigacin de Productos:</label>
+                    <label> Investigación de Productos:</label>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 12px;">
                         <div>
                             <label>
@@ -2894,7 +2918,7 @@ HTML_TEMPLATE = '''
                             <small>La IA investigará automáticamente especificaciones técnicas</small>
                         </div>
                         <div>
-                            <label for="ai_research_prompt">Instrucciones de investigacin:</label>
+                            <label for="ai_research_prompt">Instrucciones de investigación:</label>
                             <textarea name="ai_research_prompt" id="ai_research_prompt" rows="3" placeholder="ej: Busca informacin tcnica como peso, dimensiones, material, compatibilidad. Agrega solo datos verificables y relevantes para la categora del producto." style="width: 100%; max-width: 100%;"></textarea>
                         </div>
                     </div>
@@ -2947,7 +2971,7 @@ HTML_TEMPLATE = '''
                             <select name="ai_target" id="ai_target" style="width: 100%; max-width: 100%;">
                                 <option value="general" selected> Pblico general</option>
                                 <option value="profesional"> Profesionales</option>
-                                <option value="hogar"> Uso domstico</option>
+                                <option value="hogar"> Uso doméstico</option>
                                 <option value="tecnico"> Usuarios tcnicos</option>
                                 <option value="empresarial"> Empresarial</option>
                             </select>
@@ -2960,7 +2984,7 @@ HTML_TEMPLATE = '''
                     <label> Gestin Automtica de Fotos:</label>
                     <div style="text-align: center; color: #666; padding: 20px;">
                         <h4 style="color: #999;"> COMING SOON </h4>
-                        <p>Prximamente podrs conectar tu cuenta de ML para obtener automticamente las URLs de las fotos de tus productos.</p>
+                        <p>Próximamente podrás conectar tu cuenta de ML para obtener automáticamente las URLs de las fotos de tus productos.</p>
                         <small>Esta funcionalidad estar disponible en futuras actualizaciones.</small>
                     </div>
                 </div>
@@ -3014,11 +3038,11 @@ HTML_TEMPLATE = '''
                     margin-top: 15px;
                 ">
                     <strong>Con Premium puedes personalizar:</strong><br>
-                     Prompts de mejora de ttulos SEO<br>
-                     Instrucciones de descripcin automtica<br>
-                     Investigacin automtica de productos<br>
+                     Prompts de mejora de títulos SEO<br>
+                     Instrucciones de descripción automática<br>
+                     Investigación automática de productos<br>
                      Estilo de comunicacin personalizado<br>
-                     Enfoque en campos especficos
+                     Enfoque en campos específicos
                 </div>
             </div>
             {% endif %}
@@ -3516,30 +3540,50 @@ def analyze_ml_template(file_path):
     
     # Headers conocidos de ML para mapeo inteligente
     ml_header_mapping = {
-        'cdigo de catlogo': 'catalogo',
-        'ttulo': 'titulo',
-        'condicin': 'condicion',
-        'cdigo universal': 'codigo_universal',
-        'color': 'color',
-        'nombre comercial': 'color_comercial',
-        'fotos': 'fotos',
-        'sku': 'sku',
-        'stock': 'stock',
-        'precio': 'precio',
-        'moneda': 'moneda',
-        'descripcin': 'descripcion',
-        'cargo por venta': 'cargo_venta',
-        'forma de envo': 'forma_envio',
-        'costo de envo': 'costo_envio',
-        'retiro en persona': 'retiro_persona',
-        'tipo de garanta': 'garantia_tipo',
-        'tiempo de garanta': 'garantia_tiempo',
-        'unidad de tiempo': 'garantia_unidad',
-        'tienda oficial': 'tienda_oficial',
-        'marca': 'marca',
-        'modelo': 'modelo',
-        'formato de venta': 'formato_venta',
-        'unidades por pack': 'unidades_pack',
+    # keep common non-accented variants for backwards compatibility
+    'cdigo de catlogo': 'catalogo',
+    'codigo de catalogo': 'catalogo',
+    'código de catálogo': 'catalogo',
+    'ttulo': 'titulo',
+    'titulo': 'titulo',
+    'título': 'titulo',
+    'condicin': 'condicion',
+    'condicion': 'condicion',
+    'cdigo universal': 'codigo_universal',
+    'codigo universal': 'codigo_universal',
+    'código universal': 'codigo_universal',
+    'color': 'color',
+    'nombre comercial': 'color_comercial',
+    'fotos': 'fotos',
+    'sku': 'sku',
+    'stock': 'stock',
+    'precio': 'precio',
+    'moneda': 'moneda',
+    'descripcin': 'descripcion',
+    'descripcion': 'descripcion',
+    'descripción': 'descripcion',
+    'cargo por venta': 'cargo_venta',
+    'forma de envo': 'forma_envio',
+    'forma de envio': 'forma_envio',
+    'forma de envío': 'forma_envio',
+    'costo de envo': 'costo_envio',
+    'costo de envio': 'costo_envio',
+    'costo de envío': 'costo_envio',
+    'retiro en persona': 'retiro_persona',
+    'tipo de garanta': 'garantia_tipo',
+    'tipo de garantia': 'garantia_tipo',
+    'tipo de garantía': 'garantia_tipo',
+    'tiempo de garanta': 'garantia_tiempo',
+    'tiempo de garantia': 'garantia_tiempo',
+    'tiempo de garantía': 'garantia_tiempo',
+    'unidad de tiempo': 'garantia_unidad',
+    'unidad de tiempo de la garanta': 'garantia_unidad',
+    'unidad de tiempo de la garantía': 'garantia_unidad',
+    'tienda oficial': 'tienda_oficial',
+    'marca': 'marca',
+    'modelo': 'modelo',
+    'formato de venta': 'formato_venta',
+    'unidades por pack': 'unidades_pack',
         'dimetro': 'diametro',
         'unidad de dimetro': 'unidad_diametro',
         'largo': 'largo',
@@ -3862,9 +3906,9 @@ def index():
                         if ':' in item:
                             row, forma = item.strip().split(':', 1)
                             forma_envio_overrides[int(row)] = forma.strip()
-                            debug_info.append(f" Forma envo fila {row}: {forma}")
+                            debug_info.append(f" Forma envío fila {row}: {forma}")
                 except Exception as e:
-                    debug_info.append(f" Error en forma envo selectiva: {e}")
+                    debug_info.append(f" Error en forma envío selectiva: {e}")
             
             #  Procesar costo de envo selectivo
             if manual_config.get('costo_envio_selective'):
@@ -3873,9 +3917,9 @@ def index():
                         if ':' in item:
                             row, costo = item.strip().split(':', 1)
                             costo_envio_overrides[int(row)] = costo.strip()
-                            debug_info.append(f" Costo envo fila {row}: {costo}")
+                            debug_info.append(f" Costo envío fila {row}: {costo}")
                 except Exception as e:
-                    debug_info.append(f" Error en costo envo selectivo: {e}")
+                    debug_info.append(f" Error en costo envío selectivo: {e}")
             
             #  Procesar color selectivo
             if manual_config.get('color_selective'):
@@ -3926,14 +3970,14 @@ def index():
                 if manual_config.get('retiro_persona'):
                     applied_configs.append(f"Retiro persona: {manual_config['retiro_persona']}")
                 if manual_config.get('tipo_garantia'):
-                    applied_configs.append(f"Garanta: {manual_config['tipo_garantia']}")
+                    applied_configs.append(f"Garantía: {manual_config['tipo_garantia']}")
                 if manual_config.get('descripcion_global'):
-                    applied_configs.append("Descripcin global agregada")
+                    applied_configs.append("Descripción global agregada")
                 #  NUEVAS CONFIGURACIONES
                 if manual_config.get('forma_envio_global'):
-                    applied_configs.append(f"Forma envo: {manual_config['forma_envio_global']}")
+                    applied_configs.append(f"Forma envío: {manual_config['forma_envio_global']}")
                 if manual_config.get('costo_envio_global'):
-                    applied_configs.append(f"Costo envo: {manual_config['costo_envio_global']}")
+                    applied_configs.append(f"Costo envío: {manual_config['costo_envio_global']}")
                 if manual_config.get('color_global'):
                     applied_configs.append(f"Color: {manual_config['color_global']}")
                 
@@ -4301,22 +4345,22 @@ def fill_ml_template(sheet, headers, products, selected_fields, condicion, moned
     
     # Mapeo de campos
     field_mapping = {
-        'titulo': 'Ttulo: incluye producto, marca, modelo y destaca sus caractersticas principales',
+        'titulo': 'Título: incluye producto, marca, modelo y destaca sus características principales',
         'precio': 'Precio',
         'stock': 'Stock',
         'sku': 'SKU',
-        'descripcion': 'Descripcin',
+        'descripcion': 'Descripción',
         'marca': 'Marca',
         'modelo': 'Modelo',
-        'codigo_universal': 'Cdigo universal de producto',
+        'codigo_universal': 'Código universal de producto',
         'color': 'Color',
         'peso': 'Peso',
         'retiro_persona': 'Acepto retiro del comprador en domicilio del vendedor',
-        'tipo_garantia': 'Tipo de garanta',
-        'tiempo_garantia': 'Tiempo de garanta',
-        'unidad_garantia': 'Unidad de tiempo de la garanta',
-        'catalogo': 'El producto tiene catlogo',
-        'numero_catalogo': 'Nmero de catlogo'
+        'tipo_garantia': 'Tipo de garantía',
+        'tiempo_garantia': 'Tiempo de garantía',
+        'unidad_garantia': 'Unidad de tiempo de la garantía',
+        'catalogo': 'El producto tiene catálogo',
+        'numero_catalogo': 'Número de catálogo'
     }
     
     # Encontrar columnas en la plantilla
