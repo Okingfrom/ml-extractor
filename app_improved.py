@@ -574,17 +574,123 @@ HTML_TEMPLATE = '''
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ML Bulk Mapper Pro - {{ user_info.get('first_name', 'Usuario') if user_info else 'Usuario' }}</title>
     <style>
-        /*  DISEO MOBILE-FIRST RESPONSIVE */
+        /*  DISEO MOBILE-FIRST RESPONSIVE CON SIDEBAR */
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
         
-        /* Header de usuario */
-        .user-header {
-            background: linear-gradient(135deg, #3483fa, #2968c8);
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #FFE600 0%, #f8dc00 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        /* SIDEBAR LATERAL DESPLEGABLE */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 60px;
+            height: 100vh;
+            background: linear-gradient(180deg, #3483fa 0%, #2968c8 100%);
+            transition: width 0.3s ease;
+            z-index: 1000;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .sidebar:hover {
+            width: 280px;
+        }
+        
+        .sidebar-header {
+            padding: 20px 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            white-space: nowrap;
+        }
+        
+        .sidebar-icon {
+            width: 30px;
+            height: 30px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             color: white;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+        
+        .sidebar-title {
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .sidebar:hover .sidebar-title {
+            opacity: 1;
+        }
+        
+        .sidebar-menu {
+            padding: 20px 0;
+        }
+        
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px 15px;
+            color: rgba(255,255,255,0.9);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            border: none;
+            background: none;
+            width: 100%;
+            font-size: 14px;
+        }
+        
+        .sidebar-item:hover {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+        
+        .sidebar-item i {
+            width: 20px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        
+        .sidebar-text {
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .sidebar:hover .sidebar-text {
+            opacity: 1;
+        }
+        
+        /* CONTENIDO PRINCIPAL */
+        .main-content {
+            margin-left: 60px;
+            padding: 20px;
+            transition: margin-left 0.3s ease;
+            min-height: 100vh;
+        }
+        
+        /* Header de usuario simplificado */
+        .user-header {
+            background: rgba(255,255,255,0.95);
+            color: #333;
             padding: 15px 20px;
             border-radius: 12px;
             margin-bottom: 20px;
@@ -593,7 +699,8 @@ HTML_TEMPLATE = '''
             align-items: center;
             flex-wrap: wrap;
             gap: 10px;
-            box-shadow: 0 4px 20px rgba(52, 131, 250, 0.25);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border: 1px solid rgba(52, 131, 250, 0.2);
         }
         
         .user-info {
@@ -605,49 +712,361 @@ HTML_TEMPLATE = '''
         .user-avatar {
             width: 40px;
             height: 40px;
-            background: rgba(255,255,255,0.2);
+            background: #3483fa;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 600;
             font-size: 16px;
+            color: white;
         }
         
         .user-details h3 {
             margin: 0;
             font-size: 16px;
             font-weight: 600;
+            color: #333;
         }
         
         .user-details p {
             margin: 0;
             font-size: 14px;
-            opacity: 0.9;
+            color: #666;
         }
-
-        /* Small text utility for high contrast on gradients */
-        .small-contrast {
-            color: rgba(0,0,0,0.85) !important; /* dark text for legibility */
-            text-shadow: 0 1px 0 rgba(255,255,255,0.6); /* subtle light lift */
+        
+        /* Badge de cuenta */
+        .account-badge {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .account-badge.free {
+            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+        }
+        
+        /* Contenedor principal */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .ml-logo {
+            font-size: 28px;
+            font-weight: 700;
+            color: #3483fa;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .ai-badge {
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        /* Sección de archivos horizontal */
+        .files-section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 2px solid #e9ecef;
+        }
+        
+        .files-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            align-items: start;
+        }
+        
+        @media (max-width: 768px) {
+            .files-row {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .file-upload-group {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .file-upload-group h4 {
+            margin: 0 0 10px 0;
+            color: #495057;
             font-size: 14px;
-            opacity: 0.95;
+            font-weight: 600;
         }
-
-        /* White-on-dark pill for small text over colorful gradients */
-        .small-pill {
-            display: inline-block;
-            background: rgba(0,0,0,0.65); /* slightly darker for contrast */
-            color: #ffffff !important;
-            padding: 8px 12px; /* increased padding */
-            border-radius: 999px;
-            font-size: 13px;
-            line-height: 1;
-            box-shadow: 0 6px 18px rgba(0,0,0,0.28);
-            backdrop-filter: blur(6px);
-            -webkit-backdrop-filter: blur(6px);
-            border: 1px solid rgba(255,255,255,0.06);
-            opacity: 0.98;
+        
+        .file-input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .file-recommendation {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        
+        /* Configuración de mapeo inline */
+        .mapping-section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 2px solid #e9ecef;
+        }
+        
+        .mapping-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .checkbox-group input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+        }
+        
+        .checkbox-group label {
+            font-size: 14px;
+            color: #495057;
+            margin: 0;
+            cursor: pointer;
+        }
+        
+        /* Popup para configuración */
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .popup-content {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+            margin: 20px;
+        }
+        
+        .popup-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+        }
+        
+        /* Botón principal */
+        .process-button {
+            background: linear-gradient(135deg, #3483fa 0%, #2968c8 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(52, 131, 250, 0.3);
+        }
+        
+        .process-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(52, 131, 250, 0.4);
+        }
+        
+        .process-button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        /* Validación de archivos */
+        .validation-message {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 14px;
+            display: none;
+        }
+        
+        .validation-message.error {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        
+        .validation-message.success {
+            background: #d1edff;
+            border-color: #b8daff;
+            color: #004085;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 50px;
+            }
+            
+            .sidebar:hover {
+                width: 250px;
+            }
+            
+            .main-content {
+                margin-left: 50px;
+                padding: 15px;
+            }
+            
+            .container {
+                padding: 20px 15px;
+            }
+            
+            .user-header {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- SIDEBAR LATERAL DESPLEGABLE -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-icon">ML</div>
+            <span class="sidebar-title">Menú Principal</span>
+        </div>
+        
+        <div class="sidebar-menu">
+            <button class="sidebar-item" onclick="toggleSection('ai-prompt')">
+                <i>🤖</i>
+                <span class="sidebar-text">Generación IA</span>
+            </button>
+            
+            <button class="sidebar-item" onclick="toggleSection('config')">
+                <i>⚙️</i>
+                <span class="sidebar-text">Configuración</span>
+            </button>
+            
+            <button class="sidebar-item" onclick="toggleSection('mapping')">
+                <i>🗺️</i>
+                <span class="sidebar-text">Configurar Mapeo</span>
+            </button>
+            
+            <button class="sidebar-item" onclick="toggleSection('help')">
+                <i>📚</i>
+                <span class="sidebar-text">Guía de Uso</span>
+            </button>
+            
+            <button class="sidebar-item" onclick="toggleSection('donations')">
+                <i>🐾</i>
+                <span class="sidebar-text">Donar Mascotas</span>
+            </button>
+            
+            <div style="border-top: 1px solid rgba(255,255,255,0.1); margin: 15px 0; padding-top: 15px;">
+                <button class="sidebar-item" onclick="toggleSection('user-profile')">
+                    <i>👤</i>
+                    <span class="sidebar-text">Mi Perfil</span>
+                </button>
+                
+                <button class="sidebar-item" onclick="window.location.href='/logout'">
+                    <i>🚪</i>
+                    <span class="sidebar-text">Cerrar Sesión</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- CONTENIDO PRINCIPAL -->
+    <div class="main-content">
+        <!-- Header de usuario simplificado -->
+        <div class="user-header">
+            <div class="user-info">
+                <div class="user-avatar">
+                    {{ user_info.get('first_name', 'U')[0].upper() if user_info else 'U' }}
+                </div>
+                <div class="user-details">
+                    <h3>{{ user_info.get('first_name', 'Usuario') if user_info else 'Usuario' }} {{ user_info.get('last_name', '') if user_info else '' }}</h3>
+                    <p>{{ user_info.get('email', 'Sin email') if user_info else 'Sin email' }}</p>
+                </div>
+            </div>
+            <div class="account-badge {% if user_info and user_info.get('account_type') == 'premium' %}premium{% else %}free{% endif %}">
+                {{ 'PREMIUM' if user_info and user_info.get('account_type') == 'premium' else 'GRATUITO' }}
+            </div>
+        </div>
+        
+        <div class="container">
+            <div class="header">
+                <h1 class="ml-logo">
+                    ML Bulk Mapper Pro 
+                    <span class="ai-badge">AI POWERED</span>
+                </h1>
+                <p style="color: #666; margin: 0;">Herramienta profesional para carga masiva en Mercado Libre</p>
+            </div>
+            
+            <!-- VALIDACIÓN DE ARCHIVOS -->
+            <div class="validation-message" id="validationMessage">
+                ⚠️ Primero debes cargar la Plantilla de Mercado Libre (.xlsx) para continuar
+            </div>'''
         }
 
         /* Apply pill styling to all <small> by default, opt-out with .no-pill */
@@ -2399,45 +2818,68 @@ HTML_TEMPLATE = '''
                 </div>
             </div>
             
-            <h3>Archivos</h3>
-            
-            <div class="form-group">
-                <label for="template">Plantilla de Mercado Libre (.xlsx):</label>
-                <input type="file" name="template" accept=".xlsx" required>
-                <small>Sube la plantilla oficial descargada de Mercado Libre</small>
-            </div>
-            
-            <div class="form-group">
-                <label for="content">Datos de Productos:</label>
-                <input type="file" name="content" accept=".xlsx,.xls,.csv,.pdf,.docx,.txt" required>
-                <small>Recomendado: Excel o CSV para mejor mapeo</small>
-            </div>
-            
-            <h3>Configuración de Mapeo</h3>
-            
-            <div class="mapping-section">
-                <label>Selecciona los campos que quieres mapear desde tus datos:</label>
+            <!-- SECCIÓN DE ARCHIVOS HORIZONTAL -->
+            <div class="files-section">
+                <h3 style="margin: 0 0 15px 0; color: #495057; font-size: 18px;">📁 Archivos</h3>
                 
-                <div class="checkbox-group">
-                    <div class="checkbox-item">
+                <div class="files-row">
+                    <div class="file-upload-group">
+                        <h4>📋 Plantilla de Mercado Libre (.xlsx)</h4>
+                        <input type="file" name="template" accept=".xlsx" required class="file-input" id="templateFile" onchange="validateFiles()">
+                        <div class="file-recommendation">Sube la plantilla oficial descargada de Mercado Libre</div>
+                    </div>
+                    
+                    <div class="file-upload-group">
+                        <h4>📊 Datos de Productos</h4>
+                        <input type="file" name="content" accept=".xlsx,.xls,.csv,.pdf,.docx,.txt" required class="file-input" id="contentFile" onchange="validateFiles()">
+                        <div class="file-recommendation">Recomendado: Excel o CSV para mejor mapeo</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- CONFIGURACIÓN DE MAPEO SIMPLIFICADA -->
+            <div class="mapping-section">
+                <h3 style="margin: 0 0 15px 0; color: #495057; font-size: 18px;">🗺️ Configuración Rápida de Mapeo</h3>
+                <p style="color: #6c757d; margin: 0 0 15px 0; font-size: 14px;">Selecciona los campos que quieres mapear desde tus datos:</p>
+                
+                <div class="mapping-grid">
+                    <div class="checkbox-group">
                         <input type="checkbox" name="map_fields" value="titulo" id="titulo" checked>
-                        <label for="titulo"><span class="required">Título</span> (Nombre del producto)</label>
+                        <label for="titulo"><strong style="color: #dc3545;">Título</strong> (Nombre del producto)</label>
                     </div>
                     
-                    <div class="checkbox-item">
+                    <div class="checkbox-group">
                         <input type="checkbox" name="map_fields" value="precio" id="precio" checked>
-                        <label for="precio"><span class="required">Precio</span></label>
+                        <label for="precio"><strong style="color: #dc3545;">Precio</strong></label>
                     </div>
                     
-                    <div class="checkbox-item">
+                    <div class="checkbox-group">
                         <input type="checkbox" name="map_fields" value="stock" id="stock" checked>
-                        <label for="stock"><span class="required">Stock</span></label>
+                        <label for="stock"><strong style="color: #dc3545;">Stock</strong></label>
                     </div>
                     
-                    <div class="checkbox-item">
+                    <div class="checkbox-group">
                         <input type="checkbox" name="map_fields" value="sku" id="sku" checked>
-                        <label for="sku"><span class="optional">SKU</span></label>
+                        <label for="sku">SKU</label>
                     </div>
+                    
+                    <div class="checkbox-group">
+                        <input type="checkbox" name="map_fields" value="descripcion" id="descripcion">
+                        <label for="descripcion">Descripción (existente en datos)</label>
+                    </div>
+                    
+                    <div class="checkbox-group">
+                        <input type="checkbox" name="map_fields" value="marca" id="marca">
+                        <label for="marca">Marca (existente en datos)</label>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 15px; padding: 12px; background: #e7f3ff; border-radius: 8px; border-left: 4px solid #3483fa;">
+                    <p style="margin: 0; font-size: 14px; color: #004085;">
+                        <strong>💡 Configuración avanzada:</strong> Usa el menú lateral para acceder a opciones avanzadas de IA y mapeo personalizado.
+                    </p>
+                </div>
+            </div>'''
                     
                     <div class="checkbox-item">
                         <input type="checkbox" name="map_fields" value="descripcion" id="descripcion">
@@ -3047,85 +3489,17 @@ HTML_TEMPLATE = '''
             </div>
             {% endif %}
             
-            <!-- SUBMIT BUTTON - CENTERED AND PROFESSIONAL -->
-            {% if user_info and user_info.account_type == 'premium' %}
-            <div style="text-align: center; margin: 40px 0; padding: 20px;">
-                <button type="submit" style="
-                    background: linear-gradient(135deg, #3483fa 0%, #1e6acc 100%);
-                    color: white;
-                    border: none;
-                    padding: 18px 40px;
-                    font-size: 18px;
-                    font-weight: 600;
-                    border-radius: 12px;
-                    cursor: pointer;
-                    box-shadow: 0 6px 20px rgba(52, 131, 250, 0.3);
-                    transition: all 0.3s ease;
-                    text-transform: uppercase;
-                    letter-spacing: 1px;
-                    min-width: 300px;
-                " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 25px rgba(52, 131, 250, 0.4)'" 
-                   onmouseout="this.style.transform='translateY(0px)'; this.style.boxShadow='0 6px 20px rgba(52, 131, 250, 0.3)'">
-                     Procesar y Generar Archivo ML
-                </button>
-                <div style="margin-top: 12px; color: #666; font-size: 14px;">
-                     El procesamiento puede tomar entre 10-30 segundos
-                </div>
-            </div>
+            <!-- BOTÓN PRINCIPAL DE PROCESAMIENTO -->
+            <button type="submit" id="processButton" class="process-button" disabled>
+                🚀 PROCESAR Y GENERAR ARCHIVO ML
+            </button>
             
-            {% else %}
-            <!-- Botn deshabilitado para usuarios gratuitos -->
-            <div style="text-align: center; margin: 40px 0; padding: 20px;">
-                <div style="
-                    background: linear-gradient(135deg, #ffc107, #ffb300);
-                    border: 2px solid #ff8f00;
-                    color: #663c00;
-                    padding: 24px;
-                    border-radius: 12px;
-                    margin-bottom: 20px;
-                ">
-                    <h3 style="margin: 0 0 15px 0;"> Procesamiento Premium Requerido</h3>
-                    <p style="margin: 0 0 15px 0; font-size: 16px;">
-                        Para procesar archivos y usar las funciones de IA necesitas una cuenta Premium.
-                    </p>
-                    <a href="/register" style="
-                        background: linear-gradient(135deg, #28a745, #20c997);
-                        color: white;
-                        text-decoration: none;
-                        padding: 12px 30px;
-                        border-radius: 8px;
-                        font-weight: 600;
-                        display: inline-block;
-                        margin-top: 10px;
-                    ">
-                         Obtener Premium
-                    </a>
-                </div>
-                
-                <button type="button" disabled style="
-                    background: #6c757d;
-                    color: #dee2e6;
-                    border: none;
-                    padding: 18px 40px;
-                    font-size: 18px;
-                    font-weight: 600;
-                    border-radius: 12px;
-                    cursor: not-allowed;
-                    text-transform: uppercase;
-                    letter-spacing: 1px;
-                    min-width: 300px;
-                    opacity: 0.6;
-                ">
-                     Procesamiento Bloqueado
-                </button>
-                <div style="margin-top: 12px; color: #6c757d; font-size: 14px;">
-                     Requiere cuenta Premium para procesar
-                </div>
+            <div style="text-align: center; margin-top: 12px; color: #666; font-size: 14px;">
+                ⏱️ El procesamiento puede tomar entre 10-30 segundos
             </div>
-            {% endif %}
         </form>
         
-        <!--  PANTALLA DE CARGA CREATIVA CON VERSCULOS BBLICOS -->
+        <!--  PANTALLA DE CARGA CREATIVA -->
         <div class="loading-overlay" id="loadingOverlay">
             <div class="loading-container">
                 <div class="loading-logo">
@@ -3450,6 +3824,82 @@ HTML_TEMPLATE = '''
             step.classList.add('completed');
             step.querySelector('.loading-step-icon').textContent = '';
         }
+        
+        // 🔧 FUNCIONES DEL SIDEBAR Y NUEVA INTERFAZ
+        
+        // Validación de archivos
+        function validateFiles() {
+            const templateFile = document.getElementById('templateFile');
+            const contentFile = document.getElementById('contentFile');
+            const processButton = document.getElementById('processButton');
+            const validationMessage = document.getElementById('validationMessage');
+            
+            const hasTemplate = templateFile.files.length > 0;
+            const hasContent = contentFile.files.length > 0;
+            
+            if (hasTemplate && hasContent) {
+                processButton.disabled = false;
+                validationMessage.style.display = 'none';
+            } else if (hasTemplate && !hasContent) {
+                processButton.disabled = true;
+                validationMessage.style.display = 'block';
+                validationMessage.className = 'validation-message';
+                validationMessage.innerHTML = '⚠️ Ahora carga tu archivo de Datos de Productos para continuar';
+            } else if (!hasTemplate) {
+                processButton.disabled = true;
+                validationMessage.style.display = 'block';
+                validationMessage.className = 'validation-message error';
+                validationMessage.innerHTML = '❌ Primero debes cargar la Plantilla de Mercado Libre (.xlsx) para continuar';
+            }
+        }
+        
+        // Función para toggle de secciones del sidebar
+        function toggleSection(sectionName) {
+            switch(sectionName) {
+                case 'ai-prompt':
+                    openPopup('aiPromptPopup');
+                    break;
+                case 'config':
+                    openPopup('configPopup');
+                    break;
+                case 'mapping':
+                    openPopup('mappingPopup');
+                    break;
+                case 'help':
+                    openPopup('helpPopup');
+                    break;
+                case 'donations':
+                    openPopup('donationsPopup');
+                    break;
+                case 'user-profile':
+                    openPopup('userProfilePopup');
+                    break;
+            }
+        }
+        
+        // Funciones para popups
+        function openPopup(popupId) {
+            document.getElementById(popupId).style.display = 'flex';
+        }
+        
+        function closePopup(popupId) {
+            document.getElementById(popupId).style.display = 'none';
+        }
+        
+        // Cerrar popup al hacer clic fuera
+        window.onclick = function(event) {
+            const popups = document.querySelectorAll('.popup-overlay');
+            popups.forEach(popup => {
+                if (event.target === popup) {
+                    popup.style.display = 'none';
+                }
+            });
+        }
+        
+        // Validar archivos al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            validateFiles();
+        });
         </script>
         
         {% if output_file %}
