@@ -27,9 +27,9 @@ if USE_FALLBACK:
     from app_flask import app as application
 else:
     try:
-        _log("passenger_wsgi: trying to load app_improved.app")
-        from app_improved import app as application
+        _log("passenger_wsgi: trying to load legacy/app_improved.app")
+        from legacy.app_improved import app as application
     except Exception as exc:  # fallback to lightweight app
-        _log("passenger_wsgi: failed to load app_improved.app, falling back to app_flask.app")
+        _log("passenger_wsgi: failed to load legacy/app_improved.app, falling back to app_flask.app")
         _log("passenger_wsgi: import error:\n" + traceback.format_exc())
         from app_flask import app as application
