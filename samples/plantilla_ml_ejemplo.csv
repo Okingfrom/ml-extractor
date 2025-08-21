@@ -1,0 +1,12 @@
+Título,Precio,Stock,Categoría,Marca,Modelo,Descripción,Peso,Garantía,Condición,Imagen Principal
+obligatorio,obligatorio,obligatorio,obligatorio,opcional,opcional,obligatorio,opcional,opcional,obligatorio,opcional
+texto,número,número,texto,texto,texto,texto,número,texto,texto,url
+,,,,,,,,,,
+,,,,,,,,,,
+,,,,,,,,,,
+,,,,,,,,,,
+iPhone 14 Pro Max 256GB,1200000,15,Celulares,Apple,iPhone 14 Pro Max,Smartphone Apple iPhone 14 Pro Max con 256GB de almacenamiento,238,12 meses,Nuevo,https://example.com/iphone.jpg
+Samsung Galaxy S23 Ultra,1100000,8,Celulares,Samsung,Galaxy S23 Ultra,Smartphone Samsung Galaxy S23 Ultra con S Pen,234,12 meses,Nuevo,https://example.com/samsung.jpg
+MacBook Air M2,2500000,5,Computadoras,Apple,MacBook Air M2,Laptop Apple MacBook Air con chip M2,1240,12 meses,Nuevo,https://example.com/macbook.jpg
+Dell XPS 13,1800000,12,Computadoras,Dell,XPS 13,Laptop Dell XPS 13 ultradelgada,1200,24 meses,Nuevo,https://example.com/dell.jpg
+Sony WH-1000XM5,450000,25,Auriculares,Sony,WH-1000XM5,Auriculares inalámbricos con cancelación de ruido,250,24 meses,Nuevo,https://example.com/sony.jpg

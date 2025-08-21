@@ -11,8 +11,8 @@ if __name__ == "__main__":
     from typing import List, Optional
     
     print("🚀 Starting ML Extractor Backend - FastAPI")
-    print("📚 Documentation available at: http://localhost:8003/docs")
-    print("🔍 Health check at: http://localhost:8003/health")
+    print("📚 Documentation available at: http://localhost:8004/docs")
+    print("🔍 Health check at: http://localhost:8004/health")
     print("")
     
     from fastapi import FastAPI, UploadFile, File, HTTPException, Form
@@ -325,7 +325,7 @@ if __name__ == "__main__":
     uvicorn.run(
         app,
         host="0.0.0.0",
-        port=8003,
+        port=8004,
         reload=False,
         log_level="info"
     )

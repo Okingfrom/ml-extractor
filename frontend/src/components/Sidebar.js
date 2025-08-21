@@ -37,6 +37,13 @@ const Sidebar = ({ expanded, onToggle }) => {
       description: 'Cargar datos'
     },
     {
+      name: 'Análisis ML',
+      href: '/ml-analysis',
+      icon: ShoppingBag,
+      description: 'Analizar plantilla ML',
+      badge: 'Nuevo'
+    },
+    {
       name: 'Configurar Mapeo',
       href: '/mapping',
       icon: Settings,
@@ -146,6 +153,13 @@ const Sidebar = ({ expanded, onToggle }) => {
                 >
                   {item.name}
                 </span>
+
+                {/* Badge */}
+                {item.badge && expanded && (
+                  <span className="ml-auto text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full font-medium">
+                    {item.badge}
+                  </span>
+                )}
 
                 {/* Tooltip for collapsed state */}
                 {!expanded && (

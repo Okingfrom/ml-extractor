@@ -6,10 +6,11 @@ import os
 import uuid
 import shutil
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form, BackgroundTasks
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
+import json
 
 from ..database import get_database_session
 from ..models.database import User, UploadedFile, ProcessingTask
@@ -18,6 +19,7 @@ from ..models.schemas import (
     TaskResponse, PaginatedResponse, PaginationParams
 )
 from ..api.auth import get_current_user
+from ..services.ml_template_processor import process_ml_template
 from ..core.config import settings
 from ..services.file_processor import FileProcessorService
 from ..services.ml_processor import MLProcessorService
@@ -222,6 +224,149 @@ async def process_file(
     )
     
     return TaskResponse.from_orm(task)
+
+@router.post("/analyze-ml-template")
+async def analyze_ml_template(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_database_session)
+) -> Dict[str, Any]:
+    """
+    Analyze uploaded file to detect Mercado Libre template structure
+    """
+    
+    # Validate file type
+    allowed_extensions = {'.xlsx', '.xls', '.csv'}
+    file_extension = os.path.splitext(file.filename)[1].lower()
+    
+    if file_extension not in allowed_extensions:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Tipo de archivo no soportado. Use: {', '.join(allowed_extensions)}"
+        )
+    
+    # Validate file size (50MB for premium, 5MB for free users)
+    max_size = 50 * 1024 * 1024 if current_user.subscription_type == "premium" else 5 * 1024 * 1024
+    file.file.seek(0, 2)  # Seek to end
+    file_size = file.file.tell()
+    file.file.seek(0)  # Reset to beginning
+    
+    if file_size > max_size:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Archivo muy grande. Tamaño máximo: {max_size / 1024 / 1024:.1f}MB"
+        )
+    
+    # Save temporary file for analysis
+    temp_filename = f"temp_ml_analysis_{uuid.uuid4()}{file_extension}"
+    temp_path = os.path.join("uploads", temp_filename)
+    
+    try:
+        # Save file temporarily
+        with open(temp_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        
+        # Analyze ML template
+        analysis_result = process_ml_template(temp_path)
+        
+        # If it's a valid ML template, save to database
+        if analysis_result['analysis']['is_ml_template']:
+            # Save file permanently
+            permanent_filename = f"ml_template_{current_user.id}_{uuid.uuid4()}{file_extension}"
+            permanent_path = os.path.join("uploads", permanent_filename)
+            shutil.move(temp_path, permanent_path)
+            
+            # Create database record
+            db_file = UploadedFile(
+                user_id=current_user.id,
+                filename=file.filename,
+                original_filename=file.filename,
+                file_path=permanent_path,
+                file_size=file_size,
+                file_type=file.content_type,
+                status="analyzed",
+                metadata=json.dumps({
+                    "ml_analysis": analysis_result['analysis'],
+                    "template_type": "mercado_libre",
+                    "analysis_date": datetime.now().isoformat()
+                })
+            )
+            db.add(db_file)
+            db.commit()
+            db.refresh(db_file)
+            
+            # Add file ID to response
+            analysis_result['file_id'] = db_file.id
+            analysis_result['file_saved'] = True
+        else:
+            # Remove temporary file if not ML template
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
+            analysis_result['file_saved'] = False
+        
+        return analysis_result
+        
+    except Exception as e:
+        # Clean up temporary file
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
+        
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error analizando archivo: {str(e)}"
+        )
+
+@router.get("/{file_id}/ml-analysis")
+async def get_ml_analysis(
+    file_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_database_session)
+) -> Dict[str, Any]:
+    """
+    Get ML template analysis for a previously uploaded file
+    """
+    
+    file = (
+        db.query(UploadedFile)
+        .filter(UploadedFile.id == file_id, UploadedFile.user_id == current_user.id)
+        .first()
+    )
+    
+    if not file:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Archivo no encontrado"
+        )
+    
+    # Check if file has ML analysis metadata
+    if not file.metadata:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="El archivo no tiene análisis ML disponible"
+        )
+    
+    try:
+        metadata = json.loads(file.metadata)
+        ml_analysis = metadata.get('ml_analysis')
+        
+        if not ml_analysis:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No se encontró análisis ML en el archivo"
+            )
+        
+        return {
+            'file_id': file.id,
+            'filename': file.original_filename,
+            'analysis': ml_analysis,
+            'status': 'success'
+        }
+        
+    except json.JSONDecodeError:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error leyendo metadatos del archivo"
+        )
 
 @router.get("/{file_id}/download")
 async def download_file(

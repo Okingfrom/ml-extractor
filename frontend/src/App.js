@@ -7,6 +7,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import FileUpload from './pages/FileUpload';
+import MLTemplateAnalysis from './pages/MLTemplateAnalysis';
 import MappingConfig from './pages/MappingConfig';
 import DataValidation from './pages/DataValidation';
 import Profile from './pages/Profile';
@@ -52,6 +53,7 @@ function App() {
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="upload" element={<FileUpload />} />
+          <Route path="ml-analysis" element={<MLTemplateAnalysis />} />
           <Route path="mapping" element={<MappingConfig />} />
           <Route path="validation" element={<DataValidation />} />
           <Route path="profile" element={<Profile />} />
