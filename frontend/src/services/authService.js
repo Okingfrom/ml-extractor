@@ -4,18 +4,24 @@ export const authService = {
   // Login user
   async login(email, password) {
     try {
+      console.log('🔐 Attempting login for:', email);
       const response = await api.post('/api/login', {
         email,
         password,
       });
       
+      console.log('🔐 Login API response:', response);
+      console.log('🔐 Login response data:', response.data);
+      
       // Store token if provided
       if (response.data.token) {
         localStorage.setItem('token', response.data.token);
+        console.log('🔐 Token stored:', response.data.token);
       }
       
       return response.data;
     } catch (error) {
+      console.error('🔐 Login error:', error);
       throw error;
     }
   },

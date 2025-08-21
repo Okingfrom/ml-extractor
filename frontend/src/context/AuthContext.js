@@ -38,16 +38,32 @@ export const AuthProvider = ({ children }) => {
       setLoading(true);
       const response = await authService.login(email, password);
       
+      console.log('Login response:', response); // Debug log
+      
       if (response.success) {
         setUser(response.user);
-        toast.success(`¡Bienvenido ${response.user.first_name}!`);
+        toast.success(`¡Bienvenido ${response.user.first_name || response.user.name}!`);
         return { success: true };
       } else {
-        toast.error(response.error || 'Error al iniciar sesión');
-        return { success: false, error: response.error };
+        toast.error(response.message || response.error || 'Error al iniciar sesión');
+        return { success: false, error: response.message || response.error };
       }
     } catch (error) {
-      const errorMessage = error.response?.data?.error || 'Error de conexión';
+      console.error('Login error:', error); // Debug log
+      
+      let errorMessage = 'Error de conexión';
+      
+      if (error.response) {
+        // Server responded with error
+        errorMessage = error.response.data?.message || error.response.data?.error || `Error ${error.response.status}`;
+      } else if (error.request) {
+        // Network error
+        errorMessage = 'No se pudo conectar con el servidor. Verifica que el backend esté ejecutándose en puerto 8003.';
+      } else {
+        // Other error
+        errorMessage = error.message || 'Error desconocido';
+      }
+      
       toast.error(errorMessage);
       return { success: false, error: errorMessage };
     } finally {

@@ -11,8 +11,8 @@ if __name__ == "__main__":
     from typing import List, Optional
     
     print("🚀 Starting ML Extractor Backend - FastAPI")
-    print("📚 Documentation available at: http://localhost:8001/docs")
-    print("🔍 Health check at: http://localhost:8001/health")
+    print("📚 Documentation available at: http://localhost:8003/docs")
+    print("🔍 Health check at: http://localhost:8003/health")
     print("")
     
     from fastapi import FastAPI, UploadFile, File, HTTPException, Form
@@ -31,7 +31,7 @@ if __name__ == "__main__":
     # CORS middleware
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["http://localhost:3001", "http://127.0.0.1:3001", "*"],
+        allow_origins=["http://localhost:3000", "http://localhost:3001", "http://127.0.0.1:3000", "http://127.0.0.1:3001", "*"],
         allow_credentials=True,
         allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         allow_headers=["*"],
@@ -213,11 +213,119 @@ if __name__ == "__main__":
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Failed to list files: {str(e)}")
     
+    # Demo authentication endpoints
+    class LoginRequest(BaseModel):
+        email: str
+        password: str
+    
+    class AuthResponse(BaseModel):
+        success: bool
+        message: str
+        user: Optional[dict] = None
+        token: Optional[str] = None
+    
+    # Demo users database
+    DEMO_USERS = {
+        "premium@test.com": {
+            "id": 1,
+            "email": "premium@test.com",
+            "password": "Premium123!",
+            "name": "Premium User",
+            "first_name": "Premium",
+            "last_name": "User",
+            "account_type": "premium",
+            "is_verified": True
+        },
+        "free@test.com": {
+            "id": 2,
+            "email": "free@test.com", 
+            "password": "Free123!",
+            "name": "Free User",
+            "first_name": "Free",
+            "last_name": "User",
+            "account_type": "free",
+            "is_verified": True
+        }
+    }
+    
+    @app.post("/auth/login", response_model=AuthResponse)
+    async def login(request: LoginRequest):
+        """Demo login endpoint"""
+        try:
+            # Check if user exists
+            if request.email not in DEMO_USERS:
+                return AuthResponse(
+                    success=False,
+                    message="Email no encontrado"
+                )
+            
+            user = DEMO_USERS[request.email]
+            
+            # Check password
+            if request.password != user["password"]:
+                return AuthResponse(
+                    success=False,
+                    message="Contraseña incorrecta"
+                )
+            
+            # Generate demo token
+            demo_token = f"demo_token_{user['id']}_{datetime.now().strftime('%Y%m%d%H%M%S')}"
+            
+            # Return user data without password
+            user_data = {k: v for k, v in user.items() if k != "password"}
+            
+            return AuthResponse(
+                success=True,
+                message=f"Bienvenido {user['name']}!",
+                user=user_data,
+                token=demo_token
+            )
+            
+        except Exception as e:
+            return AuthResponse(
+                success=False,
+                message=f"Error de login: {str(e)}"
+            )
+    
+    @app.get("/auth/me")
+    async def get_current_user():
+        """Get current user info (demo endpoint)"""
+        return {
+            "user": {
+                "id": 1,
+                "email": "demo@test.com",
+                "name": "Demo User",
+                "account_type": "premium"
+            },
+            "authenticated": True
+        }
+    
+    @app.post("/auth/logout")
+    async def logout():
+        """Demo logout endpoint"""
+        return {"success": True, "message": "Sesión cerrada exitosamente"}
+    
+    # Frontend-compatible API endpoints (matching React frontend expectations)
+    @app.post("/api/login", response_model=AuthResponse)
+    async def api_login(request: LoginRequest):
+        """Frontend-compatible login endpoint"""
+        return await login(request)
+    
+    @app.get("/api/user")
+    async def api_get_current_user():
+        """Frontend-compatible current user endpoint"""
+        return await get_current_user()
+    
+    @app.post("/api/logout")
+    async def api_logout():
+        """Frontend-compatible logout endpoint"""
+        return await logout()
+    
     # Start the server
     uvicorn.run(
         app,
         host="0.0.0.0",
-        port=8001,
+        port=8003,
         reload=False,
         log_level="info"
     )

@@ -62,6 +62,7 @@ const Sidebar = ({ expanded, onToggle }) => {
       <div 
         className={clsx(
           'fixed left-0 top-0 h-full bg-white shadow-xl border-r border-secondary-200 transition-all duration-300 z-40',
+          'hidden lg:block', // Solo visible en desktop
           expanded ? 'w-64' : 'w-16'
         )}
       >
@@ -185,6 +186,112 @@ const Sidebar = ({ expanded, onToggle }) => {
               </div>
             )}
           </button>
+        </div>
+      </div>
+
+      {/* Mobile Sidebar */}
+      <div 
+        className={clsx(
+          'fixed inset-0 z-50 lg:hidden transition-all duration-300',
+          expanded ? 'visible opacity-100' : 'invisible opacity-0'
+        )}
+      >
+        {/* Backdrop */}
+        <div 
+          className="absolute inset-0 bg-black bg-opacity-50"
+          onClick={onToggle}
+        />
+        
+        {/* Mobile Sidebar Panel */}
+        <div 
+          className={clsx(
+            'absolute left-0 top-0 h-full w-80 bg-white shadow-xl transition-transform duration-300',
+            expanded ? 'transform-none' : '-translate-x-full'
+          )}
+        >
+          {/* Mobile Header */}
+          <div className="h-16 flex items-center justify-between px-4 border-b border-secondary-200">
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 ml-gradient rounded-lg flex items-center justify-center">
+                <ShoppingBag className="w-5 h-5 text-white" />
+              </div>
+              <span className="font-bold text-lg text-secondary-900">
+                ML Extractor
+              </span>
+            </div>
+            
+            <button
+              onClick={onToggle}
+              className="p-2 rounded-lg hover:bg-secondary-100 transition-colors"
+            >
+              <Menu className="w-5 h-5 text-secondary-600" />
+            </button>
+          </div>
+
+          {/* Mobile User Info */}
+          <div className="p-4 border-b border-secondary-200">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-primary-500 rounded-full flex items-center justify-center">
+                <span className="text-white font-medium text-sm">
+                  {user?.first_name?.charAt(0)?.toUpperCase() || 'U'}
+                </span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm text-secondary-900 truncate">
+                  {user?.first_name} {user?.last_name}
+                </p>
+                <div className="flex items-center space-x-1">
+                  <span className={clsx(
+                    'text-xs px-2 py-1 rounded-full font-medium',
+                    isPremium 
+                      ? 'bg-warning-100 text-warning-800' 
+                      : 'bg-secondary-100 text-secondary-600'
+                  )}>
+                    {isPremium ? 'Premium' : 'Gratuito'}
+                  </span>
+                  {isPremium && (
+                    <Zap className="w-3 h-3 text-warning-600" />
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Mobile Navigation */}
+          <nav className="flex-1 p-4 space-y-2">
+            {navigationItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <NavLink
+                  key={item.name}
+                  to={item.href}
+                  onClick={onToggle} // Cerrar el sidebar al navegar en móvil
+                  className={({ isActive }) =>
+                    clsx(
+                      'flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors',
+                      isActive
+                        ? 'bg-primary-50 text-primary-700 border border-primary-200'
+                        : 'text-secondary-600 hover:bg-secondary-50 hover:text-secondary-900'
+                    )
+                  }
+                >
+                  <Icon className="w-5 h-5 flex-shrink-0" />
+                  <span className="font-medium">{item.name}</span>
+                </NavLink>
+              );
+            })}
+          </nav>
+
+          {/* Mobile Logout Button */}
+          <div className="p-4 border-t border-secondary-200">
+            <button
+              onClick={handleLogout}
+              className="flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors text-secondary-600 hover:bg-error-50 hover:text-error-700 w-full"
+            >
+              <LogOut className="w-5 h-5 flex-shrink-0" />
+              <span className="font-medium">Cerrar Sesión</span>
+            </button>
+          </div>
         </div>
       </div>
     </>

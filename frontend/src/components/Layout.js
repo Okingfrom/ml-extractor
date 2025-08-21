@@ -18,7 +18,7 @@ const Layout = () => {
       {/* Main Content */}
       <div 
         className={`transition-all duration-300 ${
-          sidebarExpanded ? 'ml-64' : 'ml-16'
+          sidebarExpanded ? 'lg:ml-64' : 'lg:ml-16'
         }`}
       >
         {/* Header */}
@@ -34,14 +34,6 @@ const Layout = () => {
           </div>
         </main>
       </div>
-      
-      {/* Mobile Overlay */}
-      {sidebarExpanded && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
-          onClick={() => setSidebarExpanded(false)}
-        />
-      )}
     </div>
   );
 };
