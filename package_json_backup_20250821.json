@@ -1,0 +1,75 @@
+{
+  "backup_timestamp": "2025-08-21T16:30:00Z",
+  "backup_purpose": "Track package.json changes during Flask to React+FastAPI transition",
+  "auto_delete_date": "2025-09-21",
+  "original_file": "frontend/package.json",
+  "content": {
+    "name": "ml-extractor-frontend",
+    "version": "1.0.0",
+    "private": true,
+    "description": "ML Extractor Frontend - React + Tailwind CSS",
+    "dependencies": {
+      "@tailwindcss/forms": "^0.5.10",
+      "@tailwindcss/typography": "^0.5.16",
+      "@testing-library/jest-dom": "^5.17.0",
+      "@testing-library/react": "^13.4.0",
+      "@testing-library/user-event": "^14.5.2",
+      "axios": "^1.6.0",
+      "clsx": "^2.0.0",
+      "lucide-react": "^0.290.0",
+      "react": "^18.2.0",
+      "react-dom": "^18.2.0",
+      "react-dropzone": "^14.2.3",
+      "react-hot-toast": "^2.4.1",
+      "react-router-dom": "^6.8.0",
+      "react-scripts": "5.0.1",
+      "web-vitals": "^2.1.4"
+    },
+    "scripts": {
+      "start": "set PORT=3001 && react-scripts start",
+      "build": "react-scripts build",
+      "test": "react-scripts test",
+      "eject": "react-scripts eject",
+      "lint": "eslint src --ext .js,.jsx,.ts,.tsx",
+      "lint:fix": "eslint src --ext .js,.jsx,.ts,.tsx --fix",
+      "format": "prettier --write 'src/**/*.{js,jsx,ts,tsx,json,css,md}'"
+    },
+    "eslintConfig": {
+      "extends": [
+        "react-app",
+        "react-app/jest"
+      ]
+    },
+    "browserslist": {
+      "production": [
+        ">0.2%",
+        "not dead",
+        "not op_mini all"
+      ],
+      "development": [
+        "last 1 chrome version",
+        "last 1 firefox version",
+        "last 1 safari version"
+      ]
+    },
+    "devDependencies": {
+      "@types/react": "^18.2.42",
+      "@types/react-dom": "^18.2.17",
+      "autoprefixer": "^10.4.16",
+      "eslint": "^8.55.0",
+      "postcss": "^8.4.32",
+      "prettier": "^3.1.0",
+      "tailwindcss": "^3.3.6"
+    },
+    "proxy": "http://localhost:8000"
+  },
+  "changes_made": [
+    "Added PORT=3001 to start script for custom port configuration",
+    "Added @tailwindcss/forms and @tailwindcss/typography dependencies",
+    "Added complete devDependencies for Tailwind CSS development",
+    "Added proxy configuration pointing to backend server",
+    "Added lint and format scripts for code quality",
+    "Updated package name and added description"
+  ],
+  "note": "This backup will be automatically cleaned up when no longer needed or after September 21, 2025"
+}
