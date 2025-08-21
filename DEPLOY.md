@@ -1,12 +1,14 @@
-Deploy helper
+# Deploy Helper
 
 A small helper script to deploy the project to a server via SSH/cPanel terminal.
 
-Files added:
+## Files Added
+
 - scripts/deploy_to_server.sh — minimal deploy script (clone/pull, venv, pip, gunicorn)
 - .env.template — example environment variables file
 
-Usage:
+## Usage
+
 1. Copy `.env.template` to `.env` and fill secrets.
 2. On the server, run: ./scripts/deploy_to_server.sh /path/to/deploy main
 

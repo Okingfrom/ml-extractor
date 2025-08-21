@@ -1,8 +1,8 @@
-PICKUP.md
+# PICKUP.md
 
 Quick pickup instructions — run these on the other PC to continue where you left off.
 
-1) Install tools (Linux example)
+## 1) Install tools (Linux example)
 
 ```bash
 sudo apt update
@@ -11,7 +11,7 @@ sudo apt install -y git python3 python3-venv python3-pip
 sudo apt install -y gh
 ```
 
-2) Clone and update repo
+## 2) Clone and update repo
 
 ```bash
 git clone https://github.com/Okingfrom/ml-extractor.git
@@ -22,7 +22,7 @@ git pull origin main
 git status --porcelain=2 -b
 ```
 
-3) Create venv and install minimal deps (fallback-safe)
+## 3) Create venv and install minimal deps (fallback-safe)
 
 ```bash
 python3 -m venv .venv
@@ -33,7 +33,7 @@ pip install flask requests werkzeug
 # pip install -r requirements.txt
 ```
 
-4) Prepare `.env` (DO NOT commit)
+## 4) Prepare `.env` (DO NOT commit)
 
 ```bash
 cp .env.template .env
@@ -41,7 +41,7 @@ cp .env.template .env
 nano .env
 ```
 
-5) Run locally (fallback recommended)
+## 5) Run locally (fallback recommended)
 
 ```bash
 # fallback (safe)
@@ -53,7 +53,7 @@ python -m flask --app app_flask run --host 127.0.0.1 --port 5000
 .venv/bin/gunicorn -b 127.0.0.1:8001 app_improved:app
 ```
 
-6) Check CI / Actions
+## 6) Check CI / Actions
 
 ```bash
 gh run list --repo Okingfrom/ml-extractor --limit 10
@@ -63,18 +63,19 @@ gh run view <ID> --repo Okingfrom/ml-extractor --log
 gh run rerun <ID> --repo Okingfrom/ml-extractor
 ```
 
-7) Deploy (server or cPanel)
+## 7) Deploy (server or cPanel)
 
-- Server (SSH):
+Server (SSH):
+
 ```bash
 ./scripts/deploy_to_server.sh "$HOME/app_ml_extractor" main
 # follow logs:
 tail -f ~/app_ml_extractor/gunicorn.log
 ```
 
-- cPanel/Passenger: `passenger_wsgi.py` present; `.cpanel.yml` sets `USE_FALLBACK=1` by default.
+cPanel/Passenger: `passenger_wsgi.py` present; `.cpanel.yml` sets `USE_FALLBACK=1` by default.
 
-8) If you have local work-in-progress
+## 8) If you have local work-in-progress
 
 ```bash
 git add -A
@@ -84,7 +85,8 @@ git push origin HEAD
 git stash push -m "WIP before switching PC"
 ```
 
-Notes
+## Notes
+
 - I moved backup/corrupt files into `backups/archived/` and renamed to `.txt` so CI compile checks don't fail on them.
 - Do NOT commit `.env` or `users.db`.
 - Wait until GitHub Actions (Compile check) shows success before deploying.
