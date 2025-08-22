@@ -5,12 +5,10 @@ import {
   Home, 
   Upload, 
   Settings, 
-  CheckSquare, 
-  User, 
   LogOut,
   Menu,
   ShoppingBag,
-  Zap
+  Star
 } from 'lucide-react';
 import { clsx } from 'clsx';
 
@@ -37,29 +35,25 @@ const Sidebar = ({ expanded, onToggle }) => {
       description: 'Cargar datos'
     },
     {
-      name: 'Análisis ML',
-      href: '/ml-analysis',
+      name: 'Análisis de Productos',
+      href: '/product-analysis',
       icon: ShoppingBag,
-      description: 'Analizar plantilla ML',
+      description: 'Analizar productos y plantillas ML',
       badge: 'Nuevo'
     },
     {
-      name: 'Configurar Mapeo',
+      name: 'Asistente ML',
+      href: '/ml-mapping',
+      icon: Star,
+      description: 'Wizard guiado para Mercado Libre',
+      badge: 'Premium',
+      isPremium: true
+    },
+    {
+      name: 'Configuración',
       href: '/mapping',
       icon: Settings,
-      description: 'Configurar campos'
-    },
-    {
-      name: 'Validar Datos',
-      href: '/validation',
-      icon: CheckSquare,
-      description: 'Revisar información'
-    },
-    {
-      name: 'Perfil',
-      href: '/profile',
-      icon: User,
-      description: 'Configuración de cuenta'
+      description: 'Configurar mapeo y campos'
     },
   ];
 
@@ -118,7 +112,7 @@ const Sidebar = ({ expanded, onToggle }) => {
                     {isPremium ? 'Premium' : 'Gratuito'}
                   </span>
                   {isPremium && (
-                    <Zap className="w-3 h-3 text-warning-600" />
+                    <Star className="w-3 h-3 text-warning-600" />
                   )}
                 </div>
               </div>
@@ -264,7 +258,7 @@ const Sidebar = ({ expanded, onToggle }) => {
                     {isPremium ? 'Premium' : 'Gratuito'}
                   </span>
                   {isPremium && (
-                    <Zap className="w-3 h-3 text-warning-600" />
+                    <Star className="w-3 h-3 text-warning-600" />
                   )}
                 </div>
               </div>

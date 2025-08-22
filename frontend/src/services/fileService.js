@@ -32,13 +32,13 @@ export const fileService = {
     }
   },
 
-  // Analyze ML Template structure
-  async analyzeMLTemplate(file, onProgress) {
+  // Analyze Product Data for ML mapping
+  async analyzeProductData(file, onProgress) {
     try {
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await api.post('/files/analyze-ml-template', formData, {
+      const response = await api.post('/api/files/analyze-product-data', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -54,6 +54,7 @@ export const fileService = {
 
       return response.data;
     } catch (error) {
+      console.error('Product data analysis error:', error);
       throw error;
     }
   },
@@ -168,6 +169,185 @@ export const fileService = {
     } catch (error) {
       throw error;
     }
+  },
+  
+
+  // Analyze ML Template structure and fields
+  async analyzeMLTemplate(file, onProgress) {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await api.post('/api/files/analyze-ml-template', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        onUploadProgress: (progressEvent) => {
+          if (onProgress) {
+            const percentCompleted = Math.round(
+              (progressEvent.loaded * 100) / progressEvent.total
+            );
+            onProgress(percentCompleted);
+          }
+        },
+      });
+
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+    // Generate ML file preview
+  async generateMLFilePreview(mlTemplate, productData, mappingConfig, defaultSettings) {
+    try {
+      const formData = new FormData();
+      formData.append('ml_template', mlTemplate);
+      formData.append('product_data', productData);
+      formData.append('mapping_config', JSON.stringify(mappingConfig));
+      formData.append('default_settings', JSON.stringify(defaultSettings));
+
+      const response = await api.post('/api/files/preview-ml-file', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      return response.data;
+    } catch (error) {
+      console.error('Error generating ML file preview:', error);
+      throw error;
+    }
+  },
+
+  // Generate ML file
+  async generateMLFile(mlTemplateFile, productFile, mappingConfig, defaultSettings, onProgress, writeMode = 'fill-empty', edits = null) {
+    try {
+      const formData = new FormData();
+      formData.append('ml_template', mlTemplateFile);
+      formData.append('product_data', productFile);
+      formData.append('mapping_config', JSON.stringify(mappingConfig));
+      formData.append('default_settings', JSON.stringify(defaultSettings));
+      // attach write_mode and optional edits JSON
+      formData.append('write_mode', writeMode);
+      if (edits) {
+        formData.append('edits', JSON.stringify(edits));
+      }
+
+      const response = await api.post('/api/files/generate-ml-file', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        onUploadProgress: (progressEvent) => {
+          if (onProgress) {
+            const percentCompleted = Math.round(
+              (progressEvent.loaded * 100) / progressEvent.total
+            );
+            onProgress(percentCompleted);
+          }
+        },
+      });
+
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Download generated ML file
+  async downloadMLFile(filename) {
+    try {
+      const response = await api.get(`/api/files/download/${filename}`, {
+        responseType: 'blob',
+      });
+
+      // Create blob URL for download
+      const blob = new Blob([response.data], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      });
+      
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      return { success: true, message: 'Descarga iniciada' };
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Generate final ML template with mappings (deprecated - use generateMLFile instead)
+  async generateMLMapping(mlTemplateFile, productFile, mappingConfig, onProgress) {
+    try {
+      const formData = new FormData();
+      formData.append('ml_template', mlTemplateFile);
+      formData.append('product_file', productFile);
+      formData.append('mapping_config', JSON.stringify(mappingConfig));
+
+      const response = await api.post('/api/files/generate-ml-mapping', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        onUploadProgress: (progressEvent) => {
+          if (onProgress) {
+            const percentCompleted = Math.round(
+              (progressEvent.loaded * 100) / progressEvent.total
+            );
+            onProgress(percentCompleted);
+          }
+        },
+      });
+
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Validate ML Template structure
+  validateMLTemplateStructure(analysisResult) {
+    if (!analysisResult?.analysis) {
+      return {
+        isValid: false,
+        errors: ['No se pudo analizar la estructura del archivo'],
+        suggestions: ['Verifica que sea una plantilla oficial de Mercado Libre']
+      };
+    }
+
+    const analysis = analysisResult.analysis;
+    const errors = [];
+    const suggestions = [];
+
+    // Check if it's recognized as ML template
+    if (!analysis.is_ml_template) {
+      errors.push('El archivo no parece ser una plantilla de Mercado Libre');
+      suggestions.push('Descarga la plantilla oficial desde tu cuenta de ML');
+    }
+
+    // Check for required fields
+    if (!analysis.ml_fields || analysis.ml_fields.length === 0) {
+      errors.push('No se detectaron campos de ML en la plantilla');
+      suggestions.push('Verifica que la plantilla no esté modificada');
+    }
+
+    // Check for categories
+    if (!analysis.categories || analysis.categories.length === 0) {
+      errors.push('No se detectaron categorías en la plantilla');
+      suggestions.push('La plantilla debe tener categorías definidas');
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors,
+      suggestions,
+      fieldCount: analysis.ml_fields?.length || 0,
+      categoryCount: analysis.categories?.length || 0
+    };
   },
 
   // File validation utilities

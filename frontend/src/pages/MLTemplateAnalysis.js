@@ -338,16 +338,24 @@ const MLTemplateAnalysis = () => {
                     </button>
                     
                     {file.analysis?.file_saved && (
-                      <button
-                        onClick={() => {
-                          // Here you would navigate to mapping configuration
-                          toast.success('Archivo guardado. Listo para mapeo!');
-                        }}
-                        className="flex items-center space-x-1 px-3 py-1.5 bg-green-100 text-green-700 rounded text-sm hover:bg-green-200"
-                      >
-                        <Check className="w-4 h-4" />
-                        <span>Configurar Mapeo</span>
-                      </button>
+                      <>
+                        <button
+                          onClick={() => {
+                            // Here you would navigate to mapping configuration
+                            toast.success('Archivo guardado. Listo para mapeo!');
+                          }}
+                          className="flex items-center space-x-1 px-3 py-1.5 bg-green-100 text-green-700 rounded text-sm hover:bg-green-200"
+                        >
+                          <Check className="w-4 h-4" />
+                          <span>Configurar Mapeo</span>
+                        </button>
+                        
+                        {file.analysis?.mapping_patterns && (
+                          <div className="text-xs text-purple-600 bg-purple-50 px-2 py-1 rounded">
+                            🎯 Patrones generados ({(file.analysis.mapping_patterns.summary.confidence_score * 100).toFixed(0)}% confianza)
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
@@ -442,6 +450,105 @@ const MLTemplateAnalysis = () => {
                             <li key={index}>• {rec}</li>
                           ))}
                         </ul>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Mapping Patterns */}
+                  {selectedAnalysis.analysis.mapping_patterns && (
+                    <div>
+                      <h3 className="font-semibold text-purple-900 mb-3">
+                        Patrones de Mapeo Generados
+                        <span className="ml-2 text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full">
+                          Confianza: {(selectedAnalysis.analysis.mapping_patterns.summary.confidence_score * 100).toFixed(1)}%
+                        </span>
+                      </h3>
+                      <div className="bg-purple-50 border border-purple-200 rounded p-4 space-y-4">
+                        
+                        {/* Mapping Summary */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                          <div>
+                            <span className="font-medium text-purple-800">Campos mapeados:</span>
+                            <p className="text-purple-700">
+                              {selectedAnalysis.analysis.mapping_patterns.summary.mapped_fields} de {selectedAnalysis.analysis.mapping_patterns.summary.total_fields}
+                            </p>
+                          </div>
+                          <div>
+                            <span className="font-medium text-purple-800">Éxito de mapeo:</span>
+                            <p className="text-purple-700">
+                              {selectedAnalysis.analysis.mapping_patterns.summary.mapping_success_rate.toFixed(1)}%
+                            </p>
+                          </div>
+                          <div>
+                            <span className="font-medium text-purple-800">Alta confianza:</span>
+                            <p className="text-purple-700">
+                              {selectedAnalysis.analysis.mapping_patterns.summary.high_confidence_mappings} campos
+                            </p>
+                          </div>
+                          <div>
+                            <span className="font-medium text-purple-800">Revisión manual:</span>
+                            <p className="text-purple-700">
+                              {selectedAnalysis.analysis.mapping_patterns.summary.manual_review_needed} campos
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Field Mappings Table */}
+                        <div>
+                          <h4 className="font-medium text-purple-800 mb-2">Mapeo de Campos</h4>
+                          <div className="overflow-x-auto">
+                            <table className="min-w-full text-xs border border-purple-200">
+                              <thead className="bg-purple-100">
+                                <tr>
+                                  <th className="px-2 py-1 text-left font-medium text-purple-800">Campo Origen</th>
+                                  <th className="px-2 py-1 text-left font-medium text-purple-800">Campo ML</th>
+                                  <th className="px-2 py-1 text-left font-medium text-purple-800">Confianza</th>
+                                  <th className="px-2 py-1 text-left font-medium text-purple-800">Transformación</th>
+                                  <th className="px-2 py-1 text-left font-medium text-purple-800">Ejemplos</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {selectedAnalysis.analysis.mapping_patterns.mapping_pattern.field_mappings.map((mapping, index) => (
+                                  <tr key={index} className="border-t border-purple-200">
+                                    <td className="px-2 py-1 font-medium">{mapping.source_column}</td>
+                                    <td className="px-2 py-1">{mapping.target_field}</td>
+                                    <td className="px-2 py-1">
+                                      <span className={`px-1 py-0.5 rounded text-xs ${
+                                        mapping.confidence === 'high' ? 'bg-green-100 text-green-800' :
+                                        mapping.confidence === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                                        'bg-red-100 text-red-800'
+                                      }`}>
+                                        {mapping.confidence}
+                                      </span>
+                                    </td>
+                                    <td className="px-2 py-1">
+                                      {mapping.transformation_rule ? (
+                                        <span className="text-blue-600 text-xs">{mapping.transformation_rule}</span>
+                                      ) : (
+                                        <span className="text-gray-500 text-xs">Directo</span>
+                                      )}
+                                    </td>
+                                    <td className="px-2 py-1 text-gray-600">
+                                      {mapping.examples ? mapping.examples.slice(0, 2).join(', ') : '-'}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+
+                        {/* Next Steps */}
+                        {selectedAnalysis.analysis.mapping_patterns.next_steps && (
+                          <div>
+                            <h4 className="font-medium text-purple-800 mb-2">Próximos Pasos</h4>
+                            <ul className="text-sm text-purple-700 space-y-1">
+                              {selectedAnalysis.analysis.mapping_patterns.next_steps.map((step, index) => (
+                                <li key={index}>• {step}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}

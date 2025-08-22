@@ -7,10 +7,10 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import FileUpload from './pages/FileUpload';
-import MLTemplateAnalysis from './pages/MLTemplateAnalysis';
+import ProductDataAnalysis from './pages/ProductDataAnalysis';
+import MLMappingWizard from './pages/MLMappingWizard';
 import MappingConfig from './pages/MappingConfig';
-import DataValidation from './pages/DataValidation';
-import Profile from './pages/Profile';
+import AdminSettings from './pages/AdminSettings';
 
 // Components
 import Layout from './components/Layout';
@@ -53,10 +53,10 @@ function App() {
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="upload" element={<FileUpload />} />
-          <Route path="ml-analysis" element={<MLTemplateAnalysis />} />
+          <Route path="product-analysis" element={<ProductDataAnalysis />} />
+          <Route path="ml-mapping" element={<MLMappingWizard />} />
           <Route path="mapping" element={<MappingConfig />} />
-          <Route path="validation" element={<DataValidation />} />
-          <Route path="profile" element={<Profile />} />
+          <Route path="admin/settings" element={<AdminSettings />} />
         </Route>
         
         {/* Catch all route */}

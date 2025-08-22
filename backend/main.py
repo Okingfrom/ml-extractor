@@ -15,6 +15,7 @@ from .database import create_tables
 
 # Import API routes
 from .api import auth, files, mapping, dashboard
+from .api import admin_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -101,6 +102,7 @@ app.include_router(auth.router, prefix="/api")
 app.include_router(files.router, prefix="/api")
 app.include_router(mapping.router, prefix="/api")
 app.include_router(dashboard.router, prefix="/api")
+app.include_router(admin_router, prefix="/api")
 
 if __name__ == "__main__":
     uvicorn.run(
