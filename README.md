@@ -37,6 +37,10 @@ A sophisticated Python application that intelligently maps product data from var
    ```bash
    pip install -r requirements.txt
    ```
+   (For development/testing use the extended set)
+   ```bash
+   pip install -r requirements-dev.txt
+   ```
 3. Run the CLI:
    ```bash
    python main.py --help
