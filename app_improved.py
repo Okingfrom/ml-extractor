@@ -105,23 +105,61 @@ They can be re-enabled locally by creating a developer settings module and
 guarding them behind a strict environment variable (e.g., ML_EXTRACTOR_DEV=1).
 """
 
-# Example placeholder to illustrate how to safely re-enable for local debugging:
-if False:  # Set to (os.getenv('ML_EXTRACTOR_DEV') == '1') to re-activate locally
+# Environment flag for conditional dev routes
+DEV_FLAG = os.getenv('ML_EXTRACTOR_DEV') == '1'
+
+if DEV_FLAG:
     @app.route('/dev-login')
-    def dev_login():  # pragma: no cover - disabled in production
-        return redirect(url_for('login'))
+    def dev_login():  # pragma: no cover - development only
+        """Lightweight dev login: assigns a premium session if none exists."""
+        if not session.get('user_id'):
+            session.permanent = True
+            session['user_id'] = DEVELOPER_USER['user_id']
+            session['username'] = DEVELOPER_USER['username']
+            session['email'] = DEVELOPER_USER['email']
+            session['first_name'] = DEVELOPER_USER['first_name']
+            session['last_name'] = DEVELOPER_USER['last_name']
+            session['account_type'] = DEVELOPER_USER['account_type']
+            session['user_type'] = DEVELOPER_USER['user_type']
+            flash('Dev login activo (ML_EXTRACTOR_DEV=1).', 'success')
+        else:
+            flash('Sesión existente reutilizada.', 'info')
+        return redirect(url_for('index'))
 
     @app.route('/switch-user/<user_type>')
-    def switch_user(user_type):  # pragma: no cover - disabled in production
-        return redirect(url_for('login'))
+    def switch_user(user_type):  # pragma: no cover - development only
+        user_type_norm = user_type.lower()
+        if user_type_norm == 'premium':
+            session['account_type'] = 'premium'
+            session['user_type'] = 'premium'
+            flash('Modo premium (DEV).', 'success')
+        elif user_type_norm in ('regular', 'free'):
+            session['account_type'] = 'free'
+            session['user_type'] = 'free'
+            flash('Modo gratuito (DEV).', 'warning')
+        else:
+            flash('Tipo inválido.', 'error')
+        return redirect(url_for('index'))
 
     @app.route('/test-auth')
-    def test_auth():  # pragma: no cover - disabled in production
-        return "<h1>Auth Debug Disabled</h1>"
+    def test_auth():  # pragma: no cover - development only
+        return f"""
+        <h1> Test Auth (DEV)</h1>
+        <p>ML_EXTRACTOR_DEV=1</p>
+        <p>User: {session.get('username')}</p>
+        <p>Account Type: {session.get('account_type')}</p>
+        <p>Session Keys: {list(session.keys())}</p>
+        <a href='/debug-session'>Debug Session</a>
+        """
 
     @app.route('/debug-session')
-    def debug_session():  # pragma: no cover - disabled in production
-        return "<h1>Session Debug Disabled</h1>"
+    def debug_session():  # pragma: no cover - development only
+        return f"""
+        <h1> Debug Session (DEV)</h1>
+        <pre>{dict(session)}</pre>
+        <p>Cookies: {dict(request.cookies)}</p>
+        <a href='/'>Home</a>
+        """
 
 # 🚧 USER TYPE SWITCHER FOR TESTING
 ## Original /switch-user route removed (see production hardening note above)
