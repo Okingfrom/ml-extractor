@@ -80,10 +80,17 @@ from ai_enhancer import AIProductEnhancer, AI_CONFIG
 
 USE_REACT_UI = os.getenv('USE_REACT_UI') == '1'
 FRONTEND_DIST = os.path.join(os.path.dirname(__file__), 'frontend', 'dist')
+FRONTEND_BUILD = os.path.join(os.path.dirname(__file__), 'frontend', 'build')
 
 static_opts = {}
-if USE_REACT_UI and os.path.isdir(FRONTEND_DIST):
-    static_opts = {'static_folder': FRONTEND_DIST, 'static_url_path': '/'}
+if USE_REACT_UI:
+    target_static = None
+    if os.path.isdir(FRONTEND_DIST):
+        target_static = FRONTEND_DIST
+    elif os.path.isdir(FRONTEND_BUILD):
+        target_static = FRONTEND_BUILD
+    if target_static:
+        static_opts = {'static_folder': target_static, 'static_url_path': '/'}
 
 app = Flask(__name__, **static_opts)
 app.secret_key = os.getenv('SECRET_KEY', 'dev_secret_key_ml_extractor_2025_very_secure')
@@ -4791,10 +4798,12 @@ if USE_REACT_UI:
     def serve_react(path):  # pragma: no cover
         if path.startswith('api/'):
             return jsonify({'error': 'Not found'}), 404
-        index_path = os.path.join(FRONTEND_DIST, 'index.html')
+        # Determine active build directory
+        base_dir = FRONTEND_DIST if os.path.isdir(FRONTEND_DIST) else FRONTEND_BUILD
+        index_path = os.path.join(base_dir, 'index.html')
         if os.path.exists(index_path):
-            return send_from_directory(FRONTEND_DIST, 'index.html')
-        return "React build not found. Run npm run build inside frontend/", 500
+            return send_from_directory(base_dir, 'index.html')
+        return "React build not found. Run npm run build in frontend/ (dist/ or build/).", 500
 
 if __name__ == '__main__':
     mode = 'React SPA' if USE_REACT_UI else 'Legacy Template'
