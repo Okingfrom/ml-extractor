@@ -8,4 +8,5 @@ PyPDF2
 spacy
 PyYAML
 pytest
+flask-cors
 

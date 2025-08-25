@@ -6,7 +6,7 @@ CON INTELIGENCIA ARTIFICIAL para autocompletar datos faltantes
 SISTEMA DE AUTENTICACIN Y USUARIOS PREMIUM/GRATUITOS
 """
 
-from flask import Flask, request, render_template_string, send_file, redirect, url_for, jsonify, session, render_template, flash
+from flask import Flask, request, render_template_string, send_file, redirect, url_for, jsonify, session, render_template, flash, send_from_directory
 import openpyxl
 from openpyxl.cell import MergedCell
 import csv
@@ -18,6 +18,7 @@ import tempfile
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from auth_system import user_manager, login_required, premium_required
+from flask_cors import CORS
 
 # Cargar variables de entorno
 load_dotenv()
@@ -77,7 +78,14 @@ from werkzeug.utils import secure_filename
 import shutil
 from ai_enhancer import AIProductEnhancer, AI_CONFIG
 
-app = Flask(__name__)
+USE_REACT_UI = os.getenv('USE_REACT_UI') == '1'
+FRONTEND_DIST = os.path.join(os.path.dirname(__file__), 'frontend', 'dist')
+
+static_opts = {}
+if USE_REACT_UI and os.path.isdir(FRONTEND_DIST):
+    static_opts = {'static_folder': FRONTEND_DIST, 'static_url_path': '/'}
+
+app = Flask(__name__, **static_opts)
 app.secret_key = os.getenv('SECRET_KEY', 'dev_secret_key_ml_extractor_2025_very_secure')
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
@@ -89,6 +97,10 @@ app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['SESSION_COOKIE_NAME'] = 'ml_extractor_session'
 app.config['APPLICATION_ROOT'] = '/'
+
+# Enable CORS for API endpoints in dev mode when React UI enabled
+if USE_REACT_UI and os.getenv('ML_EXTRACTOR_DEV') == '1':
+    CORS(app, resources={r"/api/*": {"origins": ["http://localhost:3000", "http://localhost:5173", "http://localhost:3002"]}}, supports_credentials=True)
 
 # Create uploads directory if it doesn't exist
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -4764,6 +4776,27 @@ def generate_from_prompt():
             error=error_msg,
             debug_info=f"General Error: {str(e)}")
 
+@app.get('/api/health')
+def api_health():
+    return jsonify({
+        'status': 'ok',
+        'react': USE_REACT_UI,
+        'dev': os.getenv('ML_EXTRACTOR_DEV') == '1'
+    })
+
+if USE_REACT_UI:
+    # Serve React index for any unknown route (SPA fallback)
+    @app.route('/', defaults={'path': ''})
+    @app.route('/<path:path>')
+    def serve_react(path):  # pragma: no cover
+        if path.startswith('api/'):
+            return jsonify({'error': 'Not found'}), 404
+        index_path = os.path.join(FRONTEND_DIST, 'index.html')
+        if os.path.exists(index_path):
+            return send_from_directory(FRONTEND_DIST, 'index.html')
+        return "React build not found. Run npm run build inside frontend/", 500
+
 if __name__ == '__main__':
-    print(" Iniciando Mercado Libre Bulk Mapper Pro en http://localhost:5003")
+    mode = 'React SPA' if USE_REACT_UI else 'Legacy Template'
+    print(f" Iniciando Mercado Libre Bulk Mapper Pro ({mode}) en http://localhost:5003")
     app.run(debug=True, host='localhost', port=5003)

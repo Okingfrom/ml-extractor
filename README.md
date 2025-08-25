@@ -54,6 +54,42 @@ A sophisticated Python application that intelligently maps product data from var
 - `samples/` - Example input files and templates
 - `config/` - Mapping and configuration files
 - `.github/` - Copilot instructions and project docs
+- `frontend/` - React (SPA) source (optional UI layer)
+
+## 🖥 React Frontend Integration (Optional)
+The project can serve a React single-page application. Two modes:
+
+1. Legacy Flask Template (default): Inline HTML/CSS served from `app_improved.py`.
+2. React SPA: Build the frontend and let Flask serve the static bundle.
+
+### Enable React UI
+1. Install frontend dependencies:
+   ```bash
+   cd frontend
+   npm install
+   npm run build
+   cd ..
+   ```
+2. Run backend with React mode:
+   ```bash
+   USE_REACT_UI=1 python3 app_improved.py
+   ```
+3. (Dev hot reload) In one terminal run `npm start` (or Vite dev), in another run:
+   ```bash
+   ML_EXTRACTOR_DEV=1 USE_REACT_UI=1 python3 app_improved.py
+   ```
+
+### API Notes
+- Health endpoint: `GET /api/health` returns `{ status, react, dev }`.
+- Add new JSON endpoints under `/api/`.
+- CORS enabled in dev (`ML_EXTRACTOR_DEV=1` & `USE_REACT_UI=1`).
+
+### Environment Flags
+- `ML_EXTRACTOR_DEV=1` enables developer utilities & CORS.
+- `USE_REACT_UI=1` switches to serving the React build (fallback to legacy if missing build).
+
+### Future Split
+Keep back-end routes pure JSON and avoid embedding UI state server-side to simplify extracting `frontend/` to its own repo or deploying via CDN.
 
 ---
 For more details, see the roadmap and code comments.
