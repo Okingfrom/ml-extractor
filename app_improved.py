@@ -80,15 +80,12 @@ from ai_enhancer import AIProductEnhancer, AI_CONFIG
 
 USE_REACT_UI = os.getenv('USE_REACT_UI') == '1'
 FRONTEND_DIST = os.path.join(os.path.dirname(__file__), 'frontend', 'dist')
-FRONTEND_BUILD = os.path.join(os.path.dirname(__file__), 'frontend', 'build')
 
 static_opts = {}
 if USE_REACT_UI:
     target_static = None
     if os.path.isdir(FRONTEND_DIST):
         target_static = FRONTEND_DIST
-    elif os.path.isdir(FRONTEND_BUILD):
-        target_static = FRONTEND_BUILD
     if target_static:
         static_opts = {'static_folder': target_static, 'static_url_path': '/'}
 
@@ -4799,11 +4796,11 @@ if USE_REACT_UI:
         if path.startswith('api/'):
             return jsonify({'error': 'Not found'}), 404
         # Determine active build directory
-        base_dir = FRONTEND_DIST if os.path.isdir(FRONTEND_DIST) else FRONTEND_BUILD
+        base_dir = FRONTEND_DIST
         index_path = os.path.join(base_dir, 'index.html')
         if os.path.exists(index_path):
             return send_from_directory(base_dir, 'index.html')
-        return "React build not found. Run npm run build in frontend/ (dist/ or build/).", 500
+        return "React build not found. Run npm run build in frontend/ (creates dist/).", 500
 
 if __name__ == '__main__':
     mode = 'React SPA' if USE_REACT_UI else 'Legacy Template'
