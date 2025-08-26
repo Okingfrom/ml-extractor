@@ -1,35 +1,42 @@
 """
 Passenger WSGI entrypoint for cPanel/Passenger deployments.
-
-Behavior:
-- If environment variable USE_FALLBACK is truthy (1/true/yes), load `app_flask.app`.
-- Otherwise, try to import `app_improved.app`. If that fails (missing deps / import
-  error) the module will fall back to importing `app_flask.app`.
-
-Passenger expects a WSGI callable named `application` in this module.
+Updated to use the new simple_backend FastAPI application.
 """
 import os
 import sys
-import traceback
 
+# Add current directory to Python path
+sys.path.insert(0, os.path.dirname(__file__))
 
 def _log(msg: str):
     try:
-        sys.stderr.write(msg + "\n")
+        sys.stderr.write(f"[passenger_wsgi] {msg}\n")
+        sys.stderr.flush()
     except Exception:
         pass
 
-
-USE_FALLBACK = os.environ.get("USE_FALLBACK", "").lower() in ("1", "true", "yes")
-
-if USE_FALLBACK:
-    _log("passenger_wsgi: USE_FALLBACK set; loading app_flask.app")
-    from app_flask import app as application
-else:
+try:
+    _log("Loading simple_backend FastAPI application...")
+    from simple_backend import app
+    _log("Successfully loaded FastAPI app")
+    
+    # Passenger expects a WSGI application
+    # FastAPI is ASGI, so we need an ASGI-to-WSGI adapter
     try:
-        _log("passenger_wsgi: trying to load legacy/app_improved.app")
-        from legacy.app_improved import app as application
-    except Exception as exc:  # fallback to lightweight app
-        _log("passenger_wsgi: failed to load legacy/app_improved.app, falling back to app_flask.app")
-        _log("passenger_wsgi: import error:\n" + traceback.format_exc())
+        from asgiref.wsgi import WsgiToAsgi
+        application = WsgiToAsgi(app)
+        _log("Using ASGI-to-WSGI adapter")
+    except ImportError:
+        _log("asgiref not available, trying direct WSGI mode")
+        # Some hosts support ASGI directly
+        application = app
+        
+except Exception as e:
+    _log(f"Error loading simple_backend: {e}")
+    _log("Falling back to Flask app...")
+    try:
         from app_flask import app as application
+        _log("Successfully loaded Flask fallback")
+    except Exception as e2:
+        _log(f"Error loading Flask app: {e2}")
+        raise Exception("Could not load any application")
