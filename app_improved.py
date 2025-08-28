@@ -6,7 +6,7 @@ CON INTELIGENCIA ARTIFICIAL para autocompletar datos faltantes
 SISTEMA DE AUTENTICACIN Y USUARIOS PREMIUM/GRATUITOS
 """
 
-from flask import Flask, request, render_template_string, send_file, redirect, url_for, jsonify, session, render_template, flash
+from flask import Flask, request, render_template_string, send_file, redirect, url_for, jsonify, session, render_template, flash, send_from_directory
 import openpyxl
 from openpyxl.cell import MergedCell
 import csv
@@ -18,6 +18,7 @@ import tempfile
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from auth_system import user_manager, login_required, premium_required
+from flask_cors import CORS
 
 # Cargar variables de entorno
 load_dotenv()
@@ -77,7 +78,18 @@ from werkzeug.utils import secure_filename
 import shutil
 from ai_enhancer import AIProductEnhancer, AI_CONFIG
 
-app = Flask(__name__)
+USE_REACT_UI = os.getenv('USE_REACT_UI') == '1'
+FRONTEND_DIST = os.path.join(os.path.dirname(__file__), 'frontend', 'dist')
+
+static_opts = {}
+if USE_REACT_UI:
+    target_static = None
+    if os.path.isdir(FRONTEND_DIST):
+        target_static = FRONTEND_DIST
+    if target_static:
+        static_opts = {'static_folder': target_static, 'static_url_path': '/'}
+
+app = Flask(__name__, **static_opts)
 app.secret_key = os.getenv('SECRET_KEY', 'dev_secret_key_ml_extractor_2025_very_secure')
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
@@ -90,98 +102,89 @@ app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['SESSION_COOKIE_NAME'] = 'ml_extractor_session'
 app.config['APPLICATION_ROOT'] = '/'
 
+# Enable CORS for API endpoints in dev mode when React UI enabled
+if USE_REACT_UI and os.getenv('ML_EXTRACTOR_DEV') == '1':
+    CORS(app, resources={r"/api/*": {"origins": ["http://localhost:3000", "http://localhost:5173", "http://localhost:3002"]}}, supports_credentials=True)
+
 # Create uploads directory if it doesn't exist
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
-# 🚧 DEVELOPER BYPASS ROUTE - For easy testing (REMOVE IN PRODUCTION)
-@app.route('/dev-login')
-def dev_login():
-    """Developer bypass route - automatically logs in as premium user"""
-    if DEVELOPER_MODE:
-        # Create session for developer user
-        session.permanent = True
-        session['user_id'] = DEVELOPER_USER['user_id']
-        session['username'] = DEVELOPER_USER['username']
-        session['email'] = DEVELOPER_USER['email']
-        session['first_name'] = DEVELOPER_USER['first_name']
-        session['last_name'] = DEVELOPER_USER['last_name']
-        session['account_type'] = DEVELOPER_USER['account_type']
-        session['user_type'] = DEVELOPER_USER['user_type']
-        
-        flash('🚧 Developer mode: Auto-logged in as premium user', 'success')
+"""DEBUG/DEV ROUTES REMOVED IN PRODUCTION BUILD
+
+The following routes were present during development but are now removed / disabled:
+  - /dev-login (auto-login as premium)
+  - /switch-user/<user_type> (role switching without auth)
+  - /test-auth (session inspection)
+  - /debug-session (raw session/cookie dump)
+
+They can be re-enabled locally by creating a developer settings module and
+guarding them behind a strict environment variable (e.g., ML_EXTRACTOR_DEV=1).
+"""
+
+# Environment flag for conditional dev routes
+DEV_FLAG = os.getenv('ML_EXTRACTOR_DEV') == '1'
+
+if DEV_FLAG:
+    @app.route('/dev-login')
+    def dev_login():  # pragma: no cover - development only
+        """Lightweight dev login: assigns a premium session if none exists."""
+        if not session.get('user_id'):
+            session.permanent = True
+            session['user_id'] = DEVELOPER_USER['user_id']
+            session['username'] = DEVELOPER_USER['username']
+            session['email'] = DEVELOPER_USER['email']
+            session['first_name'] = DEVELOPER_USER['first_name']
+            session['last_name'] = DEVELOPER_USER['last_name']
+            session['account_type'] = DEVELOPER_USER['account_type']
+            session['user_type'] = DEVELOPER_USER['user_type']
+            flash('Dev login activo (ML_EXTRACTOR_DEV=1).', 'success')
+        else:
+            flash('Sesión existente reutilizada.', 'info')
         return redirect(url_for('index'))
-    else:
-        flash('Developer mode is disabled', 'error')
-        return redirect(url_for('login'))
-    # Developer bypass route removed for production review. Re-enable in a private
-    # development branch if needed for local testing. This prevents accidental
-    # exposure of developer shortcuts when merging to `main`.
+
+    @app.route('/switch-user/<user_type>')
+    def switch_user(user_type):  # pragma: no cover - development only
+        user_type_norm = user_type.lower()
+        if user_type_norm == 'premium':
+            session['account_type'] = 'premium'
+            session['user_type'] = 'premium'
+            flash('Modo premium (DEV).', 'success')
+        elif user_type_norm in ('regular', 'free'):
+            session['account_type'] = 'free'
+            session['user_type'] = 'free'
+            flash('Modo gratuito (DEV).', 'warning')
+        else:
+            flash('Tipo inválido.', 'error')
+        return redirect(url_for('index'))
+
+    @app.route('/test-auth')
+    def test_auth():  # pragma: no cover - development only
+        return f"""
+        <h1> Test Auth (DEV)</h1>
+        <p>ML_EXTRACTOR_DEV=1</p>
+        <p>User: {session.get('username')}</p>
+        <p>Account Type: {session.get('account_type')}</p>
+        <p>Session Keys: {list(session.keys())}</p>
+        <a href='/debug-session'>Debug Session</a>
+        """
+
+    @app.route('/debug-session')
+    def debug_session():  # pragma: no cover - development only
+        return f"""
+        <h1> Debug Session (DEV)</h1>
+        <pre>{dict(session)}</pre>
+        <p>Cookies: {dict(request.cookies)}</p>
+        <a href='/'>Home</a>
+        """
 
 # 🚧 USER TYPE SWITCHER FOR TESTING
-@app.route('/switch-user/<user_type>')
-def switch_user(user_type):
-    """Switch between Premium and Regular user for testing"""
-    if not DISABLE_AUTH:
-        flash('User switching is only available when authentication is disabled', 'error')
-        return redirect(url_for('index'))
-    
-    if user_type.lower() == 'premium':
-        session['account_type'] = 'premium'
-        session['user_type'] = 'premium'
-        session['first_name'] = 'Usuario'
-        session['last_name'] = 'Premium'
-        flash('🌟 Cambiado a Usuario PREMIUM - Todas las funciones disponibles', 'success')
-    elif user_type.lower() == 'regular':
-        session['account_type'] = 'free'
-        session['user_type'] = 'free'
-        session['first_name'] = 'Usuario'
-        session['last_name'] = 'Gratuito'
-        flash('👤 Cambiado a Usuario GRATUITO - Funciones limitadas', 'warning')
-    else:
-        flash('Tipo de usuario inválido', 'error')
-    
-    return redirect(url_for('index'))
-    # User-switching route removed for production review to avoid test-account
-    # shortcuts. Use proper test fixtures or a staging environment for user role
-    # testing instead.
+## Original /switch-user route removed (see production hardening note above)
 
 # ==========================================
 # RUTAS DE AUTENTICACIN Y USUARIOS
 # ==========================================
 
-@app.route('/test-auth')
-def test_auth():
-    """Página de prueba para verificar autenticación"""
-    return f"""
-    <h1> Test de Autenticación</h1>
-    <p>Ruta actual: {request.path}</p>
-    <p>User ID: {session.get('user_id', 'No definido')}</p>
-    <p>Username: {session.get('username', 'No definido')}</p>
-    <p>Email: {session.get('email', 'No definido')}</p>
-    <p>Account Type: {session.get('account_type', 'No definido')}</p>
-    <p>Sesión completa: {dict(session)}</p>
-    <p>Session ID en cookies: {request.cookies.get('session', 'No definido')}</p>
-    <p>Todas las cookies: {dict(request.cookies)}</p>
-    <br>
-    <a href="/login">Ir a Login</a> | <a href="/logout">Logout</a> | <a href="/debug-session">Debug Session</a>
-    """
-
-@app.route('/debug-session')
-def debug_session():
-    """Ruta especial para debug de sesión - sin protección"""
-    print(f" DEBUG SESSION: Session keys: {list(session.keys())}")
-    print(f" DEBUG SESSION: Session dict: {dict(session)}")
-    print(f" DEBUG SESSION: Cookies: {dict(request.cookies)}")
-    
-    return f"""
-    <h1> Debug de Sesión</h1>
-    <p><strong>Session Keys:</strong> {list(session.keys())}</p>
-    <p><strong>Session Dict:</strong> {dict(session)}</p>
-    <p><strong>Cookies:</strong> {dict(request.cookies)}</p>
-    <p><strong>Request Headers:</strong> {dict(request.headers)}</p>
-    <br>
-    <a href="/login">Ir a Login</a> | <a href="/test-auth">Test Auth</a>
-    """
+## Original /test-auth and /debug-session routes removed (see production hardening note above)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -4777,6 +4780,29 @@ def generate_from_prompt():
             error=error_msg,
             debug_info=f"General Error: {str(e)}")
 
+@app.get('/api/health')
+def api_health():
+    return jsonify({
+        'status': 'ok',
+        'react': USE_REACT_UI,
+        'dev': os.getenv('ML_EXTRACTOR_DEV') == '1'
+    })
+
+if USE_REACT_UI:
+    # Serve React index for any unknown route (SPA fallback)
+    @app.route('/', defaults={'path': ''})
+    @app.route('/<path:path>')
+    def serve_react(path):  # pragma: no cover
+        if path.startswith('api/'):
+            return jsonify({'error': 'Not found'}), 404
+        # Determine active build directory
+        base_dir = FRONTEND_DIST
+        index_path = os.path.join(base_dir, 'index.html')
+        if os.path.exists(index_path):
+            return send_from_directory(base_dir, 'index.html')
+        return "React build not found. Run npm run build in frontend/ (creates dist/).", 500
+
 if __name__ == '__main__':
-    print(" Iniciando Mercado Libre Bulk Mapper Pro en http://localhost:5003")
+    mode = 'React SPA' if USE_REACT_UI else 'Legacy Template'
+    print(f" Iniciando Mercado Libre Bulk Mapper Pro ({mode}) en http://localhost:5003")
     app.run(debug=True, host='localhost', port=5003)

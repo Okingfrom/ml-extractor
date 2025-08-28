@@ -55,6 +55,7 @@ uploads/
 !README.md
 !SOLUTION_README.md
 !requirements.txt
+!requirements-dev.txt
 users.db
 
 # Node.js

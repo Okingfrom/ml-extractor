@@ -1,0 +1,10 @@
+# Development dependencies for ML Extractor
+# Installs base runtime plus test and lint tools
+-r requirements.txt
+
+pytest>=8.0.0
+pytest-cov>=5.0.0
+# Add linters/formatters here if adopted later:
+# black
+# flake8
+# mypy
