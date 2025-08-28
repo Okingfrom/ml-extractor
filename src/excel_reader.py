@@ -1,7 +1,10 @@
 import pandas as pd
 import os
+import logging
 import openpyxl
 from openpyxl.cell import MergedCell
+
+logger = logging.getLogger(__name__)
 
 def read_excel(file_path):
     ext = os.path.splitext(file_path)[1].lower()
@@ -10,15 +13,15 @@ def read_excel(file_path):
     if ext == ".xlsx":
         try:
             # 🔧 FIX CRÍTICO: Manejo especial de celdas fusionadas y fórmulas
-            print(f"🔍 Leyendo archivo Excel: {file_path}")
+            logger.info(f"🔍 Leyendo archivo Excel: {file_path}")
             
             # Primer intento: lectura directa con pandas
             try:
                 df = pd.read_excel(file_path, engine="openpyxl")
-                print(f"✅ Lectura exitosa con pandas - Filas: {len(df)}, Columnas: {len(df.columns)}")
+                logger.info(f"✅ Lectura exitosa con pandas - Filas: {len(df)}, Columnas: {len(df.columns)}")
                 return df
             except Exception as pandas_error:
-                print(f"⚠️ Pandas falló, intentando con openpyxl manual: {pandas_error}")
+                logger.warning(f"⚠️ Pandas falló, intentando con openpyxl manual: {pandas_error}")
                 
                 # Segundo intento: lectura manual con manejo de MergedCell
                 wb = openpyxl.load_workbook(file_path, data_only=True)
@@ -49,7 +52,7 @@ def read_excel(file_path):
                     headers = data[0] if data else []
                     df_data = data[1:] if len(data) > 1 else []
                     df = pd.DataFrame(df_data, columns=headers)
-                    print(f"✅ Lectura manual exitosa - Filas: {len(df)}, Columnas: {len(df.columns)}")
+                    logger.info(f"✅ Lectura manual exitosa - Filas: {len(df)}, Columnas: {len(df.columns)}")
                     return df
                 else:
                     raise ValueError("No se pudieron extraer datos del archivo")

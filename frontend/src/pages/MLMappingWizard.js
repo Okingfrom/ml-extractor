@@ -2,6 +2,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { useAuth } from '../context/AuthContext';
 import { fileService } from '../services/fileService';
+import { logger } from '../utils/logger';
 import { mapHeaderToLogical } from '../utils/headerMapper';
 import MLFilePreview from '../components/MLFilePreview';
 import { 
@@ -65,7 +66,7 @@ const MLMappingWizard = () => {
     setError(null);
 
     try {
-      console.log('🔍 Analizando plantilla ML...');
+      logger.info('🔍 Analizando plantilla ML...');
       
       // Validate ML template first
       const validation = fileService.validateMLTemplate(file);
@@ -76,7 +77,7 @@ const MLMappingWizard = () => {
       // Analyze ML template structure
       const analysisResult = await fileService.analyzeMLTemplate(file);
       
-      console.log('✅ Análisis de plantilla completado:', analysisResult);
+      logger.info('✅ Análisis de plantilla completado:', analysisResult);
       
       setWizardData(prev => ({
         ...prev,
@@ -88,7 +89,7 @@ const MLMappingWizard = () => {
       setCurrentStep(2); // Move to validation step
       
     } catch (error) {
-      console.error('❌ Error analizando plantilla ML:', error);
+      logger.error('❌ Error analizando plantilla ML:', error);
       setError(error.message || 'Error al analizar la plantilla ML');
       toast.error(`❌ Error: ${error.message || 'No se pudo analizar la plantilla'}`);
     } finally {
@@ -140,11 +141,11 @@ const MLMappingWizard = () => {
     setError(null);
 
     try {
-      console.log('🔍 Analizando archivo de productos...');
+      logger.info('🔍 Analizando archivo de productos...');
       
       const analysisResult = await fileService.analyzeProductData(file);
       
-      console.log('✅ Análisis de productos completado:', analysisResult);
+      logger.info('✅ Análisis de productos completado:', analysisResult);
       
       setWizardData(prev => ({
         ...prev,
@@ -156,7 +157,7 @@ const MLMappingWizard = () => {
       setCurrentStep(6); // Move to field mapping
       
     } catch (error) {
-      console.error('❌ Error analizando productos:', error);
+      logger.error('❌ Error analizando productos:', error);
       setError(error.message || 'Error al analizar el archivo de productos');
       toast.error(`❌ Error: ${error.message || 'No se pudo analizar el archivo'}`);
     } finally {
@@ -1408,14 +1409,14 @@ const Step7FinalResults = ({ data, onReset }) => {
 
   const handlePreviewGenerated = (result) => {
     setPreviewData(result);
-    console.log('🔍 Vista previa generada:', result);
+    logger.info('🔍 Vista previa generada:', result);
   };
 
   const handleGenerateFile = async () => {
     setIsGenerating(true);
 
     try {
-      console.log('🔄 Generando archivo ML...', {
+      logger.info('🔄 Generando archivo ML...', {
         mlTemplate: data?.mlTemplate?.name,
         productData: data?.productData?.name,
         mappings: Object.keys(mappings).length,
@@ -1460,7 +1461,7 @@ const Step7FinalResults = ({ data, onReset }) => {
           backendMapping[mlLabel] = productField;
         });
       } catch (err) {
-        console.warn('Error building backend mapping payload', err);
+        logger.warn('Error building backend mapping payload', err);
       }
 
       // Validate presence of required logical fields (title, price)
@@ -1488,13 +1489,13 @@ const Step7FinalResults = ({ data, onReset }) => {
         editsPayload
       );
 
-      console.log('✅ Archivo generado:', result);
+      logger.info('✅ Archivo generado:', result);
 
       toast.success(`✅ Archivo ML generado: ${result.file_info?.products_processed || 0} productos procesados`);
       setDownloadUrl(result.download?.url);
 
     } catch (error) {
-      console.error('❌ Error generando archivo:', error);
+      logger.error('❌ Error generando archivo:', error);
       toast.error(`❌ Error: ${error.response?.data?.detail || error.message || 'No se pudo generar el archivo'}`);
     } finally {
       setIsGenerating(false);
@@ -1510,13 +1511,13 @@ const Step7FinalResults = ({ data, onReset }) => {
       // Extract filename from download URL
       const filename = downloadUrl.split('/').pop();
       
-      console.log('📥 Iniciando descarga:', filename);
+      logger.info('📥 Iniciando descarga:', filename);
       
       await fileService.downloadMLFile(filename);
       toast.success('📥 Descarga completada');
       
     } catch (error) {
-      console.error('❌ Error descargando:', error);
+      logger.error('❌ Error descargando:', error);
       toast.error(`❌ Error en descarga: ${error.message}`);
     }
   };

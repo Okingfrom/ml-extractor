@@ -8,9 +8,11 @@ from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 import uvicorn
 import os
+import logging
 
 # Import configuration
 from .core.config import settings
+from .core.logging_config import setup_logging
 from .database import create_tables
 
 # Import API routes
@@ -23,20 +25,24 @@ async def lifespan(app: FastAPI):
     Application lifespan manager
     Handles startup and shutdown events
     """
+    # Setup logging
+    setup_logging()
+    logger = logging.getLogger(__name__)
+    
     # Startup
-    print("🚀 Starting ML Extractor API...")
+    logger.info("🚀 Starting ML Extractor API...")
     
     # Create database tables
     try:
         create_tables()
-        print("✅ Database tables created/verified")
+        logger.info("✅ Database tables created/verified")
     except Exception as e:
-        print(f"❌ Database initialization failed: {e}")
+        logger.error(f"❌ Database initialization failed: {e}")
     
     yield
     
     # Shutdown
-    print("🛑 Shutting down ML Extractor API...")
+    logger.info("🛑 Shutting down ML Extractor API...")
 
 # Create FastAPI application
 app = FastAPI(
@@ -65,8 +71,9 @@ async def global_exception_handler(request: Request, exc: Exception):
     """
     if settings.DEBUG:
         import traceback
-        print(f"Unhandled exception: {exc}")
-        print(traceback.format_exc())
+        logger = logging.getLogger(__name__)
+        logger.error(f"Unhandled exception: {exc}")
+        logger.error(traceback.format_exc())
     
     return JSONResponse(
         status_code=500,
@@ -148,7 +155,8 @@ security = HTTPBearer()
 async def lifespan(app: FastAPI):
     """Application lifespan manager"""
     # Startup
-    print("🚀 Starting ML Extractor API...")
+    logger = logging.getLogger(__name__)
+    logger.info("🚀 Starting ML Extractor API...")
     
     # Create database tables
     async with engine.begin() as conn:
@@ -156,13 +164,13 @@ async def lifespan(app: FastAPI):
     
     # Connect to database
     await database.connect()
-    print("✅ Database connected")
+    logger.info("✅ Database connected")
     
     yield
     
     # Shutdown
     await database.disconnect()
-    print("🔒 Database disconnected")
+    logger.info("🔒 Database disconnected")
 
 # Create FastAPI app
 app = FastAPI(

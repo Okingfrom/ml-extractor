@@ -5,6 +5,7 @@ File handling API routes
 import os
 import uuid
 import shutil
+import logging
 from datetime import datetime
 from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form, BackgroundTasks
@@ -466,7 +467,7 @@ async def delete_file(
         if file.output_file_path and os.path.exists(file.output_file_path):
             os.remove(file.output_file_path)
     except Exception as e:
-        print(f"Error deleting file from disk: {e}")
+        logging.error(f"Error deleting file from disk: {e}")
     
     # Delete from database
     db.delete(file)

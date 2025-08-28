@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { mapHeaderToLogical } from '../utils/headerMapper';
+import { logger } from '../utils/logger';
 import LoadingSpinner from './LoadingSpinner';
 import toast from 'react-hot-toast';
 import HeaderRemapModal from './HeaderRemapModal';
@@ -48,7 +49,7 @@ const MLFilePreview = ({
       }
     } catch (err) {
       setError(err.response?.data?.detail || 'Error generando vista previa');
-      console.error('Preview error:', err);
+      logger.error('Preview error:', err);
     } finally {
       setLoading(false);
     }
@@ -146,7 +147,7 @@ const MLFilePreview = ({
       // Clear local edits after successful apply
       setEditsMap({});
     } catch (err) {
-      console.error('Apply edits error:', err);
+      logger.error('Apply edits error:', err);
       toast.error(err.response?.data?.detail || 'Error aplicando ediciones');
     } finally {
       setApplyingEdits(false);
@@ -215,7 +216,7 @@ const MLFilePreview = ({
       setEditsMap(newEdits);
       setPendingInvalidEdits([]);
     } catch (err) {
-      console.error('Remap apply error:', err);
+      logger.error('Remap apply error:', err);
       toast.error('Error aplicando ediciones remapeadas');
     } finally {
       setApplyingEdits(false);

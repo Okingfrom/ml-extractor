@@ -8,8 +8,11 @@
       "type": "image/x-icon"
     }
   ],
-  "start_url": ".",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "description": "ML Extractor frontend for generating Mercado Libre templates",
+  "lang": "es-AR",
   "theme_color": "#000000",
   "background_color": "#ffffff"
 }

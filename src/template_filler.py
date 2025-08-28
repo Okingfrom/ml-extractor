@@ -11,8 +11,11 @@ This module uses openpyxl and works with openpyxl.workbook.workbook.Workbook or
 worksheet objects.
 """
 from typing import List, Dict, Tuple, Optional, Any
+import logging
 from openpyxl import load_workbook
 from openpyxl.worksheet.worksheet import Worksheet
+
+logger = logging.getLogger(__name__)
 from openpyxl.workbook.workbook import Workbook
 import re
 
@@ -358,10 +361,10 @@ if __name__ == '__main__':
         try:
             wb = load_workbook('..\\samples\\sample_output.xlsx')
         except Exception:
-            print('No sample file found for smoke test')
+            logger.warning('No sample file found for smoke test')
     if wb:
         ws = wb.active
-        print('Detected columns:', detect_columns(ws, header_row=8))
+        logger.info('Detected columns:', detect_columns(ws, header_row=8))
         products = [{'title': 'Prueba', 'sku': 'ABC123', 'price': '99.90'}]
         filled, skipped = fill_products_from_row(ws, start_row=8, products_data=products, default_values={'condition': 'Nuevo', 'stock': 1}, overwrite=False)
-        print(json.dumps(generate_fill_report(products, filled, skipped), indent=2, ensure_ascii=False))
+        logger.info(json.dumps(generate_fill_report(products, filled, skipped), indent=2, ensure_ascii=False))

@@ -6,6 +6,7 @@ Complete backend for ML Extractor FastAPI
 import uvicorn
 import os
 import tempfile
+import logging
 from datetime import datetime
 from typing import List, Optional
 
@@ -13,6 +14,15 @@ from fastapi import FastAPI, UploadFile, File, HTTPException, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, FileResponse
 from pydantic import BaseModel
+
+# Setup logging
+try:
+    from core.logging_config import setup_logging, get_logger
+    setup_logging()
+    logger = get_logger(__name__)
+except ImportError:
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="ML Extractor API",
@@ -51,14 +61,14 @@ try:
             admin_router = getattr(mod, 'router', None)
             if admin_router is not None:
                 app.include_router(admin_router, prefix="/api")
-                print("✅ Admin router registered at /api/admin")
+                logger.info("Admin router registered at /api/admin")
             else:
-                print("ℹ️ Admin module loaded but no 'router' attribute found")
+                logger.info("Admin module loaded but no 'router' attribute found")
     else:
-        print(f"ℹ️ Admin module not found at {_admin_path}")
+        logger.info(f"Admin module not found at {_admin_path}")
 except Exception as _err:
     # Don't fail startup if admin router isn't importable in this lightweight dev server
-    print("ℹ️ Admin router not registered (optional):", _err)
+    logger.info(f"Admin router not registered (optional): {_err}")
 
 # Pydantic models
 class ProcessingResponse(BaseModel):
@@ -680,13 +690,18 @@ async def preview_ml_file_endpoint(
             mapping_resolved = {}
             try:
                 import sys
+                import importlib.util
                 src_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src'))
                 if src_dir not in sys.path:
                     sys.path.insert(0, src_dir)
-                from mapping_loader import resolve_column_aliases
+                
+                # Use importlib to safely import mapping_loader
+                spec = importlib.util.spec_from_file_location("mapping_loader", os.path.join(src_dir, "mapping_loader.py"))
+                mapping_loader_module = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mapping_loader_module)
 
                 product_cols = list(product_df.columns)
-                mapping_resolved = resolve_column_aliases(product_cols, mapping)
+                mapping_resolved = mapping_loader_module.resolve_column_aliases(product_cols, mapping)
             except Exception:
                 # fallback: use literal column names where available
                 mapping_resolved = {k: (v if isinstance(v, str) and v in list(product_df.columns) else None) for k, v in mapping.items()}
@@ -938,13 +953,18 @@ async def generate_ml_file_endpoint(
             mapping_resolved = {}
             try:
                 import sys
+                import importlib.util
                 src_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src'))
                 if src_dir not in sys.path:
                     sys.path.insert(0, src_dir)
-                from mapping_loader import resolve_column_aliases
+                
+                # Use importlib to safely import mapping_loader
+                spec = importlib.util.spec_from_file_location("mapping_loader", os.path.join(src_dir, "mapping_loader.py"))
+                mapping_loader_module = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mapping_loader_module)
 
                 product_cols = list(product_df.columns)
-                mapping_resolved = resolve_column_aliases(product_cols, mapping)
+                mapping_resolved = mapping_loader_module.resolve_column_aliases(product_cols, mapping)
             except Exception:
                 mapping_resolved = {k: (v if isinstance(v, str) and v in list(product_df.columns) else None) for k, v in mapping.items()}
 
@@ -1104,12 +1124,16 @@ async def generate_ml_file_endpoint(
             # Excel row 8 and produce a fill report. This preserves rows 1..7 and
             # writes only detected logical columns.
             import sys
+            import importlib.util
             src_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src'))
             if src_dir not in sys.path:
                 sys.path.insert(0, src_dir)
 
             try:
-                from template_filler import detect_columns, fill_products_from_row, generate_fill_report
+                # Use importlib to safely import template_filler
+                spec = importlib.util.spec_from_file_location("template_filler", os.path.join(src_dir, "template_filler.py"))
+                template_filler_module = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(template_filler_module)
 
                 # Build products_data list using the mapping provided by the wizard.
                 products_data = []
@@ -1196,7 +1220,7 @@ async def generate_ml_file_endpoint(
                 # append mode: find first row with an empty 'title' or other primary column
                 if write_mode == 'append':
                     # detect columns and find first empty target row at or after row 8
-                    cols = detect_columns(ws, header_row=8)
+                    cols = template_filler_module.detect_columns(ws, header_row=8)
                     # prefer title column, else first detected
                     title_col = cols.get('title') or (min(cols.values()) if cols else 1)
                     append_row = 8
@@ -1206,7 +1230,7 @@ async def generate_ml_file_endpoint(
                             append_row = r
                             break
                     # write products starting at append_row
-                    filled_report, skipped_report = fill_products_from_row(
+                    filled_report, skipped_report = template_filler_module.fill_products_from_row(
                         ws,
                         start_row=append_row,
                         products_data=products_data,
@@ -1220,7 +1244,7 @@ async def generate_ml_file_endpoint(
                     if not edits_payload:
                         raise HTTPException(status_code=400, detail='No edits provided for interactive mode')
                     # edits expected as list of {row: int, field: str, value: any}
-                    cols = detect_columns(ws, header_row=8)
+                    cols = template_filler_module.detect_columns(ws, header_row=8)
                     for e in edits_payload:
                         try:
                             row = int(e.get('row'))
@@ -1243,7 +1267,7 @@ async def generate_ml_file_endpoint(
                 else:
                     # fill-empty (default) or overwrite
                     allow_overwrite = True if write_mode == 'overwrite' else False
-                    filled_report, skipped_report = fill_products_from_row(
+                    filled_report, skipped_report = template_filler_module.fill_products_from_row(
                         ws,
                         start_row=8,
                         products_data=products_data,
@@ -1262,7 +1286,7 @@ async def generate_ml_file_endpoint(
                 shutil.rmtree(temp_dir)
 
                 # Build fill summary
-                fill_summary = generate_fill_report(products_data, filled_report, skipped_report)
+                fill_summary = template_filler_module.generate_fill_report(products_data, filled_report, skipped_report)
 
                 download_url = f"/api/files/download/{output_filename}"
 
@@ -1488,10 +1512,9 @@ async def api_logout():
     return await logout()
 
 if __name__ == "__main__":
-    print("🚀 Starting ML Extractor Backend - FastAPI")
-    print("📚 Documentation available at: http://localhost:8009/docs")
-    print("🔍 Health check at: http://localhost:8009/health")
-    print("")
+    logger.info("Starting ML Extractor Backend - FastAPI")
+    logger.info("Documentation available at: http://localhost:8009/docs")
+    logger.info("Health check at: http://localhost:8009/health")
     
     # Start the server
     uvicorn.run(

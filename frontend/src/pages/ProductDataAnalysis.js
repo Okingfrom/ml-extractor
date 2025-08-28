@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { useAuth } from '../context/AuthContext';
 import { fileService } from '../services/fileService';
+import { logger } from '../utils/logger';
 import { 
   Upload, 
   FileSpreadsheet, 
@@ -63,12 +64,12 @@ const ProductDataAnalysis = () => {
       setIsAnalyzing(true);
       
       try {
-        console.log('🔍 Iniciando análisis de productos...');
+        logger.info('🔍 Iniciando análisis de productos...');
         
         // Call the new product data analysis endpoint
         const analysisResult = await fileService.analyzeProductData(file);
         
-        console.log('✅ Análisis completado:', analysisResult);
+        logger.info('✅ Análisis completado:', analysisResult);
         
         const analysisItem = {
           id: Date.now(),
@@ -86,7 +87,7 @@ const ProductDataAnalysis = () => {
         toast.success(`✅ Análisis completado: ${analysisResult.file_analysis?.total_products || 0} productos detectados`);
         
       } catch (error) {
-        console.error('❌ Error en análisis:', error);
+        logger.error('❌ Error en análisis:', error);
         
         const errorAnalysis = {
           id: Date.now(),
@@ -174,7 +175,7 @@ const ProductDataAnalysis = () => {
           }
 
         } catch (error) {
-          console.error('Analysis error:', error);
+          logger.error('Analysis error:', error);
           setAnalysisFiles(prev => 
             prev.map(f => 
               f.id === fileItem.id 

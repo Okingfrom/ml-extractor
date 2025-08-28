@@ -1,22 +1,34 @@
 ---
 deployment:
   tasks:
+    - /bin/bash -lc "echo 'Starting ML-Extractor deployment...'"
     - /bin/bash -lc "python3 -m venv .venv || true"
     - /bin/bash -lc "source .venv/bin/activate && pip install --upgrade pip setuptools wheel"
-    - /bin/bash -lc "source .venv/bin/activate && pip install -r requirements.txt || true"
-    - /bin/bash -lc "# Ensure uploads and backups dirs exist"
-    - /bin/bash -lc "mkdir -p uploads backups"
+    - /bin/bash -lc "source .venv/bin/activate && pip install -r requirements.txt || echo 'Some packages failed to install'"
+    - /bin/bash -lc "mkdir -p uploads backups logs"
+    - /bin/bash -lc "chmod 755 uploads backups logs"
+    - /bin/bash -lc "echo 'Deployment completed successfully'"
 
 hooks:
   build: |
-    echo "Build completed"
+    echo "Build completed for ML-Extractor"
+    echo "Environment: $(python3 --version 2>&1 || echo 'Python not available')"
 
 application:
   type: "python"
   path: "."
-  # Export USE_FALLBACK=1 to force the lightweight Flask fallback on hosts
-  # that cannot install numpy/pandas. If you prefer Passenger, Passenger will
-  # automatically use passenger_wsgi.py in the repo root (no explicit run cmd
-  # required). The following run command activates the venv and starts
-  # gunicorn as a fallback when using the application manager.
+  # The application will use passenger_wsgi.py automatically
+  # Environment variables can be set to control behavior:
+  # - USE_FALLBACK=1: Forces lightweight Flask app
+  # - DEBUG=1: Enables debug mode
+  # - ENVIRONMENT=production: Sets production mode
+  startup_file: "passenger_wsgi.py"
+  
+  # Alternative run command for manual deployment
   run: "/bin/bash -lc 'export USE_FALLBACK=1 && source .venv/bin/activate && gunicorn -b 0.0.0.0:$PORT app_improved:app'"
+
+# Environment variables for cPanel deployment
+environment:
+  ENVIRONMENT: "production"
+  DEBUG: "false"
+  USE_FALLBACK: "0"

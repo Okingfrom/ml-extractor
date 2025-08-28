@@ -1,8 +1,10 @@
 import axios from 'axios';
+import { logger } from '../utils/logger';
 
 // Create axios instance with default config
+// Uses environment variables for API base URL
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:8009',
+  baseURL: process.env.REACT_APP_API_BASE_URL || 'http://localhost:8011',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -19,9 +21,7 @@ api.interceptors.request.use(
     }
     
     // Log request in development
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`🚀 ${config.method?.toUpperCase()} ${config.url}`);
-    }
+    logger.request(config.method, config.url);
     
     return config;
   },
@@ -34,23 +34,13 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => {
     // Log response in development
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`✅ ${response.config.method?.toUpperCase()} ${response.config.url} - ${response.status}`);
-    }
+    logger.response(response.config.method, response.config.url, response.status);
     
     return response;
   },
   (error) => {
     // Log error in development
-    if (process.env.NODE_ENV === 'development') {
-      console.error(`❌ ${error.config?.method?.toUpperCase()} ${error.config?.url}`, {
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        data: error.response?.data,
-        message: error.message,
-        code: error.code
-      });
-    }
+    logger.requestError(error.config?.method, error.config?.url, error.response?.status);
     
     // Handle common errors
     if (error.response?.status === 401) {
@@ -63,7 +53,7 @@ api.interceptors.response.use(
     
     // Handle network errors
     if (error.code === 'ECONNREFUSED' || error.code === 'NETWORK_ERROR' || !error.response) {
-      console.error('Network error - Backend server may be down');
+      logger.error('Network error - Backend server may be down');
       error.message = 'Error de conexión con el servidor. Verifica que el backend esté ejecutándose.';
     }
     

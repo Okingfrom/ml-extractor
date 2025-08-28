@@ -1,26 +1,41 @@
 import React, { useState, useEffect } from 'react';
 import { adminService } from '../services/adminService';
+import { logger } from '../utils/logger';
 
 export default function AdminSettings() {
+  // Initialize all hooks first (before any early returns)
   const [loading, setLoading] = useState(true);
   const [settings, setSettings] = useState({});
   const [provider, setProvider] = useState('mercadolibre');
   const [apiKey, setApiKey] = useState('');
   const [notes, setNotes] = useState('');
 
+  // Basic role check: ensure frontend user is admin before loading settings
+  const currentUser = JSON.parse(localStorage.getItem('user') || 'null');
+  const isAdmin = currentUser && currentUser.role === 'admin';
+
   useEffect(() => {
+    if (!isAdmin) {
+      setLoading(false);
+      return;
+    }
+    
     async function load() {
       try {
         const res = await adminService.getSettings();
         setSettings(res.settings || {});
       } catch (e) {
-        console.error(e);
+        logger.error('Error loading admin settings:', e);
       } finally {
         setLoading(false);
       }
     }
     load();
-  }, []);
+  }, [isAdmin]);
+
+  if (!isAdmin) {
+    return (<div>Acceso denegado: necesita permisos de administrador.</div>);
+  }
 
   const save = async () => {
     await adminService.setSetting({ provider, api_key: apiKey, notes });

@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { useAuth } from '../context/AuthContext';
 import { fileService } from '../services/fileService';
+import { logger } from '../utils/logger';
 import { 
   Upload, 
   FileSpreadsheet, 
@@ -94,7 +95,7 @@ const MLTemplateAnalysis = () => {
         }
 
       } catch (error) {
-        console.error('Analysis error:', error);
+        logger.error('Analysis error:', error);
         setAnalysisFiles(prev => 
           prev.map(f => 
             f.id === fileItem.id 

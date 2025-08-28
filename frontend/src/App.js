@@ -16,6 +16,7 @@ import AdminSettings from './pages/AdminSettings';
 import Layout from './components/Layout';
 import LoadingSpinner from './components/LoadingSpinner';
 import ProtectedRoute from './components/ProtectedRoute';
+import DebugPanel from './components/DebugPanel';
 
 function App() {
   const { user, loading } = useAuth();
@@ -30,6 +31,7 @@ function App() {
 
   return (
     <div className="App">
+  {process.env.NODE_ENV === 'development' && <DebugPanel />}
       <Routes>
         {/* Public Routes */}
         <Route 

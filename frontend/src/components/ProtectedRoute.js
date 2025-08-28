@@ -3,8 +3,8 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import LoadingSpinner from './LoadingSpinner';
 
-const ProtectedRoute = ({ children, requirePremium = false }) => {
-  const { user, loading, isPremium } = useAuth();
+const ProtectedRoute = ({ children, requirePremium = false, requireAdmin = false }) => {
+  const { user, loading, isPremium, isAdmin } = useAuth();
   const location = useLocation();
 
   if (loading) {
@@ -23,6 +23,11 @@ const ProtectedRoute = ({ children, requirePremium = false }) => {
   if (requirePremium && !isPremium) {
     // Redirect to upgrade page or dashboard with message
     return <Navigate to="/dashboard" state={{ requirePremium: true }} replace />;
+  }
+
+  if (requireAdmin && !isAdmin) {
+    // Redirect to dashboard or show access denied
+    return <Navigate to="/dashboard" state={{ requireAdmin: true }} replace />;
   }
 
   return children;

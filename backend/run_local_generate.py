@@ -1,15 +1,17 @@
 import os
 import sys
 import json
+import importlib.util
 from datetime import datetime
 import pandas as pd
 
-# Ensure src is importable
+# Ensure src is importable and import template_filler using importlib
 SRC = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src'))
-if SRC not in sys.path:
-    sys.path.insert(0, SRC)
 
-from template_filler import fill_products_from_row, generate_fill_report, detect_columns
+# Import template_filler using importlib
+spec = importlib.util.spec_from_file_location("template_filler", os.path.join(SRC, "template_filler.py"))
+template_filler_module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(template_filler_module)
 
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 SAMPLES = os.path.join(REPO, 'samples')
@@ -77,9 +79,9 @@ wb = load_workbook(ml_path)
 ws = wb.active
 
 # Run filler
-filled_report, skipped_report = fill_products_from_row(ws, start_row=8, products_data=products_data, default_values=default_values, overwrite=False)
+filled_report, skipped_report = template_filler_module.fill_products_from_row(ws, start_row=8, products_data=products_data, default_values=default_values, overwrite=False)
 
-report = generate_fill_report(products_data, filled_report, skipped_report)
+report = template_filler_module.generate_fill_report(products_data, filled_report, skipped_report)
 print('Fill report:')
 print(json.dumps(report, indent=2, ensure_ascii=False))
 

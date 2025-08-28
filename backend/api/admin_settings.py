@@ -3,6 +3,7 @@ from typing import Dict, Any
 from pydantic import BaseModel
 import os
 import json
+import logging
 # Note: avoid importing get_database_session at module import time to keep
 # this module lightweight for dev-server imports. Import the DB dependency
 # inside functions if needed. Also avoid importing optional heavy deps at
@@ -23,7 +24,7 @@ except Exception:
         # Only use the dev fallback when explicitly running in development mode.
         # This prevents silently weakening auth in production-like environments.
         if os.getenv("ENVIRONMENT", "").lower() == "development":
-            print("⚠️ admin_settings: falling back to dev stub for get_current_user due to import error:", _err)
+            logging.warning("⚠️ admin_settings: falling back to dev stub for get_current_user due to import error: %s", _err)
 
             class _DevAdminUser:
                 user_type = 'admin'

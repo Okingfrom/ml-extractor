@@ -13,12 +13,15 @@ import json
 from datetime import datetime
 
 # ensure src is importable
+import importlib.util
+
 SRC = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src'))
-if SRC not in sys.path:
-    sys.path.insert(0, SRC)
 
 try:
-    from template_filler import detect_columns, fill_products_from_row, generate_fill_report
+    # Import template_filler using importlib
+    spec = importlib.util.spec_from_file_location("template_filler", os.path.join(SRC, "template_filler.py"))
+    template_filler_module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(template_filler_module)
 except ImportError as e:
     print('Failed to import template_filler:', e)
     raise
@@ -90,9 +93,9 @@ else:
 
 print('Detected default values:', default_values)
 
-filled_report, skipped_report = fill_products_from_row(ws, start_row='auto', products_data=products_data, default_values=default_values, overwrite=False)
+filled_report, skipped_report = template_filler_module.fill_products_from_row(ws, start_row='auto', products_data=products_data, default_values=default_values, overwrite=False)
 
-report = generate_fill_report(products_data, filled_report, skipped_report)
+report = template_filler_module.generate_fill_report(products_data, filled_report, skipped_report)
 
 # Save output workbook
 os.makedirs(os.path.join(BASE, 'uploads'), exist_ok=True)

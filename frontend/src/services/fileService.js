@@ -1,4 +1,5 @@
 import api from './api';
+import { logger } from '../utils/logger';
 
 export const fileService = {
   // Upload file for processing
@@ -54,7 +55,7 @@ export const fileService = {
 
       return response.data;
     } catch (error) {
-      console.error('Product data analysis error:', error);
+      logger.error('Product data analysis error:', error);
       throw error;
     }
   },
@@ -215,7 +216,7 @@ export const fileService = {
 
       return response.data;
     } catch (error) {
-      console.error('Error generating ML file preview:', error);
+      logger.error('Error generating ML file preview:', error);
       throw error;
     }
   },
