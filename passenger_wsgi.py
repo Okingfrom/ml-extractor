@@ -17,26 +17,36 @@ def _log(msg: str):
 
 try:
     _log("Loading simple_backend FastAPI application...")
-    from simple_backend import app
-    _log("Successfully loaded FastAPI app")
-    
-    # Passenger expects a WSGI application
-    # FastAPI is ASGI, so we need an ASGI-to-WSGI adapter
+
+    # Set production environment
+    os.environ.setdefault('PRODUCTION', '1')
+
+    from simple_backend import app as fastapi_app
+    _log("Successfully imported FastAPI app from simple_backend")
+
+    # Passenger expects a WSGI callable named `application`.
+    # FastAPI is an ASGI app; convert it to WSGI using `asgi2wsgi.AsgiToWsgi`.
     try:
-        from asgiref.wsgi import WsgiToAsgi
-        application = WsgiToAsgi(app)
-        _log("Using ASGI-to-WSGI adapter")
+        from asgi2wsgi import AsgiToWsgi
+        application = AsgiToWsgi(fastapi_app)
+        _log("Using AsgiToWsgi adapter (asgi2wsgi)")
     except ImportError:
-        _log("asgiref not available, trying direct WSGI mode")
-        # Some hosts support ASGI directly
-        application = app
-        
+        _log("asgi2wsgi not installed; falling back to Flask app for Passenger WSGI")
+        # Try to load Flask fallback app instead of raising so Passenger can still serve something.
+        try:
+            from app_flask import app as application
+            _log("Loaded Flask fallback app as Passenger WSGI application")
+        except Exception as e_fallback:
+            _log(f"Failed to load Flask fallback: {e_fallback}")
+            # Re-raise original ImportError to surface installation issue
+            raise
+
 except Exception as e:
-    _log(f"Error loading simple_backend: {e}")
-    _log("Falling back to Flask app...")
+    _log(f"Error loading simple_backend FastAPI app: {e}")
+    _log("Attempting fallback to Flask app (app_flask.py)")
     try:
         from app_flask import app as application
-        _log("Successfully loaded Flask fallback")
+        _log("Successfully loaded Flask fallback app")
     except Exception as e2:
-        _log(f"Error loading Flask app: {e2}")
+        _log(f"Error loading Flask fallback: {e2}")
         raise Exception("Could not load any application")
