@@ -1,0 +1,16 @@
+# Frontend + API proxy rules for Daphne (127.0.0.1:8000)
+# Place this file in /home/youruser/public_html/extractorml.uy/.htaccess
+
+# Serve existing files directly
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^ - [L]
+
+# Exclude PHP from proxy (allow normal PHP handling)
+RewriteCond %{REQUEST_URI} !^/.*\.php$
+
+# Proxy API requests to Daphne
+RewriteRule ^api/(.*)$ http://127.0.0.1:8000/api/$1 [P,L]
+
+# Fall back to index.html for SPA routing
+RewriteRule ^ index.html [L]
