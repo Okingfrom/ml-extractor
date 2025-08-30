@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
-import Sidebar from './Sidebar';
+import Sidebar from './SidebarSimple';
 import Header from './Header';
 
 const Layout = () => {
@@ -8,7 +8,7 @@ const Layout = () => {
   const location = useLocation();
 
   return (
-    <div className="min-h-screen bg-secondary-50">
+    <div className="min-h-screen bg-gray-50">
       {/* Sidebar */}
       <Sidebar 
         expanded={sidebarExpanded}

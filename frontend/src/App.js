@@ -3,9 +3,9 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 
 // Pages
-import Login from './pages/Login';
+import Login from './pages/LoginSimple';
 import Register from './pages/Register';
-import Dashboard from './pages/Dashboard';
+import Dashboard from './pages/DashboardSimple';
 import FileUpload from './pages/FileUpload';
 import MLTemplateAnalysis from './pages/MLTemplateAnalysis';
 import MappingConfig from './pages/MappingConfig';
