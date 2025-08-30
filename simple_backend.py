@@ -29,9 +29,15 @@ class RegisterRequest(BaseModel):
     email: str
     password: str
 
-# Setup logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# Setup logging - reuse centralized logging configuration when available
+try:
+    from backend.core.logging_config import setup_logging
+    setup_logging()
+    logger = logging.getLogger(__name__)
+except Exception:
+    # Fall back to a simple console logger if centralized logging isn't available
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger(__name__)
 
 # Production configuration
 PRODUCTION = os.getenv('PRODUCTION', '').lower() in ('1', 'true', 'yes')
