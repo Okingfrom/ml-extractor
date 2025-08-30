@@ -97,3 +97,47 @@ Keep back-end routes pure JSON and avoid embedding UI state server-side to simpl
 
 ---
 For more details, see the roadmap and code comments.
+
+## Admin API & Remote Backend
+
+The backend now exposes a small admin API to manage provider API keys and application settings:
+
+- GET /api/admin/settings  - returns masked settings (admin only)
+- POST /api/admin/settings - create/update a provider setting {provider, api_key, notes} (admin only)
+- DELETE /api/admin/settings/{provider} - remove a provider setting (admin only)
+
+The frontend `Admin Settings` page (Development route: `/admin/settings`) uses these endpoints.
+
+Pointing the frontend to a remote backend:
+
+- In development, the frontend uses `frontend/src/services/api.js` which defaults to `http://localhost:8010`.
+- To point the frontend at a remote backend (for testing), update the `baseURL` in `frontend/src/services/api.js` or set the appropriate environment variable when building the frontend.
+
+Security note: This admin API is a minimal developer convenience. For production, store API keys and private credentials in a secure vault (Cloud Secret Manager), use encrypted storage, and protect the admin endpoints with strong authentication and role-based access control.
+
+## Run locally with Docker (backend + frontend)
+
+We provide a `docker-compose.yml` that builds and runs both the backend (FastAPI) and the frontend (React served by nginx) together.
+
+1. Install Docker Desktop (Windows) and enable WSL2 integration if available.
+2. From the project root, build and run:
+
+```powershell
+docker compose up --build
+```
+
+3. The frontend will be available at http://localhost:3000 and the backend API at http://localhost:8010.
+
+4. To pass an OpenAI API key for local testing, set environment variable before running:
+
+```powershell
+$env:OPENAI_API_KEY = "sk-..."
+docker compose up --build
+```
+
+To stop and remove containers:
+
+```powershell
+docker compose down
+```
+

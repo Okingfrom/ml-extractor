@@ -1,35 +1,52 @@
 """
 Passenger WSGI entrypoint for cPanel/Passenger deployments.
-
-Behavior:
-- If environment variable USE_FALLBACK is truthy (1/true/yes), load `app_flask.app`.
-- Otherwise, try to import `app_improved.app`. If that fails (missing deps / import
-  error) the module will fall back to importing `app_flask.app`.
-
-Passenger expects a WSGI callable named `application` in this module.
+Updated to use the new simple_backend FastAPI application.
 """
 import os
 import sys
-import traceback
 
+# Add current directory to Python path
+sys.path.insert(0, os.path.dirname(__file__))
 
 def _log(msg: str):
     try:
-        sys.stderr.write(msg + "\n")
+        sys.stderr.write(f"[passenger_wsgi] {msg}\n")
+        sys.stderr.flush()
     except Exception:
         pass
 
+try:
+    _log("Loading simple_backend FastAPI application...")
 
-USE_FALLBACK = os.environ.get("USE_FALLBACK", "").lower() in ("1", "true", "yes")
+    # Set production environment
+    os.environ.setdefault('PRODUCTION', '1')
 
-if USE_FALLBACK:
-    _log("passenger_wsgi: USE_FALLBACK set; loading app_flask.app")
-    from app_flask import app as application
-else:
+    from simple_backend import app as fastapi_app
+    _log("Successfully imported FastAPI app from simple_backend")
+
+    # Passenger expects a WSGI callable named `application`.
+    # FastAPI is an ASGI app; convert it to WSGI using `asgi2wsgi.AsgiToWsgi`.
     try:
-        _log("passenger_wsgi: trying to load legacy/app_improved.app")
-        from legacy.app_improved import app as application
-    except Exception as exc:  # fallback to lightweight app
-        _log("passenger_wsgi: failed to load legacy/app_improved.app, falling back to app_flask.app")
-        _log("passenger_wsgi: import error:\n" + traceback.format_exc())
+        from asgi2wsgi import AsgiToWsgi
+        application = AsgiToWsgi(fastapi_app)
+        _log("Using AsgiToWsgi adapter (asgi2wsgi)")
+    except ImportError:
+        _log("asgi2wsgi not installed; falling back to Flask app for Passenger WSGI")
+        # Try to load Flask fallback app instead of raising so Passenger can still serve something.
+        try:
+            from app_flask import app as application
+            _log("Loaded Flask fallback app as Passenger WSGI application")
+        except Exception as e_fallback:
+            _log(f"Failed to load Flask fallback: {e_fallback}")
+            # Re-raise original ImportError to surface installation issue
+            raise
+
+except Exception as e:
+    _log(f"Error loading simple_backend FastAPI app: {e}")
+    _log("Attempting fallback to Flask app (app_flask.py)")
+    try:
         from app_flask import app as application
+        _log("Successfully loaded Flask fallback app")
+    except Exception as e2:
+        _log(f"Error loading Flask fallback: {e2}")
+        raise Exception("Could not load any application")

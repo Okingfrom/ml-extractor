@@ -1,27 +1,36 @@
 import api from './api';
+import { logger } from '../utils/logger';
 
 export const authService = {
   // Login user
   async login(email, password) {
     try {
-      console.log('🔐 Attempting login for:', email);
-      const response = await api.post('/api/login', {
-        email,
+      logger.info('Attempting login for:', email);
+      const response = await api.post('/api/auth/login', {
+        username: email, // Backend expects 'username' field
         password,
       });
       
-      console.log('🔐 Login API response:', response);
-      console.log('🔐 Login response data:', response.data);
+      logger.debug('Login API response:', response);
+      logger.debug('Login response data:', response.data);
       
       // Store token if provided
-      if (response.data.token) {
-        localStorage.setItem('token', response.data.token);
-        console.log('🔐 Token stored:', response.data.token);
+      if (response.data.access_token) {
+        // Store token and user (backend now returns `user.role`)
+        localStorage.setItem('token', response.data.access_token);
+        localStorage.setItem('user', JSON.stringify(response.data.user || {}));
+        logger.info('Token stored');
+        
+        return {
+          success: true,
+          user: response.data.user,
+          token: response.data.access_token
+        };
       }
       
-      return response.data;
+      return { success: false, error: 'No token received' };
     } catch (error) {
-      console.error('🔐 Login error:', error);
+      logger.error('Login error:', error);
       throw error;
     }
   },
@@ -29,7 +38,7 @@ export const authService = {
   // Register user
   async register(userData) {
     try {
-      const response = await api.post('/api/register', userData);
+      const response = await api.post('/api/auth/register', userData);
       return response.data;
     } catch (error) {
       throw error;
@@ -39,7 +48,7 @@ export const authService = {
   // Logout user
   async logout() {
     try {
-      await api.post('/api/logout');
+      await api.post('/api/auth/logout');
       localStorage.removeItem('token');
     } catch (error) {
       // Even if logout fails, remove token
@@ -61,8 +70,8 @@ export const authService = {
   // Get current user
   async getCurrentUser() {
     try {
-      const response = await api.get('/api/user');
-      return response.data.user;
+      const response = await api.get('/api/auth/me');
+      return response.data;
     } catch (error) {
       throw error;
     }

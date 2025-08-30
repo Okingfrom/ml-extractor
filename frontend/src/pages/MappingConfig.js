@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { mappingService } from '../services/mappingService';
+import { logger } from '../utils/logger';
 import { 
   Settings, 
   Plus, 
@@ -73,7 +74,7 @@ const MappingConfig = () => {
       ]);
 
     } catch (error) {
-      console.error('Error loading mapping data:', error);
+      logger.error('Error loading mapping data:', error);
       toast.error('Error cargando configuración de mapeo');
     } finally {
       setIsLoading(false);
@@ -113,7 +114,21 @@ const MappingConfig = () => {
   const saveMapping = async () => {
     try {
       setIsSaving(true);
-      const result = await mappingService.saveMappingConfig(mappingConfig);
+      // Transform mapping from { sourceField: mlKey } to { ML Label: sourceField }
+      const backendMapping = {};
+      Object.entries(mappingConfig.mapping).forEach(([source, targetKey]) => {
+        if (!targetKey) return;
+        const ml = mlFields.find(f => f.key === targetKey);
+        const mlLabel = ml ? ml.label : targetKey;
+        backendMapping[mlLabel] = source;
+      });
+
+      const payload = {
+        ...mappingConfig,
+        mapping: backendMapping,
+      };
+
+      const result = await mappingService.saveMappingConfig(payload);
       
       if (result.success) {
         toast.success('Configuración guardada exitosamente');
@@ -121,11 +136,38 @@ const MappingConfig = () => {
         toast.error(result.error || 'Error guardando configuración');
       }
     } catch (error) {
-      console.error('Error saving mapping:', error);
+      logger.error('Error saving mapping:', error);
       toast.error('Error guardando configuración');
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const exportMappingJSON = () => {
+    // Build backend-shaped mapping and trigger download
+    const backendMapping = {};
+    Object.entries(mappingConfig.mapping).forEach(([source, targetKey]) => {
+      if (!targetKey) return;
+      const ml = mlFields.find(f => f.key === targetKey);
+      const mlLabel = ml ? ml.label : targetKey;
+      backendMapping[mlLabel] = source;
+    });
+
+    const exportObj = {
+      template_columns: mappingConfig.template_columns,
+      mapping: backendMapping,
+      exported_at: new Date().toISOString(),
+    };
+
+    const blob = new Blob([JSON.stringify(exportObj, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'mapping_export.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
   };
 
   const loadTemplate = async (templateId) => {
@@ -383,7 +425,7 @@ const MappingConfig = () => {
         
         <div className="card-body">
           <div className="flex items-center space-x-4">
-            <button className="btn-secondary flex items-center space-x-2">
+            <button onClick={exportMappingJSON} className="btn-secondary flex items-center space-x-2">
               <Download className="w-4 h-4" />
               <span>Exportar JSON</span>
             </button>

@@ -1,0 +1,10 @@
+{
+  "admin_local@test.com": {
+    "username": "admin_local@test.com",
+    "email": "admin_local@test.com",
+    "password": "48d105bdfbc49a5fcf39a10b961386e61dfe40085cb0315d818b761c5735dafa",
+    "created_at": "2025-08-23T13:12:26.285770",
+    "is_active": true,
+    "role": "admin"
+  }
+}

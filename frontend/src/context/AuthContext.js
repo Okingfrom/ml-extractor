@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { authService } from '../services/authService';
+import { logger } from '../utils/logger';
 import toast from 'react-hot-toast';
 
 const AuthContext = createContext({});
@@ -15,6 +16,7 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [lastError, setLastError] = useState(null);
 
   useEffect(() => {
     // Check if user is already logged in
@@ -38,7 +40,7 @@ export const AuthProvider = ({ children }) => {
       setLoading(true);
       const response = await authService.login(email, password);
       
-      console.log('Login response:', response); // Debug log
+      logger.info('Login response:', response); // Debug log
       
       if (response.success) {
         setUser(response.user);
@@ -49,10 +51,14 @@ export const AuthProvider = ({ children }) => {
         return { success: false, error: response.message || response.error };
       }
     } catch (error) {
-      console.error('Login error:', error); // Debug log
-      
+      // Detailed logging for debugging authentication issues
+      logger.error('Login error:', error);
+      logger.debug('Axios error response:', error?.response?.data ?? null);
+      logger.debug('Axios error status:', error?.response?.status ?? null);
+  logger.debug('Axios error config:', error?.config ?? null);
+
       let errorMessage = 'Error de conexión';
-      
+
       if (error.response) {
         // Server responded with error
         errorMessage = error.response.data?.message || error.response.data?.error || `Error ${error.response.status}`;
@@ -63,9 +69,10 @@ export const AuthProvider = ({ children }) => {
         // Other error
         errorMessage = error.message || 'Error desconocido';
       }
-      
-      toast.error(errorMessage);
-      return { success: false, error: errorMessage };
+
+  toast.error(errorMessage);
+  setLastError({ message: errorMessage, details: error?.response?.data ?? null, status: error?.response?.status ?? null, config: error?.config ?? null });
+  return { success: false, error: errorMessage };
     } finally {
       setLoading(false);
     }
@@ -98,7 +105,7 @@ export const AuthProvider = ({ children }) => {
       setUser(null);
       toast.success('Sesión cerrada correctamente');
     } catch (error) {
-      console.error('Error during logout:', error);
+      logger.error('Error during logout:', error);
       // Even if logout fails, clear local state
       setUser(null);
     }
@@ -144,6 +151,7 @@ export const AuthProvider = ({ children }) => {
   const value = {
     user,
     loading,
+  lastError,
     login,
     register,
     logout,
@@ -151,7 +159,9 @@ export const AuthProvider = ({ children }) => {
     updateProfile,
     checkAuthStatus,
     isAuthenticated: !!user,
-    isPremium: user?.account_type === 'premium',
+  // New role helpers: frontend uses `role` returned by backend (user.role === 'premium' or 'admin')
+  isPremium: user?.role === 'premium',
+  isAdmin: user?.role === 'admin',
   };
 
   return (

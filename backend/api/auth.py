@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 from typing import Optional
 import jwt
+import logging
 import bcrypt
 import secrets
 import smtplib
@@ -114,7 +115,7 @@ def send_verification_email(email: str, token: str):
         server.sendmail(settings.SMTP_USER, email, text)
         server.quit()
     except Exception as e:
-        print(f"Failed to send verification email: {e}")
+        logging.error(f"Failed to send verification email: {e}")
 
 # Routes
 @router.post("/register", response_model=BaseResponse)

@@ -10,6 +10,13 @@ from dataclasses import dataclass
 from pathlib import Path
 from datetime import datetime
 
+try:
+    from .mapping_pattern_generator import generate_mapping_from_analysis
+    MAPPING_GENERATOR_AVAILABLE = True
+except ImportError:
+    print("Warning: Mapping pattern generator not available")
+    MAPPING_GENERATOR_AVAILABLE = False
+
 
 @dataclass
 class MLTemplateStructure:
@@ -427,6 +434,16 @@ def process_ml_template(file_path: str) -> Dict[str, Any]:
     # Prepare for future AI integration
     ai_data = processor.prepare_for_ai_processing(analysis, file_path)
     
+    # Generate mapping patterns if it's a valid ML template
+    mapping_data = None
+    if analysis.is_ml_template and MAPPING_GENERATOR_AVAILABLE:
+        try:
+            mapping_data = generate_mapping_from_analysis(analysis.__dict__)
+        except Exception as e:
+            print(f"Warning: Could not generate mapping patterns: {e}")
+    elif analysis.is_ml_template:
+        print("Warning: Mapping generator not available, skipping pattern generation")
+    
     return {
         'analysis': {
             'is_ml_template': analysis.is_ml_template,
@@ -437,6 +454,7 @@ def process_ml_template(file_path: str) -> Dict[str, Any]:
             'total_products': analysis.total_products,
             'sample_data': analysis.sample_data,
         },
+        'mapping_patterns': mapping_data,
         'ai_processing_data': ai_data,
         'status': 'success' if analysis.is_ml_template else 'warning',
         'message': 'Plantilla ML detectada y analizada' if analysis.is_ml_template else 'No se detectó estructura de plantilla ML'

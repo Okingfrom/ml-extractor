@@ -5,26 +5,45 @@ Mapping configuration API routes
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from typing import TYPE_CHECKING
 
-from ..database import get_database_session
-from ..models.database import User, MappingTemplate
+if TYPE_CHECKING:
+    # For static typing only
+    from ..models.database import User
+
+# Defer heavy imports (database, models) into function scope to avoid
+# import-time SQLAlchemy/ORM side-effects when modules are loaded by the
+# dev server via importlib.
 from ..models.schemas import (
     MappingTemplateCreate, MappingTemplateUpdate, MappingTemplateResponse,
     PaginatedResponse, PaginationParams, BaseResponse
 )
-from ..api.auth import get_current_user
+
+# Guard auth import similar to admin_settings
+try:
+    from backend.api.auth import get_current_user
+except Exception:
+    try:
+        from ..api.auth import get_current_user
+    except Exception:
+        # In non-development contexts let import fail; dev fallback is handled
+        # by the dev server when ENVIRONMENT=development via admin_settings.
+        raise
 
 router = APIRouter(prefix="/mapping", tags=["mapping"])
 
 @router.post("/templates", response_model=MappingTemplateResponse)
 async def create_mapping_template(
     template_data: MappingTemplateCreate,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_database_session)
+    current_user = Depends(get_current_user),
+    db: Session = Depends(lambda: __import__('backend.database', fromlist=['get_database_session']).get_database_session())
 ):
     """Create a new mapping template"""
     
     # Check if template name already exists for user
+    # Import models at runtime
+    from ..models.database import MappingTemplate
+
     existing = (
         db.query(MappingTemplate)
         .filter(
@@ -59,11 +78,14 @@ async def create_mapping_template(
 async def list_mapping_templates(
     pagination: PaginationParams = Depends(),
     include_public: bool = True,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_database_session)
+    current_user = Depends(get_current_user),
+    db: Session = Depends(lambda: __import__('backend.database', fromlist=['get_database_session']).get_database_session())
 ):
     """List mapping templates (user's own + public templates)"""
     
+    # Import models at runtime
+    from ..models.database import MappingTemplate
+
     query = db.query(MappingTemplate)
     
     if include_public:
@@ -101,11 +123,13 @@ async def list_mapping_templates(
 @router.get("/templates/{template_id}", response_model=MappingTemplateResponse)
 async def get_mapping_template(
     template_id: int,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_database_session)
+    current_user = Depends(get_current_user),
+    db: Session = Depends(lambda: __import__('backend.database', fromlist=['get_database_session']).get_database_session())
 ):
     """Get a specific mapping template"""
     
+    from ..models.database import MappingTemplate
+
     template = (
         db.query(MappingTemplate)
         .filter(
@@ -133,11 +157,13 @@ async def get_mapping_template(
 async def update_mapping_template(
     template_id: int,
     template_data: MappingTemplateUpdate,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_database_session)
+    current_user = Depends(get_current_user),
+    db: Session = Depends(lambda: __import__('backend.database', fromlist=['get_database_session']).get_database_session())
 ):
     """Update a mapping template (only owner can update)"""
     
+    from ..models.database import MappingTemplate
+
     template = (
         db.query(MappingTemplate)
         .filter(
@@ -187,11 +213,13 @@ async def update_mapping_template(
 @router.delete("/templates/{template_id}")
 async def delete_mapping_template(
     template_id: int,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_database_session)
+    current_user = Depends(get_current_user),
+    db: Session = Depends(lambda: __import__('backend.database', fromlist=['get_database_session']).get_database_session())
 ):
     """Delete a mapping template (only owner can delete)"""
     
+    from ..models.database import MappingTemplate
+
     template = (
         db.query(MappingTemplate)
         .filter(
@@ -218,11 +246,13 @@ async def delete_mapping_template(
 @router.post("/templates/{template_id}/set-default")
 async def set_default_template(
     template_id: int,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_database_session)
+    current_user = Depends(get_current_user),
+    db: Session = Depends(lambda: __import__('backend.database', fromlist=['get_database_session']).get_database_session())
 ):
     """Set a template as default for the user"""
     
+    from ..models.database import MappingTemplate
+
     template = (
         db.query(MappingTemplate)
         .filter(
@@ -259,7 +289,7 @@ async def set_default_template(
 @router.get("/fields/suggestions")
 async def get_field_suggestions(
     file_type: str = "xlsx",
-    current_user: User = Depends(get_current_user)
+    current_user = Depends(get_current_user)
 ):
     """Get field mapping suggestions based on file type"""
     
@@ -296,7 +326,7 @@ async def get_field_suggestions(
 @router.post("/validate")
 async def validate_mapping_config(
     mapping_config: dict,
-    current_user: User = Depends(get_current_user)
+    current_user = Depends(get_current_user)
 ):
     """Validate a mapping configuration"""
     

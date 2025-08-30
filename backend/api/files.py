@@ -5,20 +5,33 @@ File handling API routes
 import os
 import uuid
 import shutil
+import logging
 from datetime import datetime
 from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form, BackgroundTasks
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
+from typing import TYPE_CHECKING
 import json
 
-from ..database import get_database_session
-from ..models.database import User, UploadedFile, ProcessingTask
+if TYPE_CHECKING:
+    from ..models.database import User
+
+# Guard auth import similar to admin_settings to allow dev-server imports
+try:
+    from backend.api.auth import get_current_user
+except Exception:
+    try:
+        from ..api.auth import get_current_user
+    except Exception:
+        # Let it fail outside development; dev fallback handled elsewhere
+        raise
+
+# Defer heavy DB/model imports into function bodies to avoid import-time side-effects
 from ..models.schemas import (
-    FileUploadResponse, FileResponse, FileProcessingRequest,
+    FileUploadResponse, FileResponse as FileSchema, FileProcessingRequest,
     TaskResponse, PaginatedResponse, PaginationParams
 )
-from ..api.auth import get_current_user
 from ..services.ml_template_processor import process_ml_template
 from ..core.config import settings
 from ..services.file_processor import FileProcessorService
@@ -57,8 +70,8 @@ def save_uploaded_file(file: UploadFile, user_id: int) -> tuple[str, str]:
 @router.post("/upload", response_model=FileUploadResponse)
 async def upload_file(
     file: UploadFile = File(...),
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_database_session)
+    current_user: 'User' = Depends(get_current_user),
+    db: Session = Depends(lambda: __import__('backend.database', fromlist=['get_database_session']).get_database_session())
 ):
     """Upload a file"""
     
@@ -95,7 +108,9 @@ async def upload_file(
             detail=f"Failed to save file: {str(e)}"
         )
     
-    # Create database record
+    # Create database record (import models at runtime)
+    from ..models.database import UploadedFile
+
     db_file = UploadedFile(
         user_id=current_user.id,
         filename=unique_filename,
@@ -115,12 +130,14 @@ async def upload_file(
 @router.get("/", response_model=PaginatedResponse)
 async def list_files(
     pagination: PaginationParams = Depends(),
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_database_session)
+    current_user: 'User' = Depends(get_current_user),
+    db: Session = Depends(lambda: __import__('backend.database', fromlist=['get_database_session']).get_database_session())
 ):
     """List user's files with pagination"""
     
     # Get total count
+    from ..models.database import UploadedFile
+
     total = db.query(UploadedFile).filter(UploadedFile.user_id == current_user.id).count()
     
     # Get files with pagination
@@ -137,7 +154,7 @@ async def list_files(
     pages = (total + pagination.size - 1) // pagination.size
     
     return PaginatedResponse(
-        items=[FileResponse.from_orm(file) for file in files],
+        items=[FileSchema.from_orm(file) for file in files],
         total=total,
         page=pagination.page,
         size=pagination.size,
@@ -147,11 +164,13 @@ async def list_files(
 @router.get("/{file_id}", response_model=FileResponse)
 async def get_file(
     file_id: int,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_database_session)
+    current_user: 'User' = Depends(get_current_user),
+    db: Session = Depends(lambda: __import__('backend.database', fromlist=['get_database_session']).get_database_session())
 ):
     """Get file details"""
     
+    from ..models.database import UploadedFile
+
     file = (
         db.query(UploadedFile)
         .filter(UploadedFile.id == file_id, UploadedFile.user_id == current_user.id)
@@ -164,19 +183,21 @@ async def get_file(
             detail="File not found"
         )
     
-    return FileResponse.from_orm(file)
+    return FileSchema.from_orm(file)
 
 @router.post("/{file_id}/process", response_model=TaskResponse)
 async def process_file(
     file_id: int,
     processing_request: FileProcessingRequest,
     background_tasks: BackgroundTasks,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_database_session)
+    current_user: 'User' = Depends(get_current_user),
+    db: Session = Depends(lambda: __import__('backend.database', fromlist=['get_database_session']).get_database_session())
 ):
     """Process a file with mapping and optional AI enhancement"""
     
     # Get file
+    from ..models.database import UploadedFile
+
     file = (
         db.query(UploadedFile)
         .filter(UploadedFile.id == file_id, UploadedFile.user_id == current_user.id)
@@ -195,7 +216,9 @@ async def process_file(
             detail="File is already being processed"
         )
     
-    # Create processing task
+    # Create processing task (import models at runtime)
+    from ..models.database import ProcessingTask
+
     task_id = str(uuid.uuid4())
     task = ProcessingTask(
         task_id=task_id,
@@ -228,8 +251,8 @@ async def process_file(
 @router.post("/analyze-ml-template")
 async def analyze_ml_template(
     file: UploadFile = File(...),
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_database_session)
+    current_user = Depends(get_current_user),
+    db: Session = Depends(lambda: __import__('backend.database', fromlist=['get_database_session']).get_database_session())
 ) -> Dict[str, Any]:
     """
     Analyze uploaded file to detect Mercado Libre template structure
@@ -277,6 +300,8 @@ async def analyze_ml_template(
             shutil.move(temp_path, permanent_path)
             
             # Create database record
+            from ..models.database import UploadedFile
+
             db_file = UploadedFile(
                 user_id=current_user.id,
                 filename=file.filename,
@@ -319,13 +344,15 @@ async def analyze_ml_template(
 @router.get("/{file_id}/ml-analysis")
 async def get_ml_analysis(
     file_id: int,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_database_session)
+    current_user = Depends(get_current_user),
+    db: Session = Depends(lambda: __import__('backend.database', fromlist=['get_database_session']).get_database_session())
 ) -> Dict[str, Any]:
     """
     Get ML template analysis for a previously uploaded file
     """
     
+    from ..models.database import UploadedFile
+
     file = (
         db.query(UploadedFile)
         .filter(UploadedFile.id == file_id, UploadedFile.user_id == current_user.id)
@@ -371,11 +398,13 @@ async def get_ml_analysis(
 @router.get("/{file_id}/download")
 async def download_file(
     file_id: int,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_database_session)
+    current_user = Depends(get_current_user),
+    db: Session = Depends(lambda: __import__('backend.database', fromlist=['get_database_session']).get_database_session())
 ):
     """Download original or processed file"""
     
+    from ..models.database import UploadedFile
+
     file = (
         db.query(UploadedFile)
         .filter(UploadedFile.id == file_id, UploadedFile.user_id == current_user.id)
@@ -412,11 +441,13 @@ async def download_file(
 @router.delete("/{file_id}")
 async def delete_file(
     file_id: int,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_database_session)
+    current_user = Depends(get_current_user),
+    db: Session = Depends(lambda: __import__('backend.database', fromlist=['get_database_session']).get_database_session())
 ):
     """Delete a file"""
     
+    from ..models.database import UploadedFile
+
     file = (
         db.query(UploadedFile)
         .filter(UploadedFile.id == file_id, UploadedFile.user_id == current_user.id)
@@ -436,7 +467,7 @@ async def delete_file(
         if file.output_file_path and os.path.exists(file.output_file_path):
             os.remove(file.output_file_path)
     except Exception as e:
-        print(f"Error deleting file from disk: {e}")
+        logging.error(f"Error deleting file from disk: {e}")
     
     # Delete from database
     db.delete(file)
@@ -457,6 +488,8 @@ async def process_file_background(
     # For now, it's a placeholder
     
     from ..database import SessionLocal
+    from ..models.database import ProcessingTask, UploadedFile
+
     db = SessionLocal()
     
     try:

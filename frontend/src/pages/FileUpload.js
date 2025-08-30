@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { useAuth } from '../context/AuthContext';
 import { fileService } from '../services/fileService';
+import { logger } from '../utils/logger';
 import { 
   Upload, 
   FileText, 
@@ -85,7 +86,7 @@ const FileUpload = () => {
         }
 
       } catch (error) {
-        console.error('Upload error:', error);
+        logger.error('Upload error:', error);
         setUploadedFiles(prev => 
           prev.map(f => 
             f.id === fileItem.id 

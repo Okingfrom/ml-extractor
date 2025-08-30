@@ -3,57 +3,57 @@
 Complete backend for ML Extractor FastAPI
 """
 
+import uvicorn
+import os
+import tempfile
+from datetime import datetime
+from typing import List, Optional
+
+from fastapi import FastAPI, UploadFile, File, HTTPException, Form
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse, FileResponse
+from pydantic import BaseModel
+
+app = FastAPI(
+    title="ML Extractor API",
+    version="2.0.0-dev",
+    description="ML Extractor Backend - Complete File Processing System",
+    docs_url="/docs",
+    redoc_url="/redoc"
+)
+
+# CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://localhost:3001", "http://127.0.0.1:3000", "http://127.0.0.1:3001", "*"],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["*"],
+)
+
+# Create uploads directory
+UPLOAD_DIR = "uploads"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+# Pydantic models
+class ProcessingResponse(BaseModel):
+    success: bool
+    message: str
+    output_file: Optional[str] = None
+    processing_time: Optional[float] = None
+    records_processed: Optional[int] = None
+
+class HealthResponse(BaseModel):
+    status: str
+    mode: str
+    message: str
+    timestamp: str
+
 if __name__ == "__main__":
-    import uvicorn
-    import os
-    import tempfile
-    from datetime import datetime
-    from typing import List, Optional
-    
     print("🚀 Starting ML Extractor Backend - FastAPI")
-    print("📚 Documentation available at: http://localhost:8004/docs")
-    print("🔍 Health check at: http://localhost:8004/health")
+    print("📚 Documentation available at: http://localhost:8005/docs")
+    print("🔍 Health check at: http://localhost:8005/health")
     print("")
-    
-    from fastapi import FastAPI, UploadFile, File, HTTPException, Form
-    from fastapi.middleware.cors import CORSMiddleware
-    from fastapi.responses import JSONResponse, FileResponse
-    from pydantic import BaseModel
-    
-    app = FastAPI(
-        title="ML Extractor API",
-        version="2.0.0-dev",
-        description="ML Extractor Backend - Complete File Processing System",
-        docs_url="/docs",
-        redoc_url="/redoc"
-    )
-    
-    # CORS middleware
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["http://localhost:3000", "http://localhost:3001", "http://127.0.0.1:3000", "http://127.0.0.1:3001", "*"],
-        allow_credentials=True,
-        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        allow_headers=["*"],
-    )
-    
-    # Create uploads directory
-    UPLOAD_DIR = "uploads"
-    os.makedirs(UPLOAD_DIR, exist_ok=True)
-    
-    # Pydantic models
-    class ProcessingResponse(BaseModel):
-        success: bool
-        message: str
-        output_file: Optional[str] = None
-        processing_time: Optional[float] = None
-        records_processed: Optional[int] = None
-    
-    class HealthResponse(BaseModel):
-        status: str
-        mode: str
-        message: str
-        timestamp: str
     
     # Root endpoint
     @app.get("/")
@@ -212,6 +212,126 @@ if __name__ == "__main__":
             }
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Failed to list files: {str(e)}")
+
+    # ML Template Analysis endpoint
+    @app.post("/api/files/analyze-ml-template")
+    async def analyze_ml_template_endpoint(file: UploadFile = File(...)):
+        """Analyze uploaded file for ML template structure"""
+        try:
+            # Simple ML template analysis for now
+            import pandas as pd
+            
+            # Validate file type
+            allowed_extensions = {'.xlsx', '.xls', '.csv'}
+            file_extension = os.path.splitext(file.filename)[1].lower()
+            
+            if file_extension not in allowed_extensions:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Tipo de archivo no soportado. Use: {', '.join(allowed_extensions)}"
+                )
+            
+            # Save temporary file for analysis
+            temp_filename = f"temp_ml_analysis_{file.filename}"
+            temp_path = os.path.join(UPLOAD_DIR, temp_filename)
+            
+            # Save file temporarily
+            with open(temp_path, "wb") as buffer:
+                content = await file.read()
+                buffer.write(content)
+            
+            try:
+                # Basic analysis
+                if file_extension == '.csv':
+                    df = pd.read_csv(temp_path)
+                else:
+                    df = pd.read_excel(temp_path)
+                
+                # Detect if it looks like an ML template
+                columns = df.columns.tolist()
+                ml_indicators = ['titulo', 'precio', 'stock', 'categoria', 'title', 'price']
+                is_ml_template = any(any(indicator.lower() in col.lower() for indicator in ml_indicators) for col in columns)
+                
+                total_products = len(df.dropna(how='all'))
+                sample_data = df.head(3).to_dict('records') if not df.empty else []
+                
+                # Clean up temporary file
+                if os.path.exists(temp_path):
+                    os.remove(temp_path)
+                
+                # Mock mapping patterns for now
+                mapping_patterns = None
+                if is_ml_template:
+                    mapping_patterns = {
+                        "summary": {
+                            "confidence_score": 0.85,
+                            "mapped_fields": len([col for col in columns if any(ind.lower() in col.lower() for ind in ml_indicators)]),
+                            "total_fields": len(columns),
+                            "mapping_success_rate": 75.0,
+                            "high_confidence_mappings": 3,
+                            "manual_review_needed": 1
+                        },
+                        "mapping_pattern": {
+                            "field_mappings": [
+                                {
+                                    "source_column": col,
+                                    "target_field": "titulo" if "titulo" in col.lower() or "title" in col.lower() else 
+                                                   "precio" if "precio" in col.lower() or "price" in col.lower() else
+                                                   "stock" if "stock" in col.lower() or "cantidad" in col.lower() else
+                                                   "categoria" if "categoria" in col.lower() or "category" in col.lower() else col.lower(),
+                                    "confidence": "high" if any(ind.lower() in col.lower() for ind in ml_indicators) else "low",
+                                    "transformation_rule": None,
+                                    "examples": [str(df[col].iloc[i]) for i in range(min(2, len(df))) if pd.notna(df[col].iloc[i])]
+                                }
+                                for col in columns
+                            ]
+                        },
+                        "next_steps": [
+                            "Revisar mapeos sugeridos",
+                            "Validar transformaciones propuestas",
+                            "Configurar validaciones personalizadas",
+                            "Procesar datos con el mapeo generado"
+                        ]
+                    }
+                
+                return {
+                    "analysis": {
+                        "is_ml_template": is_ml_template,
+                        "template_structure": {
+                            "obligatory_columns": {col: "texto" for col in columns if any(ind.lower() in col.lower() for ind in ml_indicators[:4])},
+                            "data_start_row": 2,
+                            "obligatory_row": 1,
+                            "data_type_row": 1
+                        } if is_ml_template else None,
+                        "detected_columns": {col: "texto" for col in columns},
+                        "validation_errors": [],
+                        "recommendations": ["Archivo analizado correctamente"] if is_ml_template else ["No parece ser una plantilla ML estándar"],
+                        "total_products": total_products,
+                        "sample_data": sample_data,
+                    },
+                    "mapping_patterns": mapping_patterns,
+                    "file_saved": is_ml_template,
+                    "status": "success" if is_ml_template else "warning",
+                    "message": "Plantilla ML detectada y analizada" if is_ml_template else "No se detectó estructura de plantilla ML"
+                }
+                
+            except Exception as analysis_error:
+                # Clean up temporary file
+                if os.path.exists(temp_path):
+                    os.remove(temp_path)
+                
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Error analizando archivo: {str(analysis_error)}"
+                )
+                
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error procesando solicitud: {str(e)}"
+            )
     
     # Demo authentication endpoints
     class LoginRequest(BaseModel):
@@ -325,7 +445,7 @@ if __name__ == "__main__":
     uvicorn.run(
         app,
         host="0.0.0.0",
-        port=8004,
+        port=8005,
         reload=False,
         log_level="info"
     )
