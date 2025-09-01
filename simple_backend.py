@@ -43,7 +43,7 @@ except Exception:
 PRODUCTION = os.getenv('PRODUCTION', '').lower() in ('1', 'true', 'yes')
 SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
 FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:3002')
-ALLOWED_ORIGINS = os.getenv('ALLOWED_ORIGINS', 'http://localhost:3002,http://localhost:3000').split(',')
+ALLOWED_ORIGINS = os.getenv('ALLOWED_ORIGINS', 'https://extractorml.uy,http://localhost:3002,http://localhost:3000').split(',')
 
 if PRODUCTION:
     logger.info("🚀 Running in PRODUCTION mode")
@@ -83,8 +83,19 @@ app.add_middleware(
 # Serve frontend static files
 from fastapi.staticfiles import StaticFiles
 import os
-if os.path.exists("frontend/dist"):
-    app.mount("/", StaticFiles(directory="frontend/dist", html=True), name="frontend")
+import sys
+
+# Get the directory where the executable is running
+if getattr(sys, 'frozen', False):
+    # Running as PyInstaller bundle
+    bundle_dir = sys._MEIPASS
+    static_dir = os.path.join(bundle_dir, "frontend", "dist")
+else:
+    # Running as script
+    static_dir = "frontend/dist"
+
+if os.path.exists(static_dir):
+    app.mount("/", StaticFiles(directory=static_dir, html=True), name="frontend")
 
 # Helper functions
 def hash_password(password: str) -> str:
