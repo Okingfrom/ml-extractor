@@ -94,8 +94,7 @@ else:
     # Running as script
     static_dir = "frontend/dist"
 
-if os.path.exists(static_dir):
-    app.mount("/", StaticFiles(directory=static_dir, html=True), name="frontend")
+# Note: StaticFiles mounting moved to end of file to ensure API routes are processed first
 
 # Helper functions
 def hash_password(password: str) -> str:
@@ -632,6 +631,17 @@ async def get_mapping_config(current_user: dict = Depends(verify_token)):
     }
     
     return {"config": default_config}
+
+# Mount StaticFiles at the end to ensure API routes are processed first
+if os.path.exists(static_dir):
+    app.mount("/", StaticFiles(directory=static_dir, html=True), name="frontend")
+    logger.info(f"📁 Serving frontend from: {static_dir}")
+else:
+    logger.warning(f"⚠️ Frontend directory not found: {static_dir}")
+    
+    @app.get("/")
+    async def root():
+        return {"message": "ML Extractor Backend is running", "version": "1.0.0", "status": "healthy"}
 
 if __name__ == "__main__":
     logger.info("🚀 Starting ML Extractor Simple Backend...")
