@@ -80,6 +80,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Serve frontend static files
+from fastapi.staticfiles import StaticFiles
+import os
+if os.path.exists("frontend/dist"):
+    app.mount("/", StaticFiles(directory="frontend/dist", html=True), name="frontend")
+
 # Helper functions
 def hash_password(password: str) -> str:
     """Hash password using SHA256"""

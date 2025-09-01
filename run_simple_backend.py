@@ -48,9 +48,9 @@ def main():
     # Wait for server to start
     time.sleep(2)
 
-    # Open browser to docs
+    # Open browser to the frontend
     browser_host = "127.0.0.1" if args.host == "0.0.0.0" else args.host
-    url = f"http://{browser_host}:{args.port}/docs"
+    url = f"http://{browser_host}:{args.port}/"
     webbrowser.open(url)
 
     print(f"Server running at {url}. Press Ctrl+C to stop.")
