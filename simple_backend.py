@@ -81,10 +81,6 @@ app.add_middleware(
 )
 
 # Serve frontend static files
-from fastapi.staticfiles import StaticFiles
-import os
-if os.path.exists("frontend/dist"):
-    app.mount("/", StaticFiles(directory="frontend/dist", html=True), name="frontend")
 
 # Helper functions
 def hash_password(password: str) -> str:
@@ -117,7 +113,7 @@ def role_required_factory(required_roles: List[str]):
     return _verify_role
 
 # Routes
-@app.get("/")
+@app.get("/api/status")
 async def root():
     """Health check endpoint"""
     return {
@@ -622,6 +618,12 @@ async def get_mapping_config(current_user: dict = Depends(verify_token)):
     
     return {"config": default_config}
 
+
+# Serve frontend static files
+from fastapi.staticfiles import StaticFiles
+import os
+if os.path.exists("frontend/dist"):
+    app.mount("/", StaticFiles(directory="frontend/dist", html=True), name="frontend")
 if __name__ == "__main__":
     logger.info("🚀 Starting ML Extractor Simple Backend...")
     logger.info("📊 In-memory storage initialized")
