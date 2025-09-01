@@ -12,6 +12,9 @@ for the purposes of packaging. If you need the full backend with SQLAlchemy, pac
 """
 import os
 import argparse
+import threading
+import webbrowser
+import time
 
 try:
     # Try to import uvicorn programmatically
@@ -34,8 +37,30 @@ def main():
         print("uvicorn is not available. Please install uvicorn or build with it included.")
         return
 
-    # Run uvicorn programmatically so PyInstaller bundles a single runnable file
-    uvicorn.run(app, host=args.host, port=args.port, log_level=args.log_level)
+    # Function to run the server
+    def run_server():
+        uvicorn.run(app, host=args.host, port=args.port, log_level=args.log_level)
+
+    # Start server in a thread
+    thread = threading.Thread(target=run_server, daemon=True)
+    thread.start()
+
+    # Wait for server to start
+    time.sleep(2)
+
+    # Open browser to docs
+    browser_host = "127.0.0.1" if args.host == "0.0.0.0" else args.host
+    url = f"http://{browser_host}:{args.port}/docs"
+    webbrowser.open(url)
+
+    print(f"Server running at {url}. Press Ctrl+C to stop.")
+
+    # Keep the main thread alive
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        print("Stopping server...")
 
 
 if __name__ == '__main__':
