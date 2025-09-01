@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Connection Test</title>
+</head>
+<body>
+    <h1>Testing API Connection</h1>
+    <div id="results"></div>
+    
+    <script>
+        async function testAPI() {
+            const results = document.getElementById('results');
+            
+            try {
+                // Test health endpoint
+                const healthResponse = await fetch('/api/health');
+                const healthData = await healthResponse.json();
+                results.innerHTML += `<p>✅ Health: ${healthData.status}</p>`;
+                
+                // Test auth endpoint (should fail)
+                const authResponse = await fetch('/api/auth/me');
+                const authData = await authResponse.json();
+                results.innerHTML += `<p>✅ Auth endpoint responds: ${authData.detail}</p>`;
+                
+                results.innerHTML += `<p>🎉 <strong>API CONNECTION WORKING!</strong></p>`;
+                results.innerHTML += `<p>The backend is accessible from the frontend.</p>`;
+                
+            } catch (error) {
+                results.innerHTML += `<p>❌ Error: ${error.message}</p>`;
+                results.innerHTML += `<p>This indicates a real connection problem.</p>`;
+            }
+        }
+        
+        testAPI();
+    </script>
+</body>
+</html>
