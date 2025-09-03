@@ -5,12 +5,15 @@ Updated to use the new simple_backend FastAPI application.
 import os
 import sys
 
-# Add current directory to Python path
+# Ensure repository root is on sys.path so imports in passenger_wsgi_new work
 sys.path.insert(0, os.path.dirname(__file__))
 
-def _log(msg: str):
-    try:
-        sys.stderr.write(f"[passenger_wsgi] {msg}\n")
+# Delegate to the real WSGI/ASGI entrypoint maintained in passenger_wsgi_new.py
+try:
+    from passenger_wsgi_new import application
+except Exception:
+    # If import fails, raise so cPanel logs show the problem
+    raise
         sys.stderr.flush()
     except Exception:
         pass
