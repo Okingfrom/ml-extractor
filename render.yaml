@@ -13,3 +13,15 @@ services:
         value: "https://your-render-domain.example"
     healthCheckPath: /api/health
     autoDeploy: true
+
+  - type: static
+    name: ml-extractor-frontend
+    env: static
+    branch: pyinstaller-artifacts
+    plan: free
+    region: oregon
+    # Build the frontend (if dependencies exist) and publish the built files
+    buildCommand: >
+      bash -lc "if [ -f frontend/package.json ]; then cd frontend && npm ci && npm run build && cd ..; fi"
+    publishPath: frontend/dist
+    autoDeploy: true
