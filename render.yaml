@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: ml-extractor
+    env: python
+    branch: pyinstaller-artifacts
+    plan: free
+    region: oregon
+    buildCommand: pip install -r requirements.txt
+    startCommand: >
+      gunicorn -k uvicorn.workers.UvicornWorker simple_backend:app --bind 0.0.0.0:$PORT --log-level info
+    envVars:
+      - key: CORS_ORIGINS
+        value: "https://your-render-domain.example"
+    healthCheckPath: /api/health
+    autoDeploy: true
