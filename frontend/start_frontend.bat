@@ -1,2 +1,2 @@
-set PORT=3004
+set PORT=3002
 npm start

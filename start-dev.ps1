@@ -7,10 +7,10 @@ Write-Host "======================================================" -ForegroundC
 Write-Host ""
 
 # Check if we're in the right directory
-if (!(Test-Path "frontend\package.json") -or !(Test-Path "backend\main.py")) {
+if (!(Test-Path "frontend\package.json") -or !(Test-Path "simple_backend.py")) {
     Write-Host "Error: Please run this script from the ml-extractor root directory" -ForegroundColor Red
     Write-Host "Current directory: $(Get-Location)" -ForegroundColor Yellow
-    Write-Host "Expected files: frontend\package.json, backend\main.py" -ForegroundColor Yellow
+    Write-Host "Expected files: frontend\package.json, simple_backend.py" -ForegroundColor Yellow
     Read-Host "Press Enter to exit"
     exit 1
 }
@@ -62,9 +62,7 @@ Write-Host ""
 # Function to start backend
 $backendJob = Start-Job -ScriptBlock {
     Set-Location $using:PWD
-    & .\.venv\Scripts\Activate.ps1
-    Set-Location backend
-    python -m uvicorn main:app --reload --host 0.0.0.0 --port 8009
+    python -m uvicorn simple_backend:app --reload --host 0.0.0.0 --port 8009
 }
 
 Write-Host "Starting backend server..." -ForegroundColor Yellow

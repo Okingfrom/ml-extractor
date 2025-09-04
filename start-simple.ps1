@@ -48,7 +48,7 @@ Write-Host ""
 
 # Start backend in background
 Write-Host "1. Starting FastAPI backend..." -ForegroundColor Yellow
-Start-Process powershell -ArgumentList "-Command", "cd '$PWD'; .\.venv\Scripts\Activate.ps1; cd backend; python -m uvicorn main:app --reload --port 8009" -WindowStyle Minimized
+Start-Process powershell -ArgumentList "-Command", "cd '$PWD'; python -m uvicorn simple_backend:app --reload --host 0.0.0.0 --port 8009" -WindowStyle Minimized
 
 # Wait a bit
 Start-Sleep 3

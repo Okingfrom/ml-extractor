@@ -35,10 +35,12 @@ class Settings:
     SMTP_PASSWORD: Optional[str] = os.getenv("SMTP_PASSWORD")
     
     # Frontend
-    FRONTEND_URL: str = os.getenv("FRONTEND_URL", "http://localhost:3000")
+    FRONTEND_URL: str = os.getenv("FRONTEND_URL", "http://localhost:3002")
     
     # CORS
     ALLOWED_ORIGINS: list = [
+        "http://localhost:3002",
+        "http://127.0.0.1:3002",
         "http://localhost:3000",
         "http://127.0.0.1:3000",
         "https://your-production-domain.com"
