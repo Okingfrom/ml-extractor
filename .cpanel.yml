@@ -1,4 +1,3 @@
----
 deployment:
   tasks:
     - /bin/bash -lc "echo 'Starting ML-Extractor deployment...'"
