@@ -32,8 +32,15 @@ for p in CANDIDATES:
         break
 
 if FRONTEND_PATH:
-    # Mount static files under root
-    app.mount("/static", StaticFiles(directory=os.path.join(FRONTEND_PATH, 'static')), name="static")
+    # Prefer mounting the 'static' subfolder when present (common with some build setups)
+    static_dir = os.path.join(FRONTEND_PATH, 'static')
+    if os.path.isdir(static_dir):
+        app.mount("/static", StaticFiles(directory=static_dir), name="static")
+    else:
+        # If there is no static subfolder, mount the build folder itself as static
+        # and serve index.html as the SPA entrypoint. Mounting occurs after
+        # the API router so /api/* routes take precedence.
+        app.mount("/", StaticFiles(directory=FRONTEND_PATH, html=True), name="frontend")
 
     @app.get("/", response_class=HTMLResponse)
     async def root_index():
@@ -42,7 +49,7 @@ if FRONTEND_PATH:
             return FileResponse(index, media_type='text/html')
         return HTMLResponse("<html><body><h1>Frontend build not found</h1></body></html>")
 
-    # Fallback for SPA routes
+    # Fallback for SPA routes — only used when static mount doesn't already serve files
     @app.get("/{full_path:path}", response_class=HTMLResponse)
     async def spa_fallback(full_path: str, request: Request):
         # avoid intercepting API routes
