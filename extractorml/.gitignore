@@ -1,0 +1,7 @@
+/extractorml/backend/__pycache__
+/extractorml/frontend/node_modules
+/extractorml/frontend/build
+/extractorml/frontend/dist
+/extractorml/.venv
+*.pyc
+.env
