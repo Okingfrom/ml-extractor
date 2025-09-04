@@ -4,6 +4,9 @@ deployment:
     - /bin/bash -lc "python3 -m venv .venv || true"
     - /bin/bash -lc "source .venv/bin/activate && pip install --upgrade pip setuptools wheel"
     - /bin/bash -lc "source .venv/bin/activate && pip install -r requirements.txt || echo 'Some packages failed to install'"
+  # If Passenger uses a different venv, set PASSENGER_VENV to that path. Do NOT paste YAML lines into a shell;
+  # edit this file instead.
+  - /bin/bash -lc "PASSENGER_VENV=/path/to/passenger/venv ./scripts/cpanel_deploy.sh || echo 'cpanel_deploy.sh failed'"
     - /bin/bash -lc "mkdir -p uploads backups logs"
     - /bin/bash -lc "chmod 755 uploads backups logs"
     - /bin/bash -lc "echo 'Deployment completed successfully'"
