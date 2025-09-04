@@ -41,8 +41,12 @@ mkdir -p "$REPO_DIR/uploads" "$REPO_DIR/backups" "$REPO_DIR/logs"
 echo "[cpanel_deploy] Upgrading pip in target venv..."
 "$PASSENGER_VENV/bin/pip" install --upgrade pip setuptools wheel || true
 
-echo "[cpanel_deploy] Installing repository requirements..."
-"$PASSENGER_VENV/bin/pip" install -r "$REPO_DIR/requirements.txt" || echo "[cpanel_deploy] Main requirements install failed"
+if [ "${SKIP_MAIN_REQUIREMENTS:-0}" = "1" ]; then
+  echo "[cpanel_deploy] SKIP_MAIN_REQUIREMENTS=1 set; skipping install of main requirements.txt"
+else
+  echo "[cpanel_deploy] Installing repository requirements..."
+  "$PASSENGER_VENV/bin/pip" install -r "$REPO_DIR/requirements.txt" || echo "[cpanel_deploy] Main requirements install failed"
+fi
 
 echo "[cpanel_deploy] Installing backend requirements..."
 "$PASSENGER_VENV/bin/pip" install -r "$REPO_DIR/extractorml/backend/requirements.txt" || echo "[cpanel_deploy] Backend requirements install failed"
