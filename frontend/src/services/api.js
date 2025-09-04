@@ -4,7 +4,7 @@ import { logger } from '../utils/logger';
 // Create axios instance with default config
 // Uses environment variables for API base URL
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_BASE_URL || 'http://localhost:8011',
+  baseURL: process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000',
   headers: {
     'Content-Type': 'application/json',
   },
