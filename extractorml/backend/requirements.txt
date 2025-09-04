@@ -1,4 +1,6 @@
 fastapi
 uvicorn[standard]
+aiofiles
+asgiref
 python-multipart
 aiofiles
