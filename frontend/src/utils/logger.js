@@ -5,7 +5,7 @@
 
 const isDev = process.env.NODE_ENV === 'development';
 
-export const logger = {
+const logger = {
   info: (message, ...args) => {
     if (isDev) console.log(`ℹ️ ${message}`, ...args);
   },

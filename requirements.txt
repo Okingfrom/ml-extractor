@@ -8,6 +8,7 @@ aiofiles==23.2.1
 # Authentication and security
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
+python-decouple==3.8
 
 # File processing
 pandas==2.0.3

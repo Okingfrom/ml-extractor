@@ -9,9 +9,10 @@ uvicorn[standard]==0.24.0
 python-multipart==0.0.6
 aiofiles==23.2.1
 
-# Security / auth
+# Authentication and security
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
+python-decouple==3.8
 
 # File processing
 pandas==2.0.3
@@ -26,8 +27,9 @@ flask-cors==4.0.0
 SQLAlchemy==2.0.23
 alembic==1.13.1
 
-# ASGI sync helper
+# ASGI sync helper and WSGI adapter for cPanel
 asgiref==3.7.2
+asgi2wsgi==1.4.0
 
 # Notes:
 # - spaCy and OpenAI SDKs are intentionally omitted to keep installation small on cPanel.
