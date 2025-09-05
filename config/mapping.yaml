@@ -1,0 +1,22 @@
+columns:
+  SKU: SKU
+  Name: Product Name
+  Price: Price
+  Description: Description
+  # Add more mappings as needed
+
+template_columns:
+  - title
+  - price
+  - description
+  - stock
+  - category
+  - image_url
+
+mapping:
+  product_title: title
+  product_price: price
+  product_desc: description
+  product_stock: stock
+  product_category: category
+  product_image: image_url
