@@ -18,7 +18,7 @@ def enhance_ean(data):
     enhanced_data = data.copy()
     
     # Look for EAN in various fields
-    ean_fields = ['ean', 'barcode', 'codigo_barras', 'upc', 'gtin', 'isbn']
+    ean_fields = ['ean', 'barcode', 'codigo_barras', 'upc', 'gtin', 'isbn', 'codigo', 'codigos', 'codigos_de_barra']
     
     for field in ean_fields:
         if field in data and data[field]:
