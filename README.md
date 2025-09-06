@@ -134,6 +134,27 @@ The API uses tolerant error handling:
 - Invalid record formats are coerced when possible
 - Server errors return 500 with error details
 
+### Type Checking
+Static type checking is configured with Pyright in `pyrightconfig.json`:
+
+```bash
+# Install pyright (if not already installed)
+npm install -g pyright
+
+# Run type checking
+pyright
+
+# Alternative: use npx without global install
+npx pyright
+```
+
+**Phase upgrade path**: The configuration starts with `standard` mode and gradually enables stricter checks:
+- **Phase 1** (Current): `standard` mode with basic import/module checks
+- **Phase 2**: Enable selective strict warnings for decorators and base classes  
+- **Phase 3**: Full `strict` mode with complete type inference
+
+Current configuration excludes `tests/` and focuses on `src/` directory only.
+
 ## Quick Start
 1. Set up a Python virtual environment:
    ```bash
