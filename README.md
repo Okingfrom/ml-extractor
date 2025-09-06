@@ -4,13 +4,75 @@ A sophisticated Python application that intelligently maps product data from var
 
 ## ✨ Features
 
-### 🧠 AI-Powered Enhancement
-- **Smart brand detection** from product names and descriptions
-- **Automatic model/SKU generation** based on product information  
-- **Realistic weight estimation** by product category
-- **Color inference** from product descriptions
-- **Standard warranty assignment** by product type
-- **Valid EAN-13 code generation**
+## 🧠 AI-Powered Enhancement (Planned – Phase 4)
+
+This project will optionally use AI to enrich MercadoLibre bulk listing templates. AI is NOT active yet; the baseline mapping and deterministic enrichment run without external models.
+
+### What AI Will (Optionally) Do
+| Capability | Description | Trigger | Safety Rule |
+|------------|-------------|---------|-------------|
+| Fill missing description | Generate coherent, category-aligned text | User enables "Generate descriptions" | No fabricated specs |
+| Suggest attributes | Infer color, material, brand variants, etc. | User enables "Suggest attributes" | Only plausible inferences |
+| Language adaptation | Adapt Spanish ↔ Portuguese (pt-BR) and regional Spanish variants | User selects target locale | Preserve original meaning |
+| Enrich recommended fields | Add bullet points, extended marketing copy | User enables "Extended content" | Do not alter required validated fields |
+| Consistency rewrite | Normalize titles (capitalization/style) | Always optional toggle | Do not remove key brand tokens |
+
+### Required vs Recommended vs AI-Eligible
+
+| Field Group | Examples | Status | AI Action |
+|-------------|----------|--------|-----------|
+| Required (never hallucinate) | título, categoría ID, precio, moneda, cantidad, condición | Must be present in source or validated mapping | AI may rephrase formatting only if explicitly allowed |
+| Recommended | descripción, atributos adicionales, viñetas | Optional | AI may generate if toggle on |
+| Derivable Attributes | color, material, marca (brand), peso estimado | Can be inferred | Provide confidence + mark uncertain values |
+| Non-AI Fields (integrity) | SKU original, códigos internos, ID categoría, GTIN auto-validado | Integrity fields | Never generate or modify silently |
+
+### High-Level Flow (MercadoLibre Bulk Import)
+1. Subir archivo (CSV/XLSX/JSON)
+2. Seleccionar plantilla de categoría (estructura oficial)
+3. Mapear columnas origen → columnas plantilla
+4. Validar campos obligatorios (no seguir si faltan)
+5. (Opcional) Aplicar enriquecimiento AI
+6. Generar archivo final / envío a API
+7. Confirmar resultados y errores
+
+### Planned Feature Flag
+AI features will be behind:
+```
+ENABLE_AI=1
+```
+If unset, pipeline remains fully deterministic.
+
+### Draft Internal AI System Prompt (Template)
+```
+You are an assistant enriching MercadoLibre bulk product template rows.
+Rules:
+- Do NOT fabricate category IDs, prices, SKU, or regulatory codes.
+- Fill required fields ONLY if reliable source data exists.
+- For descriptions: concise intro + bullet highlights (if requested).
+- Mark uncertain attribute inferences with a confidence note (internal, not written to final cell).
+- Language target: {{target_locale}} (e.g. es-AR, es-MX, pt-BR).
+- Do not output JSON, only return field:value pairs with plain UTF-8 text where needed.
+- Avoid repeating brand redundantly in every bullet.
+Input context:
+{{product_row}}
+Required fields set: {{required_fields_present}}
+Requested enrichment modes: {{enrichment_modes}}
+Output only enriched fields (leave others untouched).
+```
+
+### Safety & Compliance Notes
+- Never generate pricing strategy, tax statements, or regulatory claims.
+- Avoid adding warranties unless explicitly provided.
+- Strictly preserve sheet name "Publicaciones" and column ordering from official templates.
+
+### Future Implementation Plan (Phase 4)
+1. Add `src/ai/description_generator.py` with a single `generate_description(record, locale, modes, enable_ai)` function.
+2. Integrate behind feature flag in mapper pipeline extension.
+3. Add tests with a mock model (no external API first).
+4. Introduce confidence metadata in `record["_meta"]["ai"]`.
+5. Allow user toggles from UI later (Phase 2 extension after base API stable).
+
+See: docs/AI_DESCRIPTION_ENRICHMENT.md for full specification (to be added).
 
 ### 🌐 Professional Web Interface
 - Modern Flask-based web application
