@@ -89,6 +89,51 @@ See: docs/AI_DESCRIPTION_ENRICHMENT.md for full specification (to be added).
 - Sample data and configuration folders
 - Ready for future extensibility (e.g., web UI)
 
+## 🚀 API Usage (Phase 1)
+
+### Starting the API Server
+```bash
+# Install dependencies (if not already installed)
+pip install -r requirements.txt
+
+# Start the API server (uvicorn already included in requirements.txt)
+uvicorn src.api.app:app --reload --host 0.0.0.0 --port 8000
+```
+
+### API Endpoints
+
+**Health Check**
+```bash
+curl http://localhost:8000/health
+# Returns: {"status": "ok", "version": "1.0.0"}
+```
+
+**Map Single Record**
+```bash
+curl -X POST http://localhost:8000/map/single \
+  -H "Content-Type: application/json" \
+  -d '{"record": {"title": "Sony Headphones", "price": "99.99"}}'
+```
+
+**Map Multiple Records**
+```bash
+curl -X POST http://localhost:8000/map \
+  -H "Content-Type: application/json" \
+  -d '{"records": [{"title": "Sony Headphones", "price": "99.99"}, {"title": "Apple iPhone", "price": "699.99"}]}'
+```
+
+### Debug Logging
+Enable detailed logging for development:
+```bash
+LOG_LEVEL=DEBUG uvicorn src.api.app:app --reload
+```
+
+### Error Handling
+The API uses tolerant error handling:
+- Empty payloads return empty results (200 status)
+- Invalid record formats are coerced when possible
+- Server errors return 500 with error details
+
 ## Quick Start
 1. Set up a Python virtual environment:
    ```bash

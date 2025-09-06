@@ -5,18 +5,20 @@ columns:
   Description: Description
   # Add more mappings as needed
 
-template_columns:
+template:
   - title
   - price
   - description
   - stock
   - category
   - image_url
+  - brand
 
 mapping:
-  product_title: title
-  product_price: price
-  product_desc: description
-  product_stock: stock
-  product_category: category
-  product_image: image_url
+  title: title
+  price: price
+  description: description
+  stock: stock
+  category: category
+  image_url: image_url
+  brand: brand
