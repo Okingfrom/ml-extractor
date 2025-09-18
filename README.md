@@ -121,6 +121,19 @@ See: docs/AI_DESCRIPTION_ENRICHMENT.md for full specification (to be added).
 - `config/` - Mapping and configuration files
 - `.github/` - Copilot instructions and project docs
 - `frontend/` - React (SPA) source (optional UI layer)
+- `docs/` - Development team documentation
+
+## 👥 Development Team Structure
+
+This project is organized around three specialized development agent roles:
+
+- **Backend Engineer (Python)** - Core ML Template Processor, data validation, and API endpoints
+- **Frontend Engineer (React)** - 6-step wizard UI and data visualization components  
+- **ML Engineer** - ML-based template detection, column analysis, and pattern recognition
+
+For detailed role definitions and collaboration guidelines, see:
+- [Development Agents Guide](docs/DEVELOPMENT_AGENTS.md)
+- [Project Structure Guide](docs/PROJECT_STRUCTURE.md)
 
 ## 🖥 React Frontend Integration (Optional)
 The project can serve a React single-page application. Two modes:

@@ -20,8 +20,23 @@ Types: feat, fix, chore, docs, test, refactor
 1. Open small plan (what + files + test(s)).
 2. Get approval (even self-check).
 3. Implement.
-4. Run tests locally (pytest -q).
+4. Run tests locally (PYTHONPATH=. python tests/test_*.py).
 5. Submit PR with summary + risk note.
+
+### Team Onboarding
+New team members can use the onboarding script:
+```bash
+# Backend Engineer setup
+./tools/onboard.sh backend
+
+# Frontend Engineer setup  
+./tools/onboard.sh frontend
+
+# ML Engineer setup
+./tools/onboard.sh ml
+```
+
+See [Development Agents Guide](docs/DEVELOPMENT_AGENTS.md) for role definitions.
 
 ## 5. Anti-Bloat Policy
 Reject if:
